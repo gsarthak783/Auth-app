@@ -358,10 +358,11 @@ export const deleteProject = async (req, res) => {
       { $pull: { projectAccess: { projectId } } }
     );
 
-    // Decrement project count for the owner
-    await User.findByIdAndUpdate(userId, {
-      $inc: { 'stats.totalProjects': -1 }
-    });
+    // Decrement project count for the owner (but don't go below 0)
+    await User.findByIdAndUpdate(
+      { _id: userId, 'stats.totalProjects': { $gt: 0 } },
+      { $inc: { 'stats.totalProjects': -1 } }
+    );
 
     res.json({
       success: true,

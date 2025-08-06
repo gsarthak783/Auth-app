@@ -184,6 +184,21 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Refresh user data (useful after project creation/deletion)
+  const refreshUser = async () => {
+    try {
+      const response = await platformAuthAPI.getProfile();
+      dispatch({
+        type: ActionTypes.UPDATE_USER,
+        payload: response.data.user,
+      });
+      return response.data.user;
+    } catch (error) {
+      console.error('Error refreshing user data:', error);
+      // Don't throw error as this is a background refresh
+    }
+  };
+
   // Change password
   const changePassword = async (passwordData) => {
     try {
@@ -249,7 +264,7 @@ export const AuthProvider = ({ children }) => {
   const canCreateProject = () => {
     if (!state.user) return false;
     const totalProjects = state.user.stats?.totalProjects || 0;
-    const maxProjects = state.user.limits?.maxProjects || 3; // Default free plan limit
+    const maxProjects = state.user.limits?.maxProjects || 5; // Updated default limit
     console.log('🔍 Project limit check:', { totalProjects, maxProjects, canCreate: totalProjects < maxProjects });
     return totalProjects < maxProjects;
   };
@@ -258,7 +273,7 @@ export const AuthProvider = ({ children }) => {
   const getRemainingProjects = () => {
     if (!state.user) return 0;
     const totalProjects = state.user.stats?.totalProjects || 0;
-    const maxProjects = state.user.limits?.maxProjects || 3;
+    const maxProjects = state.user.limits?.maxProjects || 5;
     return Math.max(0, maxProjects - totalProjects);
   };
 
@@ -288,6 +303,7 @@ export const AuthProvider = ({ children }) => {
 
     // Profile methods
     updateProfile,
+    refreshUser,
     changePassword,
     forgotPassword,
     resetPassword,

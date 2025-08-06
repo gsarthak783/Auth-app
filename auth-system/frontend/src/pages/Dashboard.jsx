@@ -17,8 +17,7 @@ import {
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const Dashboard = () => {
-  const { user } = useAuth();
-  const { projects, isLoading, canCreateProject, getRemainingProjects } = useAuth();
+  const { user, canCreateProject, getRemainingProjects } = useAuth();
   const { projects: userProjects, isLoading: projectsLoading } = useProjects();
   const navigate = useNavigate();
 
@@ -49,7 +48,7 @@ const Dashboard = () => {
     return badges[plan] || badges.free;
   };
 
-  if (isLoading || projectsLoading) {
+  if (projectsLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <LoadingSpinner size="lg" />

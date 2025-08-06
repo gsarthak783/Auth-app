@@ -8,8 +8,7 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true,
     trim: true,
-    lowercase: true,
-    index: true
+    lowercase: true
   },
   username: {
     type: String,
@@ -17,8 +16,7 @@ const userSchema = new mongoose.Schema({
     unique: true,
     trim: true,
     minlength: 3,
-    maxlength: 30,
-    index: true
+    maxlength: 30
   },
   password: {
     type: String,
@@ -202,15 +200,15 @@ const userSchema = new mongoose.Schema({
   limits: {
     maxProjects: {
       type: Number,
-      default: 3 // Free plan limit
+      default: 5 // Updated limit
     },
     maxUsersPerProject: {
       type: Number,
-      default: 1000 // Free plan limit
+      default: 10000 // Increased limit
     },
     maxAPICallsPerMonth: {
       type: Number,
-      default: 10000 // Free plan limit
+      default: 100000 // Increased limit
     }
   },
 

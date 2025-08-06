@@ -10,35 +10,20 @@ import {
   Search,
   Filter,
   Eye,
-  EyeOff
+  EyeOff,
+  RefreshCw
 } from 'lucide-react';
 import { projectsAPI } from '../../utils/api';
 import { useAuth } from '../../contexts/AuthContext';
+import { useProjects } from '../../contexts/ProjectsContext';
 import LoadingSpinner from '../../components/LoadingSpinner';
 
 const Projects = () => {
   const { user } = useAuth();
-  const [projects, setProjects] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { projects, isLoading, loadProjects } = useProjects();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [showApiKeys, setShowApiKeys] = useState({});
-
-  useEffect(() => {
-    fetchProjects();
-  }, []);
-
-  const fetchProjects = async () => {
-    try {
-      setIsLoading(true);
-      const response = await projectsAPI.getProjects();
-      setProjects(response.projects || []);
-    } catch (error) {
-      console.error('Error fetching projects:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const toggleApiKeyVisibility = (projectId) => {
     setShowApiKeys(prev => ({
@@ -81,7 +66,7 @@ const Projects = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -90,13 +75,23 @@ const Projects = () => {
             Manage your authentication projects and their users
           </p>
         </div>
-        <Link
-          to="/projects/create"
-          className="btn btn-primary gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          New Project
-        </Link>
+        <div className="flex gap-2">
+          <button
+            onClick={loadProjects}
+            className="btn btn-ghost gap-2"
+            disabled={isLoading}
+          >
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+          <Link
+            to="/projects/create"
+            className="btn btn-primary gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            New Project
+          </Link>
+        </div>
       </div>
 
       {/* Search and Filter */}

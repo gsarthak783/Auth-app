@@ -92,7 +92,7 @@ const ProjectsContext = createContext();
 // Projects provider component
 export const ProjectsProvider = ({ children }) => {
   const [state, dispatch] = useReducer(projectsReducer, initialState);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, refreshUser } = useAuth();
 
   // Load projects when user is authenticated
   useEffect(() => {
@@ -110,7 +110,7 @@ export const ProjectsProvider = ({ children }) => {
     try {
       dispatch({ type: ActionTypes.SET_LOADING, payload: true });
       const response = await projectsAPI.getProjects();
-      dispatch({ type: ActionTypes.SET_PROJECTS, payload: response.data.projects });
+      dispatch({ type: ActionTypes.SET_PROJECTS, payload: response.projects || [] });
     } catch (error) {
       const errorMessage = utils.getErrorMessage(error);
       dispatch({ type: ActionTypes.SET_ERROR, payload: errorMessage });
@@ -123,6 +123,10 @@ export const ProjectsProvider = ({ children }) => {
       dispatch({ type: ActionTypes.SET_LOADING, payload: true });
       const response = await projectsAPI.createProject(projectData);
       dispatch({ type: ActionTypes.ADD_PROJECT, payload: response.project });
+      
+      // Refresh user data to update project count
+      await refreshUser();
+      
       toast.success(response.message || 'Project created successfully!');
       return response.project;
     } catch (error) {
@@ -173,6 +177,10 @@ export const ProjectsProvider = ({ children }) => {
       dispatch({ type: ActionTypes.SET_LOADING, payload: true });
       await projectsAPI.deleteProject(projectId);
       dispatch({ type: ActionTypes.REMOVE_PROJECT, payload: projectId });
+      
+      // Refresh user data to update project count
+      await refreshUser();
+      
       toast.success('Project deleted successfully');
     } catch (error) {
       const errorMessage = utils.getErrorMessage(error);
