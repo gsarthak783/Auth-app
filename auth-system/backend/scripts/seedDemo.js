@@ -8,13 +8,10 @@ dotenv.config();
 
 const seedDemoData = async () => {
   try {
-    // Connect to MongoDB
-    await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    // Connect to MongoDB Atlas
+    await mongoose.connect(process.env.MONGODB_URI);
     
-    console.log('Connected to MongoDB');
+    console.log('✅ Connected to MongoDB Atlas');
 
     // Create demo admin user
     const existingAdmin = await User.findOne({ email: 'admin@demo.com' });
@@ -32,10 +29,10 @@ const seedDemoData = async () => {
         isActive: true
       });
       await adminUser.save();
-      console.log('Created demo admin user');
+      console.log('👤 Created demo admin user');
     } else {
       adminUser = existingAdmin;
-      console.log('Demo admin user already exists');
+      console.log('👤 Demo admin user already exists');
     }
 
     // Create demo project
@@ -79,23 +76,30 @@ const seedDemoData = async () => {
       });
       await adminUser.save();
       
-      console.log('Created demo project with API key: ak_demo12345');
+      console.log('🚀 Created demo project with API key: ak_demo12345');
     } else {
-      console.log('Demo project already exists');
+      console.log('🚀 Demo project already exists');
     }
 
-    console.log('\n✅ Demo data seeded successfully!');
-    console.log('\nDemo credentials:');
+    console.log('\n🎉 Demo data seeded successfully!');
+    console.log('\n📋 Demo credentials:');
     console.log('📧 Email: admin@demo.com');
     console.log('🔑 Password: admin123');
     console.log('🔗 API Key: ak_demo12345');
-    console.log('\nYou can now register new users and login!');
+    console.log('\n🚀 You can now register new users and login!');
+    console.log('🌐 Frontend: http://localhost:5173');
+    console.log('🖥️  Backend: http://localhost:5000');
     
   } catch (error) {
-    console.error('Error seeding demo data:', error);
+    console.error('❌ Error seeding demo data:', error);
+    if (error.message.includes('ENOTFOUND') || error.message.includes('authentication failed')) {
+      console.error('💡 Please check your MongoDB Atlas connection string in .env file');
+      console.error('💡 Make sure your IP address is whitelisted in MongoDB Atlas');
+      console.error('💡 Verify your username and password are correct');
+    }
   } finally {
     await mongoose.connection.close();
-    console.log('Database connection closed');
+    console.log('📝 Database connection closed');
   }
 };
 
