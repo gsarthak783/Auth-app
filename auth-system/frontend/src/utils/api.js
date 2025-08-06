@@ -1,59 +1,49 @@
 import axios from 'axios';
-import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
-
-// API base URL
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import Cookies from 'js-cookie';
 
 // Create axios instance
 const api = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 10000,
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true,
 });
 
-// Token management
-const TOKEN_KEY = 'auth_token';
-const REFRESH_TOKEN_KEY = 'refresh_token';
-const API_KEY = 'api_key';
-
+// Token management for platform users
 export const tokenManager = {
-  getToken: () => Cookies.get(TOKEN_KEY),
-  setToken: (token) => Cookies.set(TOKEN_KEY, token, { expires: 1 }), // 1 day
-  removeToken: () => Cookies.remove(TOKEN_KEY),
-  
-  getRefreshToken: () => Cookies.get(REFRESH_TOKEN_KEY),
-  setRefreshToken: (token) => Cookies.set(REFRESH_TOKEN_KEY, token, { expires: 7 }), // 7 days
-  removeRefreshToken: () => Cookies.remove(REFRESH_TOKEN_KEY),
-  
-  getApiKey: () => Cookies.get(API_KEY),
-  setApiKey: (key) => Cookies.set(API_KEY, key, { expires: 30 }), // 30 days
-  removeApiKey: () => Cookies.remove(API_KEY),
-  
-  clearAll: () => {
-    Cookies.remove(TOKEN_KEY);
-    Cookies.remove(REFRESH_TOKEN_KEY);
-    Cookies.remove(API_KEY);
+  getAccessToken: () => Cookies.get('accessToken'),
+  getRefreshToken: () => Cookies.get('refreshToken'),
+  setTokens: (accessToken, refreshToken) => {
+    if (accessToken) {
+      Cookies.set('accessToken', accessToken, { 
+        expires: 1, // 1 day
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict'
+      });
+    }
+    if (refreshToken) {
+      Cookies.set('refreshToken', refreshToken, { 
+        expires: 7, // 7 days
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict'
+      });
+    }
+  },
+  clearTokens: () => {
+    Cookies.remove('accessToken');
+    Cookies.remove('refreshToken');
   }
 };
 
-// Request interceptor
+// Request interceptor to add auth header
 api.interceptors.request.use(
   (config) => {
-    const token = tokenManager.getToken();
-    const apiKey = tokenManager.getApiKey();
-    
+    const token = tokenManager.getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
-    if (apiKey) {
-      config.headers['x-api-key'] = apiKey;
-    }
-    
     return config;
   },
   (error) => {
@@ -66,325 +56,363 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      
+
       try {
         const refreshToken = tokenManager.getRefreshToken();
-        
         if (refreshToken) {
-          const response = await axios.post(`${API_BASE_URL}/auth/refresh-token`, {
+          const response = await api.post('/auth/refresh', {
             refreshToken
           });
-          
-          const { accessToken, refreshToken: newRefreshToken } = response.data.tokens;
-          
-          tokenManager.setToken(accessToken);
-          tokenManager.setRefreshToken(newRefreshToken);
-          
+
+          const { accessToken } = response.data.data;
+          tokenManager.setTokens(accessToken, refreshToken);
+
+          // Retry the original request
           originalRequest.headers.Authorization = `Bearer ${accessToken}`;
           return api(originalRequest);
         }
       } catch (refreshError) {
-        tokenManager.clearAll();
-        window.location.href = '/login';
+        // Refresh failed, redirect to login
+        tokenManager.clearTokens();
+        window.location.href = '/auth/login';
+        return Promise.reject(refreshError);
       }
     }
-    
+
     return Promise.reject(error);
   }
 );
 
-// API error handler
-const handleApiError = (error) => {
-  if (error.response) {
-    const { status, data } = error.response;
-    
-    switch (status) {
-      case 400:
-        toast.error(data.message || 'Bad request');
-        break;
-      case 401:
-        toast.error('Unauthorized access');
-        break;
-      case 403:
-        toast.error('Access forbidden');
-        break;
-      case 404:
-        toast.error('Resource not found');
-        break;
-      case 409:
-        toast.error(data.message || 'Conflict error');
-        break;
-      case 422:
-        toast.error(data.message || 'Validation error');
-        break;
-      case 429:
-        toast.error('Too many requests. Please try again later.');
-        break;
-      case 500:
-        toast.error('Server error. Please try again later.');
-        break;
-      default:
-        toast.error(data.message || 'An error occurred');
-    }
-  } else if (error.request) {
-    toast.error('Network error. Please check your connection.');
+// Error handler
+export const handleApiError = (error) => {
+  if (error.response?.data?.message) {
+    toast.error(error.response.data.message);
+  } else if (error.message) {
+    toast.error(error.message);
   } else {
     toast.error('An unexpected error occurred');
   }
-  
-  return Promise.reject(error);
+  throw error;
 };
 
-// Auth API functions
-export const authAPI = {
-  // Authentication
-  signup: async (userData, apiKey) => {
+// Platform Authentication API (for platform users)
+export const platformAuthAPI = {
+  // Register platform user (no API key required)
+  register: async (userData) => {
     try {
-      const response = await api.post('/auth/signup', userData, {
-        headers: { 'x-api-key': apiKey }
-      });
+      const response = await api.post('/auth/signup', userData);
       return response.data;
     } catch (error) {
       handleApiError(error);
-      throw error;
     }
   },
-  
-  login: async (credentials, apiKey) => {
+
+  // Login platform user (no API key required)
+  login: async (credentials) => {
     try {
-      const response = await api.post('/auth/login', credentials, {
-        headers: { 'x-api-key': apiKey }
-      });
+      const response = await api.post('/auth/login', credentials);
       return response.data;
     } catch (error) {
       handleApiError(error);
-      throw error;
     }
   },
-  
+
+  // Refresh token
+  refreshToken: async (refreshToken) => {
+    try {
+      const response = await api.post('/auth/refresh', { refreshToken });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
+  },
+
+  // Logout
   logout: async (refreshToken) => {
     try {
       const response = await api.post('/auth/logout', { refreshToken });
       return response.data;
     } catch (error) {
       handleApiError(error);
-      throw error;
     }
   },
-  
-  logoutAll: async () => {
-    try {
-      const response = await api.post('/auth/logout-all');
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
-  },
-  
-  refreshToken: async (refreshToken) => {
-    try {
-      const response = await api.post('/auth/refresh-token', { refreshToken });
-      return response.data;
-    } catch (error) {
-      throw error; // Don't show toast for refresh token errors
-    }
-  },
-  
-  // Profile
+
+  // Get profile
   getProfile: async () => {
     try {
       const response = await api.get('/auth/profile');
       return response.data;
     } catch (error) {
       handleApiError(error);
-      throw error;
     }
   },
-  
+
+  // Update profile
   updateProfile: async (profileData) => {
     try {
       const response = await api.put('/auth/profile', profileData);
       return response.data;
     } catch (error) {
       handleApiError(error);
-      throw error;
     }
   },
-  
+
+  // Change password
   changePassword: async (passwordData) => {
     try {
       const response = await api.post('/auth/change-password', passwordData);
       return response.data;
     } catch (error) {
       handleApiError(error);
-      throw error;
     }
   },
-  
-  deleteAccount: async (password) => {
+
+  // Forgot password
+  forgotPassword: async (email) => {
     try {
-      const response = await api.delete('/auth/account', { data: { password } });
+      const response = await api.post('/auth/forgot-password', { email });
       return response.data;
     } catch (error) {
       handleApiError(error);
-      throw error;
     }
   },
-  
-  // Password reset
-  requestPasswordReset: async (email, apiKey) => {
-    try {
-      const response = await api.post('/auth/request-password-reset', { email }, {
-        headers: { 'x-api-key': apiKey }
-      });
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
-  },
-  
+
+  // Reset password
   resetPassword: async (resetData) => {
     try {
       const response = await api.post('/auth/reset-password', resetData);
       return response.data;
     } catch (error) {
       handleApiError(error);
-      throw error;
     }
   },
-  
-  // Email verification
-  verifyEmail: async (token, email) => {
+
+  // Delete account
+  deleteAccount: async (password) => {
     try {
-      const response = await api.get(`/auth/verify-email?token=${token}&email=${email}`);
+      const response = await api.delete('/auth/delete-account', {
+        data: { password }
+      });
       return response.data;
     } catch (error) {
       handleApiError(error);
-      throw error;
     }
-  },
+  }
 };
 
-// Projects API functions
+// Projects API (for platform users managing projects)
 export const projectsAPI = {
-  // Project CRUD
-  create: async (projectData) => {
+  // Get all user projects
+  getProjects: async () => {
     try {
-      const response = await api.post('/projects', projectData);
+      const response = await api.get('/projects');
       return response.data;
     } catch (error) {
       handleApiError(error);
-      throw error;
     }
   },
-  
-  getAll: async (params = {}) => {
-    try {
-      const response = await api.get('/projects', { params });
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
-  },
-  
-  getById: async (projectId) => {
+
+  // Get single project
+  getProject: async (projectId) => {
     try {
       const response = await api.get(`/projects/${projectId}`);
       return response.data;
     } catch (error) {
       handleApiError(error);
-      throw error;
     }
   },
-  
-  update: async (projectId, projectData) => {
+
+  // Create project
+  createProject: async (projectData) => {
+    try {
+      const response = await api.post('/projects', projectData);
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
+  },
+
+  // Update project
+  updateProject: async (projectId, projectData) => {
     try {
       const response = await api.put(`/projects/${projectId}`, projectData);
       return response.data;
     } catch (error) {
       handleApiError(error);
-      throw error;
     }
   },
-  
-  delete: async (projectId) => {
+
+  // Delete project
+  deleteProject: async (projectId) => {
     try {
       const response = await api.delete(`/projects/${projectId}`);
       return response.data;
     } catch (error) {
       handleApiError(error);
-      throw error;
     }
   },
-  
-  // Project statistics
-  getStats: async (projectId) => {
+
+  // Get project statistics
+  getProjectStats: async (projectId) => {
     try {
       const response = await api.get(`/projects/${projectId}/stats`);
       return response.data;
     } catch (error) {
       handleApiError(error);
-      throw error;
     }
   },
-  
-  // Project users
-  getUsers: async (projectId, params = {}) => {
-    try {
-      const response = await api.get(`/projects/${projectId}/users`, { params });
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
-  },
-  
-  addUser: async (projectId, userData) => {
-    try {
-      const response = await api.post(`/projects/${projectId}/users`, userData);
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
-  },
-  
-  removeUser: async (projectId, userId) => {
-    try {
-      const response = await api.delete(`/projects/${projectId}/users/${userId}`);
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
-  },
-  
-  updateUserRole: async (projectId, userId, roleData) => {
-    try {
-      const response = await api.put(`/projects/${projectId}/users/${userId}/role`, roleData);
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
-  },
-  
-  // API key management
-  regenerateKeys: async (projectId) => {
+
+  // Regenerate API keys
+  regenerateApiKeys: async (projectId) => {
     try {
       const response = await api.post(`/projects/${projectId}/regenerate-keys`);
       return response.data;
     } catch (error) {
       handleApiError(error);
-      throw error;
     }
   },
+
+  // Add team member
+  addTeamMember: async (projectId, memberData) => {
+    try {
+      const response = await api.post(`/projects/${projectId}/team`, memberData);
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
+  },
+
+  // Remove team member
+  removeTeamMember: async (projectId, memberId) => {
+    try {
+      const response = await api.delete(`/projects/${projectId}/team/${memberId}`);
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
+  },
+
+  // Update team member role
+  updateTeamMemberRole: async (projectId, memberId, role) => {
+    try {
+      const response = await api.put(`/projects/${projectId}/team/${memberId}`, { role });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
+  }
+};
+
+// Project Users API (for managing end-users of projects)
+export const projectUsersAPI = {
+  // Get all project users (admin only)
+  getProjectUsers: async (apiKey, params = {}) => {
+    try {
+      const response = await api.get('/project-users', {
+        headers: { 'x-api-key': apiKey },
+        params
+      });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
+  },
+
+  // Get project user statistics
+  getProjectUserStats: async (apiKey) => {
+    try {
+      const response = await api.get('/project-users/stats', {
+        headers: { 'x-api-key': apiKey }
+      });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
+  },
+
+  // Delete project user
+  deleteProjectUser: async (apiKey, userId) => {
+    try {
+      const response = await api.delete(`/project-users/${userId}`, {
+        headers: { 'x-api-key': apiKey }
+      });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
+  },
+
+  // Update project user status
+  updateProjectUserStatus: async (apiKey, userId, statusData) => {
+    try {
+      const response = await api.patch(`/project-users/${userId}/status`, statusData, {
+        headers: { 'x-api-key': apiKey }
+      });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
+  },
+
+  // Register project user (requires API key)
+  registerProjectUser: async (apiKey, userData) => {
+    try {
+      const response = await api.post('/project-users/register', userData, {
+        headers: { 'x-api-key': apiKey }
+      });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
+  },
+
+  // Login project user (requires API key)
+  loginProjectUser: async (apiKey, credentials) => {
+    try {
+      const response = await api.post('/project-users/login', credentials, {
+        headers: { 'x-api-key': apiKey }
+      });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
+  }
+};
+
+// Utility functions
+export const utils = {
+  // Check if user is authenticated
+  isAuthenticated: () => {
+    const token = tokenManager.getAccessToken();
+    return !!token;
+  },
+
+  // Get current user info from token (basic decode)
+  getCurrentUser: () => {
+    const token = tokenManager.getAccessToken();
+    if (!token) return null;
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload;
+    } catch (error) {
+      return null;
+    }
+  },
+
+  // Format API error message
+  getErrorMessage: (error) => {
+    if (error.response?.data?.message) {
+      return error.response.data.message;
+    }
+    if (error.response?.data?.errors?.length > 0) {
+      return error.response.data.errors[0].msg || error.response.data.errors[0];
+    }
+    return error.message || 'An unexpected error occurred';
+  }
 };
 
 export default api;

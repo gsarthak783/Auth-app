@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { authAPI, tokenManager } from '../utils/api';
+import { platformAuthAPI, tokenManager, utils } from '../utils/api';
 import toast from 'react-hot-toast';
 
 // Initial state
@@ -11,45 +11,37 @@ const initialState = {
 };
 
 // Action types
-const AUTH_ACTIONS = {
-  AUTH_START: 'AUTH_START',
-  AUTH_SUCCESS: 'AUTH_SUCCESS',
-  AUTH_FAILURE: 'AUTH_FAILURE',
-  LOGOUT: 'LOGOUT',
-  UPDATE_PROFILE: 'UPDATE_PROFILE',
-  CLEAR_ERROR: 'CLEAR_ERROR',
+const ActionTypes = {
   SET_LOADING: 'SET_LOADING',
+  SET_USER: 'SET_USER',
+  SET_ERROR: 'SET_ERROR',
+  CLEAR_USER: 'CLEAR_USER',
+  UPDATE_USER: 'UPDATE_USER',
 };
 
 // Reducer
 const authReducer = (state, action) => {
   switch (action.type) {
-    case AUTH_ACTIONS.AUTH_START:
+    case ActionTypes.SET_LOADING:
       return {
         ...state,
-        isLoading: true,
-        error: null,
+        isLoading: action.payload,
       };
-
-    case AUTH_ACTIONS.AUTH_SUCCESS:
+    case ActionTypes.SET_USER:
       return {
         ...state,
-        user: action.payload.user,
+        user: action.payload,
         isAuthenticated: true,
         isLoading: false,
         error: null,
       };
-
-    case AUTH_ACTIONS.AUTH_FAILURE:
+    case ActionTypes.SET_ERROR:
       return {
         ...state,
-        user: null,
-        isAuthenticated: false,
+        error: action.payload,
         isLoading: false,
-        error: action.payload.error,
       };
-
-    case AUTH_ACTIONS.LOGOUT:
+    case ActionTypes.CLEAR_USER:
       return {
         ...state,
         user: null,
@@ -57,25 +49,11 @@ const authReducer = (state, action) => {
         isLoading: false,
         error: null,
       };
-
-    case AUTH_ACTIONS.UPDATE_PROFILE:
+    case ActionTypes.UPDATE_USER:
       return {
         ...state,
-        user: { ...state.user, ...action.payload.user },
+        user: { ...state.user, ...action.payload },
       };
-
-    case AUTH_ACTIONS.CLEAR_ERROR:
-      return {
-        ...state,
-        error: null,
-      };
-
-    case AUTH_ACTIONS.SET_LOADING:
-      return {
-        ...state,
-        isLoading: action.payload.isLoading,
-      };
-
     default:
       return state;
   }
@@ -88,225 +66,209 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  // Check authentication status on mount
+  // Initialize auth state
   useEffect(() => {
-    checkAuthStatus();
+    const initializeAuth = async () => {
+      try {
+        if (utils.isAuthenticated()) {
+          const response = await platformAuthAPI.getProfile();
+          dispatch({
+            type: ActionTypes.SET_USER,
+            payload: response.data.user,
+          });
+        } else {
+          dispatch({ type: ActionTypes.SET_LOADING, payload: false });
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        tokenManager.clearTokens();
+        dispatch({ type: ActionTypes.CLEAR_USER });
+      }
+    };
+
+    initializeAuth();
   }, []);
 
-  const checkAuthStatus = async () => {
+  // Platform user signup (no API key required)
+  const signup = async (userData) => {
     try {
-      const token = tokenManager.getToken();
+      dispatch({ type: ActionTypes.SET_LOADING, payload: true });
       
-      if (!token) {
-        dispatch({ type: AUTH_ACTIONS.AUTH_FAILURE, payload: { error: null } });
-        return;
-      }
-
-      const response = await authAPI.getProfile();
+      const response = await platformAuthAPI.register(userData);
       
+      // Save tokens
+      const { accessToken, refreshToken } = response.data.tokens;
+      tokenManager.setTokens(accessToken, refreshToken);
+      
+      // Set user in state
       dispatch({
-        type: AUTH_ACTIONS.AUTH_SUCCESS,
-        payload: { user: response.user },
+        type: ActionTypes.SET_USER,
+        payload: response.data.user,
       });
-    } catch (error) {
-      tokenManager.clearAll();
-      dispatch({ type: AUTH_ACTIONS.AUTH_FAILURE, payload: { error: null } });
-    }
-  };
-
-  const login = async (credentials, apiKey) => {
-    try {
-      dispatch({ type: AUTH_ACTIONS.AUTH_START });
-
-      const response = await authAPI.login(credentials, apiKey);
       
-      if (response.success) {
-        const { user, tokens } = response;
-        
-        // Store tokens
-        tokenManager.setToken(tokens.accessToken);
-        tokenManager.setRefreshToken(tokens.refreshToken);
-        tokenManager.setApiKey(apiKey);
-
-        dispatch({
-          type: AUTH_ACTIONS.AUTH_SUCCESS,
-          payload: { user },
-        });
-
-        toast.success(`Welcome back, ${user.firstName || user.username}!`);
-        return response;
-      }
+      toast.success(response.message || 'Account created successfully!');
+      return response;
     } catch (error) {
-      dispatch({
-        type: AUTH_ACTIONS.AUTH_FAILURE,
-        payload: { error: error.message },
-      });
+      const errorMessage = utils.getErrorMessage(error);
+      dispatch({ type: ActionTypes.SET_ERROR, payload: errorMessage });
       throw error;
     }
   };
 
-  const signup = async (userData, apiKey) => {
+  // Platform user login (no API key required)
+  const login = async (credentials) => {
     try {
-      dispatch({ type: AUTH_ACTIONS.AUTH_START });
-
-      const response = await authAPI.signup(userData, apiKey);
+      dispatch({ type: ActionTypes.SET_LOADING, payload: true });
       
-      if (response.success) {
-        const { user, tokens, needsVerification } = response;
-
-        if (!needsVerification && tokens) {
-          // Store tokens if user is verified
-          tokenManager.setToken(tokens.accessToken);
-          tokenManager.setRefreshToken(tokens.refreshToken);
-          tokenManager.setApiKey(apiKey);
-
-          dispatch({
-            type: AUTH_ACTIONS.AUTH_SUCCESS,
-            payload: { user },
-          });
-
-          toast.success(`Welcome, ${user.firstName || user.username}!`);
-        } else {
-          dispatch({ type: AUTH_ACTIONS.AUTH_FAILURE, payload: { error: null } });
-          toast.success('Account created! Please check your email for verification.');
-        }
-
-        return response;
-      }
-    } catch (error) {
+      const response = await platformAuthAPI.login(credentials);
+      
+      // Save tokens
+      const { accessToken, refreshToken } = response.data.tokens;
+      tokenManager.setTokens(accessToken, refreshToken);
+      
+      // Set user in state
       dispatch({
-        type: AUTH_ACTIONS.AUTH_FAILURE,
-        payload: { error: error.message },
+        type: ActionTypes.SET_USER,
+        payload: response.data.user,
       });
+      
+      toast.success(response.message || 'Login successful!');
+      return response;
+    } catch (error) {
+      const errorMessage = utils.getErrorMessage(error);
+      dispatch({ type: ActionTypes.SET_ERROR, payload: errorMessage });
       throw error;
     }
   };
 
+  // Logout
   const logout = async () => {
     try {
       const refreshToken = tokenManager.getRefreshToken();
       
       if (refreshToken) {
-        await authAPI.logout(refreshToken);
+        await platformAuthAPI.logout(refreshToken);
       }
+      
+      tokenManager.clearTokens();
+      dispatch({ type: ActionTypes.CLEAR_USER });
+      toast.success('Logged out successfully');
     } catch (error) {
       console.error('Logout error:', error);
-    } finally {
-      tokenManager.clearAll();
-      dispatch({ type: AUTH_ACTIONS.LOGOUT });
-      toast.success('Logged out successfully');
+      // Clear tokens anyway
+      tokenManager.clearTokens();
+      dispatch({ type: ActionTypes.CLEAR_USER });
     }
   };
 
-  const logoutAll = async () => {
-    try {
-      await authAPI.logoutAll();
-    } catch (error) {
-      console.error('Logout all error:', error);
-    } finally {
-      tokenManager.clearAll();
-      dispatch({ type: AUTH_ACTIONS.LOGOUT });
-      toast.success('Logged out from all devices');
-    }
-  };
-
+  // Update profile
   const updateProfile = async (profileData) => {
     try {
-      const response = await authAPI.updateProfile(profileData);
+      dispatch({ type: ActionTypes.SET_LOADING, payload: true });
       
-      if (response.success) {
-        dispatch({
-          type: AUTH_ACTIONS.UPDATE_PROFILE,
-          payload: { user: response.user },
-        });
-
-        toast.success('Profile updated successfully');
-        return response;
-      }
+      const response = await platformAuthAPI.updateProfile(profileData);
+      
+      dispatch({
+        type: ActionTypes.UPDATE_USER,
+        payload: response.data.user,
+      });
+      
+      toast.success(response.message || 'Profile updated successfully');
+      return response;
     } catch (error) {
+      const errorMessage = utils.getErrorMessage(error);
+      dispatch({ type: ActionTypes.SET_ERROR, payload: errorMessage });
       throw error;
+    } finally {
+      dispatch({ type: ActionTypes.SET_LOADING, payload: false });
     }
   };
 
+  // Change password
   const changePassword = async (passwordData) => {
     try {
-      const response = await authAPI.changePassword(passwordData);
+      const response = await platformAuthAPI.changePassword(passwordData);
       
-      if (response.success) {
-        toast.success('Password changed successfully');
-        return response;
-      }
+      // Password change requires re-login for security
+      tokenManager.clearTokens();
+      dispatch({ type: ActionTypes.CLEAR_USER });
+      
+      toast.success(response.message || 'Password changed successfully. Please login again.');
+      return response;
     } catch (error) {
+      const errorMessage = utils.getErrorMessage(error);
+      toast.error(errorMessage);
       throw error;
     }
   };
 
-  const deleteAccount = async (password) => {
+  // Forgot password
+  const forgotPassword = async (email) => {
     try {
-      const response = await authAPI.deleteAccount(password);
-      
-      if (response.success) {
-        tokenManager.clearAll();
-        dispatch({ type: AUTH_ACTIONS.LOGOUT });
-        toast.success('Account deleted successfully');
-        return response;
-      }
+      const response = await platformAuthAPI.forgotPassword(email);
+      toast.success(response.message || 'Password reset email sent');
+      return response;
     } catch (error) {
+      const errorMessage = utils.getErrorMessage(error);
+      toast.error(errorMessage);
       throw error;
     }
   };
 
-  const requestPasswordReset = async (email, apiKey) => {
-    try {
-      const response = await authAPI.requestPasswordReset(email, apiKey);
-      
-      if (response.success) {
-        toast.success('Password reset link sent to your email');
-        return response;
-      }
-    } catch (error) {
-      throw error;
-    }
-  };
-
+  // Reset password
   const resetPassword = async (resetData) => {
     try {
-      const response = await authAPI.resetPassword(resetData);
-      
-      if (response.success) {
-        toast.success('Password reset successfully');
-        return response;
-      }
+      const response = await platformAuthAPI.resetPassword(resetData);
+      toast.success(response.message || 'Password reset successfully');
+      return response;
     } catch (error) {
+      const errorMessage = utils.getErrorMessage(error);
+      toast.error(errorMessage);
       throw error;
     }
   };
 
-  const verifyEmail = async (token, email) => {
+  // Delete account
+  const deleteAccount = async (password) => {
     try {
-      const response = await authAPI.verifyEmail(token, email);
+      const response = await platformAuthAPI.deleteAccount(password);
       
-      if (response.success) {
-        toast.success('Email verified successfully');
-        // Refresh user profile if authenticated
-        if (state.isAuthenticated) {
-          await checkAuthStatus();
-        }
-        return response;
-      }
+      tokenManager.clearTokens();
+      dispatch({ type: ActionTypes.CLEAR_USER });
+      
+      toast.success(response.message || 'Account deleted successfully');
+      return response;
     } catch (error) {
+      const errorMessage = utils.getErrorMessage(error);
+      toast.error(errorMessage);
       throw error;
     }
   };
 
-  const clearError = () => {
-    dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
+  // Check if user can create more projects
+  const canCreateProject = () => {
+    if (!state.user) return false;
+    return state.user.stats?.totalProjects < state.user.limits?.maxProjects;
   };
 
-  const setLoading = (isLoading) => {
-    dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: { isLoading } });
+  // Get remaining project quota
+  const getRemainingProjects = () => {
+    if (!state.user) return 0;
+    return state.user.limits?.maxProjects - (state.user.stats?.totalProjects || 0);
   };
 
+  // Get subscription info
+  const getSubscriptionInfo = () => {
+    if (!state.user) return null;
+    return {
+      plan: state.user.subscription?.plan || 'free',
+      status: state.user.subscription?.status || 'active',
+      limits: state.user.limits,
+      stats: state.user.stats,
+    };
+  };
+
+  // Context value
   const value = {
     // State
     user: state.user,
@@ -314,20 +276,25 @@ export const AuthProvider = ({ children }) => {
     isLoading: state.isLoading,
     error: state.error,
 
-    // Actions
-    login,
+    // Authentication methods
     signup,
+    login,
     logout,
-    logoutAll,
+
+    // Profile methods
     updateProfile,
     changePassword,
-    deleteAccount,
-    requestPasswordReset,
+    forgotPassword,
     resetPassword,
-    verifyEmail,
-    checkAuthStatus,
-    clearError,
-    setLoading,
+    deleteAccount,
+
+    // Utility methods
+    canCreateProject,
+    getRemainingProjects,
+    getSubscriptionInfo,
+
+    // Clear error
+    clearError: () => dispatch({ type: ActionTypes.SET_ERROR, payload: null }),
   };
 
   return (
@@ -340,11 +307,9 @@ export const AuthProvider = ({ children }) => {
 // Custom hook to use auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
-  
   return context;
 };
 

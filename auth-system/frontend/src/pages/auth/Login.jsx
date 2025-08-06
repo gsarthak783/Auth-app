@@ -1,30 +1,27 @@
 import React, { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, Mail, User } from 'lucide-react';
 import LoadingSpinner from '../../components/LoadingSpinner';
 
 const Login = () => {
   const { login, isLoading } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   
   const [formData, setFormData] = useState({
-    login: '',
+    identifier: '', // Can be email or username
     password: '',
-    apiKey: 'ak_demo12345', // Default demo API key
+    rememberMe: false,
   });
+  const [loginType, setLoginType] = useState('email'); // 'email' or 'username'
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // Get the page user was trying to visit or default to dashboard
-  const from = location.state?.from?.pathname || '/dashboard';
-
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     }));
     
     // Clear error when user starts typing
@@ -39,16 +36,14 @@ const Login = () => {
   const validateForm = () => {
     const newErrors = {};
     
-    if (!formData.login.trim()) {
-      newErrors.login = 'Email or username is required';
+    if (!formData.identifier.trim()) {
+      newErrors.identifier = `${loginType === 'email' ? 'Email' : 'Username'} is required`;
+    } else if (loginType === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.identifier)) {
+      newErrors.identifier = 'Please enter a valid email address';
     }
     
     if (!formData.password) {
       newErrors.password = 'Password is required';
-    }
-    
-    if (!formData.apiKey.trim()) {
-      newErrors.apiKey = 'API key is required';
     }
     
     setErrors(newErrors);
@@ -63,74 +58,100 @@ const Login = () => {
     }
 
     try {
-      await login(
-        {
-          login: formData.login.trim(),
-          password: formData.password,
-        },
-        formData.apiKey.trim()
-      );
+      const credentials = {
+        password: formData.password,
+      };
+
+      // Set email or username based on login type
+      if (loginType === 'email') {
+        credentials.email = formData.identifier.trim();
+      } else {
+        credentials.username = formData.identifier.trim();
+      }
+
+      await login(credentials);
       
-      // Redirect to intended page or dashboard
-      navigate(from, { replace: true });
+      // Redirect to dashboard on successful login
+      navigate('/dashboard');
     } catch (error) {
       console.error('Login failed:', error);
       // Error handling is done in the auth context
     }
   };
 
+  const toggleLoginType = () => {
+    setLoginType(prev => prev === 'email' ? 'username' : 'email');
+    setFormData(prev => ({ ...prev, identifier: '' }));
+    setErrors({});
+  };
+
   return (
     <div className="card bg-base-100 shadow-xl">
       <div className="card-body">
         <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-base-content">Welcome back</h2>
-          <p className="text-base-content/60 mt-2">Sign in to your account</p>
+          <h2 className="text-3xl font-bold text-base-content">Welcome Back</h2>
+          <p className="text-base-content/60 mt-2">
+            Sign in to your AuthSystem account
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* API Key Input */}
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Project API Key</span>
-            </label>
-            <input
-              type="text"
-              name="apiKey"
-              value={formData.apiKey}
-              onChange={handleChange}
-              placeholder="Enter your project API key"
-              className={`input input-bordered w-full ${errors.apiKey ? 'input-error' : ''}`}
-              disabled={isLoading}
-            />
-            {errors.apiKey && (
-              <label className="label">
-                <span className="label-text-alt text-error flex items-center">
-                  <AlertCircle className="w-4 h-4 mr-1" />
-                  {errors.apiKey}
-                </span>
-              </label>
-            )}
+          {/* Login Type Toggle */}
+          <div className="flex justify-center mb-4">
+            <div className="btn-group">
+              <button
+                type="button"
+                className={`btn btn-sm ${loginType === 'email' ? 'btn-primary' : 'btn-ghost'}`}
+                onClick={() => setLoginType('email')}
+              >
+                <Mail className="w-4 h-4 mr-1" />
+                Email
+              </button>
+              <button
+                type="button"
+                className={`btn btn-sm ${loginType === 'username' ? 'btn-primary' : 'btn-ghost'}`}
+                onClick={() => setLoginType('username')}
+              >
+                <User className="w-4 h-4 mr-1" />
+                Username
+              </button>
+            </div>
           </div>
 
-          {/* Login Input */}
+          {/* Email/Username Input */}
           <div className="form-control">
             <label className="label">
-              <span className="label-text">Email or Username</span>
+              <span className="label-text">
+                {loginType === 'email' ? 'Email Address' : 'Username'}
+              </span>
             </label>
-            <input
-              type="text"
-              name="login"
-              value={formData.login}
-              onChange={handleChange}
-              placeholder="Enter your email or username"
-              className={`input input-bordered w-full ${errors.login ? 'input-error' : ''}`}
-              disabled={isLoading}
-            />
-            {errors.login && (
+            <div className="relative">
+              <input
+                type={loginType === 'email' ? 'email' : 'text'}
+                name="identifier"
+                value={formData.identifier}
+                onChange={handleChange}
+                placeholder={
+                  loginType === 'email' 
+                    ? 'Enter your email address' 
+                    : 'Enter your username'
+                }
+                className={`input input-bordered w-full ${errors.identifier ? 'input-error' : ''}`}
+                disabled={isLoading}
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                {loginType === 'email' ? (
+                  <Mail className="w-5 h-5 text-base-content/40" />
+                ) : (
+                  <User className="w-5 h-5 text-base-content/40" />
+                )}
+              </div>
+            </div>
+            {errors.identifier && (
               <label className="label">
                 <span className="label-text-alt text-error flex items-center">
                   <AlertCircle className="w-4 h-4 mr-1" />
-                  {errors.login}
+                  {errors.identifier}
                 </span>
               </label>
             )}
@@ -174,10 +195,21 @@ const Login = () => {
             )}
           </div>
 
-          {/* Forgot Password Link */}
-          <div className="text-right">
-            <Link 
-              to="/auth/forgot-password" 
+          {/* Remember Me & Forgot Password */}
+          <div className="flex items-center justify-between">
+            <label className="label cursor-pointer">
+              <input
+                type="checkbox"
+                name="rememberMe"
+                checked={formData.rememberMe}
+                onChange={handleChange}
+                className="checkbox checkbox-primary checkbox-sm mr-2"
+                disabled={isLoading}
+              />
+              <span className="label-text">Remember me</span>
+            </label>
+            <Link
+              to="/auth/forgot-password"
               className="link link-primary text-sm"
             >
               Forgot password?
@@ -196,7 +228,7 @@ const Login = () => {
                 Signing in...
               </>
             ) : (
-              'Sign in'
+              'Sign In'
             )}
           </button>
         </form>
@@ -205,9 +237,41 @@ const Login = () => {
         <div className="divider">OR</div>
         <div className="text-center">
           <span className="text-base-content/60">Don't have an account? </span>
-          <Link to="/auth/signup" className="link link-primary">
-            Sign up
+          <Link to="/auth/signup" className="link link-primary font-medium">
+            Create account
           </Link>
+        </div>
+
+        {/* Demo Credentials */}
+        <div className="mt-6 p-4 bg-base-200 rounded-lg">
+          <h3 className="font-semibold text-base-content mb-2">
+            Demo Account:
+          </h3>
+          <div className="text-sm text-base-content/80 space-y-1">
+            <div className="flex justify-between">
+              <span>Email:</span>
+              <code className="bg-base-300 px-2 py-1 rounded">admin@demo.com</code>
+            </div>
+            <div className="flex justify-between">
+              <span>Password:</span>
+              <code className="bg-base-300 px-2 py-1 rounded">admin123</code>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setLoginType('email');
+              setFormData({
+                identifier: 'admin@demo.com',
+                password: 'admin123',
+                rememberMe: false,
+              });
+            }}
+            className="btn btn-sm btn-outline w-full mt-2"
+            disabled={isLoading}
+          >
+            Use Demo Account
+          </button>
         </div>
       </div>
     </div>

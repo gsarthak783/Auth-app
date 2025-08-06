@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, Building2, Globe } from 'lucide-react';
 import LoadingSpinner from '../../components/LoadingSpinner';
 
 const Signup = () => {
@@ -15,7 +15,8 @@ const Signup = () => {
     confirmPassword: '',
     firstName: '',
     lastName: '',
-    apiKey: 'ak_demo12345', // Default demo API key
+    company: '',
+    website: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -70,8 +71,8 @@ const Signup = () => {
       newErrors.firstName = 'First name is required';
     }
     
-    if (!formData.apiKey.trim()) {
-      newErrors.apiKey = 'API key is required';
+    if (formData.website && !formData.website.startsWith('http')) {
+      newErrors.website = 'Website must be a valid URL (e.g., https://example.com)';
     }
     
     setErrors(newErrors);
@@ -91,23 +92,15 @@ const Signup = () => {
         username: formData.username.trim(),
         password: formData.password,
         firstName: formData.firstName.trim(),
-        lastName: formData.lastName.trim()
+        lastName: formData.lastName.trim(),
+        company: formData.company.trim(),
+        website: formData.website.trim(),
       };
 
-      const response = await signup(userData, formData.apiKey.trim());
+      await signup(userData);
       
-      if (response.needsVerification) {
-        // Redirect to a verification page or show message
-        navigate('/auth/verify-email', { 
-          state: { 
-            email: formData.email,
-            message: 'Please check your email for verification link' 
-          }
-        });
-      } else {
-        // User is verified, redirect to dashboard
-        navigate('/dashboard');
-      }
+      // Redirect to dashboard on successful signup
+      navigate('/dashboard');
     } catch (error) {
       console.error('Signup failed:', error);
       // Error handling is done in the auth context
@@ -118,40 +111,18 @@ const Signup = () => {
     <div className="card bg-base-100 shadow-xl">
       <div className="card-body">
         <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-base-content">Create Account</h2>
-          <p className="text-base-content/60 mt-2">Join our authentication platform</p>
+          <h2 className="text-3xl font-bold text-base-content">Create Your Account</h2>
+          <p className="text-base-content/60 mt-2">
+            Join AuthSystem to manage authentication for your projects
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* API Key Input */}
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Project API Key</span>
-            </label>
-            <input
-              type="text"
-              name="apiKey"
-              value={formData.apiKey}
-              onChange={handleChange}
-              placeholder="Enter your project API key"
-              className={`input input-bordered w-full ${errors.apiKey ? 'input-error' : ''}`}
-              disabled={isLoading}
-            />
-            {errors.apiKey && (
-              <label className="label">
-                <span className="label-text-alt text-error flex items-center">
-                  <AlertCircle className="w-4 h-4 mr-1" />
-                  {errors.apiKey}
-                </span>
-              </label>
-            )}
-          </div>
-
           {/* Name Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="form-control">
               <label className="label">
-                <span className="label-text">First Name</span>
+                <span className="label-text">First Name *</span>
               </label>
               <input
                 type="text"
@@ -191,7 +162,7 @@ const Signup = () => {
           {/* Email Input */}
           <div className="form-control">
             <label className="label">
-              <span className="label-text">Email Address</span>
+              <span className="label-text">Email Address *</span>
             </label>
             <input
               type="email"
@@ -215,7 +186,7 @@ const Signup = () => {
           {/* Username Input */}
           <div className="form-control">
             <label className="label">
-              <span className="label-text">Username</span>
+              <span className="label-text">Username *</span>
             </label>
             <input
               type="text"
@@ -236,10 +207,57 @@ const Signup = () => {
             )}
           </div>
 
+          {/* Company and Website */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text flex items-center">
+                  <Building2 className="w-4 h-4 mr-1" />
+                  Company
+                </span>
+              </label>
+              <input
+                type="text"
+                name="company"
+                value={formData.company}
+                onChange={handleChange}
+                placeholder="Acme Corp"
+                className="input input-bordered w-full"
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text flex items-center">
+                  <Globe className="w-4 h-4 mr-1" />
+                  Website
+                </span>
+              </label>
+              <input
+                type="url"
+                name="website"
+                value={formData.website}
+                onChange={handleChange}
+                placeholder="https://example.com"
+                className={`input input-bordered w-full ${errors.website ? 'input-error' : ''}`}
+                disabled={isLoading}
+              />
+              {errors.website && (
+                <label className="label">
+                  <span className="label-text-alt text-error flex items-center">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {errors.website}
+                  </span>
+                </label>
+              )}
+            </div>
+          </div>
+
           {/* Password Input */}
           <div className="form-control">
             <label className="label">
-              <span className="label-text">Password</span>
+              <span className="label-text">Password *</span>
             </label>
             <div className="relative">
               <input
@@ -277,7 +295,7 @@ const Signup = () => {
           {/* Confirm Password Input */}
           <div className="form-control">
             <label className="label">
-              <span className="label-text">Confirm Password</span>
+              <span className="label-text">Confirm Password *</span>
             </label>
             <div className="relative">
               <input
@@ -312,6 +330,23 @@ const Signup = () => {
             )}
           </div>
 
+          {/* Terms and Conditions */}
+          <div className="form-control">
+            <label className="label cursor-pointer justify-start">
+              <input type="checkbox" className="checkbox checkbox-primary mr-3" required />
+              <span className="label-text">
+                I agree to the{' '}
+                <Link to="/terms" className="link link-primary">
+                  Terms of Service
+                </Link>{' '}
+                and{' '}
+                <Link to="/privacy" className="link link-primary">
+                  Privacy Policy
+                </Link>
+              </span>
+            </label>
+          </div>
+
           {/* Submit Button */}
           <button
             type="submit"
@@ -333,9 +368,23 @@ const Signup = () => {
         <div className="divider">OR</div>
         <div className="text-center">
           <span className="text-base-content/60">Already have an account? </span>
-          <Link to="/auth/login" className="link link-primary">
+          <Link to="/auth/login" className="link link-primary font-medium">
             Sign in
           </Link>
+        </div>
+
+        {/* Features Preview */}
+        <div className="mt-6 p-4 bg-base-200 rounded-lg">
+          <h3 className="font-semibold text-base-content mb-2">
+            What you'll get with your account:
+          </h3>
+          <ul className="text-sm text-base-content/80 space-y-1">
+            <li>• Create up to 3 authentication projects</li>
+            <li>• Manage up to 1,000 users per project</li>
+            <li>• 10,000 API calls per month</li>
+            <li>• Complete authentication system</li>
+            <li>• Project analytics and insights</li>
+          </ul>
         </div>
       </div>
     </div>
