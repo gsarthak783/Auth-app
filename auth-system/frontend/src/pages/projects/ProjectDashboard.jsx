@@ -252,6 +252,13 @@ export const useAuth = () => useContext(AuthContext);`
         </div>
         <div className="flex gap-2">
           <Link
+            to={`/project/${projectId}/guide`}
+            className="btn btn-primary btn-sm"
+          >
+            <Book className="w-4 h-4" />
+            Integration Guide
+          </Link>
+          <Link
             to={`/project/${projectId}/settings`}
             className="btn btn-outline btn-sm"
           >
@@ -348,6 +355,13 @@ export const useAuth = () => useContext(AuthContext);`
               <div className="card-body">
                 <h3 className="card-title">Quick Actions</h3>
                 <div className="space-y-2">
+                  <Link
+                    to={`/project/${projectId}/guide`}
+                    className="btn btn-primary btn-sm justify-start w-full"
+                  >
+                    <Book className="w-4 h-4 mr-2" />
+                    Integration Guide
+                  </Link>
                   <Link
                     to={`/project/${projectId}/users`}
                     className="btn btn-ghost btn-sm justify-start w-full"

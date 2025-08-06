@@ -193,7 +193,7 @@ export const platformAuthAPI = {
   // Delete account
   deleteAccount: async (password) => {
     try {
-      const response = await api.delete('/auth/delete-account', {
+      const response = await api.delete('/auth/account', {
         data: { password }
       });
       return response.data;

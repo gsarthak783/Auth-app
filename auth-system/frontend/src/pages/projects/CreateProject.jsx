@@ -228,7 +228,7 @@ const CreateProject = () => {
       };
 
       const newProject = await createProject(projectData);
-      navigate(`/project/${newProject._id}`);
+      navigate(`/project/${newProject.id}`);
     } catch (error) {
       console.error('Failed to create project:', error);
     }

@@ -8,6 +8,7 @@ import { ProjectsProvider } from './contexts/ProjectsContext';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
+import PublicRoute from './components/PublicRoute';
 import Layout from './components/Layout/Layout';
 import AuthLayout from './components/Layout/AuthLayout';
 
@@ -27,6 +28,12 @@ import ProjectDashboard from './pages/projects/ProjectDashboard';
 import ProjectSettings from './pages/projects/ProjectSettings';
 import ProjectUsers from './pages/projects/ProjectUsers';
 import ProjectAnalytics from './pages/projects/ProjectAnalytics';
+import ProjectGuide from './pages/projects/ProjectGuide';
+
+// Documentation pages
+import QuickStart from './pages/docs/QuickStart';
+import ApiReference from './pages/docs/ApiReference';
+import SdkDocumentation from './pages/docs/SdkDocumentation';
 
 function App() {
   return (
@@ -49,20 +56,26 @@ function App() {
             />
 
             <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<Landing />} />
+              {/* Public Routes - redirect to dashboard if authenticated */}
+              <Route path="/" element={
+                <PublicRoute>
+                  <Landing />
+                </PublicRoute>
+              } />
               
-              {/* Auth Routes */}
+              {/* Auth Routes - redirect to dashboard if authenticated */}
               <Route path="/auth/*" element={
-                <AuthLayout>
-                  <Routes>
-                    <Route path="login" element={<Login />} />
-                    <Route path="signup" element={<Signup />} />
-                    <Route path="forgot-password" element={<ForgotPassword />} />
-                    <Route path="reset-password" element={<ResetPassword />} />
-                    <Route path="*" element={<Navigate to="/auth/login" replace />} />
-                  </Routes>
-                </AuthLayout>
+                <PublicRoute>
+                  <AuthLayout>
+                    <Routes>
+                      <Route path="login" element={<Login />} />
+                      <Route path="signup" element={<Signup />} />
+                      <Route path="forgot-password" element={<ForgotPassword />} />
+                      <Route path="reset-password" element={<ResetPassword />} />
+                      <Route path="*" element={<Navigate to="/auth/login" replace />} />
+                    </Routes>
+                  </AuthLayout>
+                </PublicRoute>
               } />
 
               {/* Protected Routes */}
@@ -108,11 +121,33 @@ function App() {
                       <Route path="users" element={<ProjectUsers />} />
                       <Route path="analytics" element={<ProjectAnalytics />} />
                       <Route path="settings" element={<ProjectSettings />} />
+                      <Route path="guide" element={<ProjectGuide />} />
                       <Route path="*" element={<Navigate to="../" replace />} />
                     </Routes>
                   </Layout>
                 </ProtectedRoute>
               } />
+
+              {/* Documentation Routes */}
+              <Route path="/docs" element={<QuickStart />} />
+              <Route path="/docs/quickstart" element={<QuickStart />} />
+              <Route path="/docs/installation" element={<QuickStart />} />
+              <Route path="/docs/authentication" element={<QuickStart />} />
+              <Route path="/docs/api" element={<ApiReference />} />
+              <Route path="/docs/api/auth" element={<ApiReference />} />
+              <Route path="/docs/api/users" element={<ApiReference />} />
+              <Route path="/docs/api/projects" element={<ApiReference />} />
+              <Route path="/docs/sdk" element={<SdkDocumentation />} />
+              <Route path="/docs/react" element={<SdkDocumentation />} />
+              <Route path="/docs/nodejs" element={<SdkDocumentation />} />
+              <Route path="/docs/examples" element={<SdkDocumentation />} />
+              <Route path="/docs/best-practices" element={<SdkDocumentation />} />
+              <Route path="/docs/security" element={<SdkDocumentation />} />
+              <Route path="/docs/deployment" element={<SdkDocumentation />} />
+              <Route path="/docs/features/*" element={<SdkDocumentation />} />
+              <Route path="/docs/guides" element={<SdkDocumentation />} />
+              <Route path="/docs/troubleshooting" element={<SdkDocumentation />} />
+              <Route path="/docs/mobile" element={<SdkDocumentation />} />
 
               {/* Catch all route */}
               <Route path="*" element={<Navigate to="/" replace />} />

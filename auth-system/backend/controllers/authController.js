@@ -54,8 +54,12 @@ export const signup = async (req, res) => {
 
     await user.save();
 
-    // Send welcome email
-    await sendWelcomeEmail(user.email, user.firstName, 'AuthSystem Platform');
+    // Send welcome email (non-blocking)
+    try {
+      await sendWelcomeEmail(user, 'AuthSystem Platform');
+    } catch (emailError) {
+      console.error('Failed to send welcome email, but continuing with signup:', emailError.message);
+    }
 
     // Generate tokens
     const accessToken = generateAccessToken({ 
@@ -362,6 +366,15 @@ export const getProfile = async (req, res) => {
       });
     }
 
+    // Debug user stats
+    console.log('👤 User profile stats:', {
+      userId: user._id,
+      totalProjects: user.stats?.totalProjects,
+      maxProjects: user.limits?.maxProjects,
+      statsObject: user.stats,
+      limitsObject: user.limits
+    });
+
     res.json({
       success: true,
       data: {
@@ -551,8 +564,12 @@ export const forgotPassword = async (req, res) => {
     user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
     await user.save();
 
-    // Send reset email
-    await sendPasswordResetEmail(user.email, resetToken);
+    // Send reset email (non-blocking)
+    try {
+      await sendPasswordResetEmail(user.email, resetToken);
+    } catch (emailError) {
+      console.error('Failed to send password reset email, but continuing:', emailError.message);
+    }
 
     res.json(successResponse);
 
@@ -637,13 +654,47 @@ export const deleteAccount = async (req, res) => {
       });
     }
 
-    // Soft delete user
+    // Soft delete user and modify email to allow reuse
+    const timestamp = Date.now();
     user.deletedAt = new Date();
     user.isActive = false;
     user.refreshTokens = [];
+    // Append timestamp to email to make it unique and allow original email reuse
+    user.email = `${user.email}.deleted.${timestamp}`;
+    // Also modify username if it exists
+    if (user.username) {
+      user.username = `${user.username}.deleted.${timestamp}`;
+    }
+    // Reset project count since all projects will be deleted
+    if (!user.stats) user.stats = {};
+    user.stats.totalProjects = 0;
     await user.save();
 
-    // TODO: Also soft delete all user's projects and their project users
+    // Soft delete all user's projects
+    const Project = (await import('../models/Project.js')).default;
+    const ProjectUser = (await import('../models/ProjectUser.js')).default;
+    
+    const userProjects = await Project.find({ 
+      owner: user._id, 
+      deletedAt: { $exists: false } 
+    });
+
+    // Soft delete each project and its users
+    for (const project of userProjects) {
+      project.deletedAt = new Date();
+      project.deletedBy = user._id;
+      project.isActive = false;
+      await project.save();
+
+      // Soft delete all project users
+      await ProjectUser.updateMany(
+        { projectId: project._id, deletedAt: { $exists: false } },
+        { 
+          deletedAt: new Date(),
+          isActive: false 
+        }
+      );
+    }
 
     res.json({
       success: true,

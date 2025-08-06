@@ -32,7 +32,7 @@ const Projects = () => {
     try {
       setIsLoading(true);
       const response = await projectsAPI.getProjects();
-      setProjects(response.data.projects || []);
+      setProjects(response.projects || []);
     } catch (error) {
       console.error('Error fetching projects:', error);
     } finally {
@@ -148,12 +148,14 @@ const Projects = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProjects.map((project) => (
-            <div key={project._id} className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow">
+            <div key={project.id} className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow">
               <div className="card-body">
                 {/* Header */}
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h3 className="card-title text-lg">{project.name}</h3>
+                    <Link to={`/project/${project.id}`} className="hover:text-primary transition-colors">
+                      <h3 className="card-title text-lg">{project.name}</h3>
+                    </Link>
                     <p className="text-base-content/60 text-sm mt-1 line-clamp-2">
                       {project.description || 'No description provided'}
                     </p>
@@ -168,10 +170,10 @@ const Projects = () => {
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">API Key</span>
                     <button
-                      onClick={() => toggleApiKeyVisibility(project._id)}
+                      onClick={() => toggleApiKeyVisibility(project.id)}
                       className="btn btn-ghost btn-xs"
                     >
-                      {showApiKeys[project._id] ? (
+                      {showApiKeys[project.id] ? (
                         <EyeOff className="w-3 h-3" />
                       ) : (
                         <Eye className="w-3 h-3" />
@@ -179,7 +181,7 @@ const Projects = () => {
                     </button>
                   </div>
                   <code className="text-xs font-mono break-all">
-                    {showApiKeys[project._id] ? project.apiKey : maskApiKey(project.apiKey)}
+                                          {showApiKeys[project.id] ? project.apiKey : maskApiKey(project.apiKey)}
                   </code>
                 </div>
 
@@ -208,21 +210,21 @@ const Projects = () => {
                 {/* Actions */}
                 <div className="card-actions justify-end mt-4 pt-4 border-t border-base-300">
                   <Link
-                    to={`/projects/${project._id}/users`}
+                    to={`/project/${project.id}/users`}
                     className="btn btn-sm btn-outline gap-1"
                   >
                     <Users className="w-4 h-4" />
                     Users
                   </Link>
                   <Link
-                    to={`/projects/${project._id}/analytics`}
+                    to={`/project/${project.id}/analytics`}
                     className="btn btn-sm btn-outline gap-1"
                   >
                     <BarChart3 className="w-4 h-4" />
                     Analytics
                   </Link>
                   <Link
-                    to={`/projects/${project._id}/settings`}
+                    to={`/project/${project.id}/settings`}
                     className="btn btn-sm btn-primary gap-1"
                   >
                     <Settings className="w-4 h-4" />

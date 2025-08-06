@@ -230,6 +230,27 @@ const userSchema = new mongoose.Schema({
     }
   },
 
+  // Project Access (for tracking user's projects and roles)
+  projectAccess: [{
+    projectId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Project',
+      required: true
+    },
+    role: {
+      type: String,
+      enum: ['owner', 'admin', 'member'],
+      default: 'member'
+    },
+    permissions: [{
+      type: String
+    }],
+    joinedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+
   // Metadata
   createdAt: {
     type: Date,

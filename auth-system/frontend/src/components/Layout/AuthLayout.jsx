@@ -1,8 +1,8 @@
 import React from 'react';
-import { Outlet, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Shield } from 'lucide-react';
 
-const AuthLayout = () => {
+const AuthLayout = ({ children }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-base-100 to-secondary/10 flex flex-col">
       {/* Header */}
@@ -18,7 +18,7 @@ const AuthLayout = () => {
       {/* Main content */}
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-md">
-          <Outlet />
+          {children}
         </div>
       </div>
 

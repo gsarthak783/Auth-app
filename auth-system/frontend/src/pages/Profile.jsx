@@ -47,6 +47,8 @@ const Profile = () => {
   
   const [isUpdating, setIsUpdating] = useState(false);
   const [errors, setErrors] = useState({});
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
 
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
@@ -170,24 +172,33 @@ const Profile = () => {
   };
 
   const handleDeleteAccount = async () => {
-    const password = window.prompt(
-      'This action cannot be undone. Please enter your password to confirm account deletion:'
-    );
-    
-    if (!password) return;
-    
-    const confirmDelete = window.confirm(
-      'Are you absolutely sure you want to delete your account? This will also delete all your projects and their users.'
-    );
-    
-    if (!confirmDelete) return;
+    if (!deletePassword.trim()) {
+      setErrors({ deletePassword: 'Password is required to delete account' });
+      return;
+    }
 
     try {
-      await deleteAccount(password);
+      setIsUpdating(true);
+      await deleteAccount(deletePassword);
       toast.success('Account deleted successfully');
+      setShowDeleteModal(false);
     } catch (error) {
-      toast.error('Failed to delete account. Please check your password.');
+      setErrors({ deletePassword: 'Invalid password. Please try again.' });
+    } finally {
+      setIsUpdating(false);
     }
+  };
+
+  const openDeleteModal = () => {
+    setShowDeleteModal(true);
+    setDeletePassword('');
+    setErrors({});
+  };
+
+  const closeDeleteModal = () => {
+    setShowDeleteModal(false);
+    setDeletePassword('');
+    setErrors({});
   };
 
   const formatDate = (date) => {
@@ -537,7 +548,7 @@ const Profile = () => {
                 Once you delete your account, there is no going back. This will also delete all your projects and their users.
               </p>
               <button
-                onClick={handleDeleteAccount}
+                onClick={openDeleteModal}
                 className="btn btn-error"
               >
                 <Trash2 className="w-4 h-4 mr-1" />
@@ -624,6 +635,89 @@ const Profile = () => {
                   {user?.subscription?.plan === 'free' ? 'Upgrade Plan' : 'Manage Subscription'}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Account Modal */}
+      {showDeleteModal && (
+        <div className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg text-error">Delete Account</h3>
+            <div className="py-4">
+              <div className="alert alert-error mb-4">
+                <AlertCircle className="w-5 h-5" />
+                <div>
+                  <h4 className="font-semibold">This action cannot be undone!</h4>
+                  <p className="text-sm">
+                    Deleting your account will permanently remove:
+                  </p>
+                  <ul className="text-sm mt-2 list-disc list-inside">
+                    <li>Your account and profile information</li>
+                    <li>All your projects and their configurations</li>
+                    <li>All users registered in your projects</li>
+                    <li>All API keys and project data</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">
+                    Please enter your password to confirm deletion:
+                  </span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="password"
+                    value={deletePassword}
+                    onChange={(e) => {
+                      setDeletePassword(e.target.value);
+                      if (errors.deletePassword) {
+                        setErrors(prev => ({ ...prev, deletePassword: '' }));
+                      }
+                    }}
+                    placeholder="Enter your password"
+                    className={`input input-bordered w-full ${errors.deletePassword ? 'input-error' : ''}`}
+                    disabled={isUpdating}
+                  />
+                </div>
+                {errors.deletePassword && (
+                  <label className="label">
+                    <span className="label-text-alt text-error">
+                      {errors.deletePassword}
+                    </span>
+                  </label>
+                )}
+              </div>
+            </div>
+            
+            <div className="modal-action">
+              <button
+                onClick={closeDeleteModal}
+                className="btn btn-ghost"
+                disabled={isUpdating}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                className="btn btn-error"
+                disabled={isUpdating || !deletePassword.trim()}
+              >
+                {isUpdating ? (
+                  <>
+                    <LoadingSpinner size="sm" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4 mr-1" />
+                    Delete Account
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>

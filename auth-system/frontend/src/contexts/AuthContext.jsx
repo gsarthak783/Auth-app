@@ -248,13 +248,18 @@ export const AuthProvider = ({ children }) => {
   // Check if user can create more projects
   const canCreateProject = () => {
     if (!state.user) return false;
-    return state.user.stats?.totalProjects < state.user.limits?.maxProjects;
+    const totalProjects = state.user.stats?.totalProjects || 0;
+    const maxProjects = state.user.limits?.maxProjects || 3; // Default free plan limit
+    console.log('🔍 Project limit check:', { totalProjects, maxProjects, canCreate: totalProjects < maxProjects });
+    return totalProjects < maxProjects;
   };
 
   // Get remaining project quota
   const getRemainingProjects = () => {
     if (!state.user) return 0;
-    return state.user.limits?.maxProjects - (state.user.stats?.totalProjects || 0);
+    const totalProjects = state.user.stats?.totalProjects || 0;
+    const maxProjects = state.user.limits?.maxProjects || 3;
+    return Math.max(0, maxProjects - totalProjects);
   };
 
   // Get subscription info

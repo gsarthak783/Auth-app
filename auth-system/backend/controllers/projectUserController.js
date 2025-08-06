@@ -4,6 +4,9 @@ import Project from '../models/Project.js';
 import { generateAccessToken, generateRefreshToken } from '../utils/jwt.js';
 import { sendWelcomeEmail, sendVerificationEmail, sendPasswordResetEmail } from '../utils/email.js';
 import crypto from 'crypto';
+import { Parser } from 'json2csv';
+import csv from 'csv-parser';
+import { Readable } from 'stream';
 
 // Register a new user for a specific project
 export const registerProjectUser = async (req, res) => {
@@ -87,16 +90,20 @@ export const registerProjectUser = async (req, res) => {
 
     await projectUser.save();
 
-    // Send verification email if required
-    if (project.settings.requireEmailVerification) {
-      await sendVerificationEmail(
-        projectUser.email,
-        projectUser.emailVerificationToken,
-        project.name
-      );
-    } else {
-      // Send welcome email
-      await sendWelcomeEmail(projectUser.email, projectUser.firstName, project.name);
+    // Send verification email if required (non-blocking)
+    try {
+      if (project.settings.requireEmailVerification) {
+        await sendVerificationEmail(
+          projectUser.email,
+          projectUser.emailVerificationToken,
+          project.name
+        );
+      } else {
+        // Send welcome email
+        await sendWelcomeEmail(projectUser, project.name);
+      }
+    } catch (emailError) {
+      console.error('Failed to send email during project user registration:', emailError.message);
     }
 
     // Generate tokens
@@ -584,6 +591,327 @@ export const updateProjectUserStatus = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Internal server error'
+    });
+  }
+};
+
+// Add export users endpoint
+export const exportUsers = async (req, res) => {
+  try {
+    const projectId = req.project.id;
+    const { format = 'json', includeCustomFields = true, dateRange } = req.body;
+    
+    let query = { projectId, deletedAt: { $exists: false } };
+    
+    // Add date range filter if provided
+    if (dateRange && dateRange.from && dateRange.to) {
+      query.createdAt = {
+        $gte: new Date(dateRange.from),
+        $lte: new Date(dateRange.to)
+      };
+    }
+    
+    const users = await ProjectUser.find(query)
+      .select('-password -emailVerificationToken -passwordResetToken -twoFactorSecret')
+      .sort({ createdAt: -1 });
+    
+    const exportData = {
+      users: users.map(user => {
+        const userData = {
+          id: user._id,
+          email: user.email,
+          username: user.username,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          displayName: user.displayName,
+          avatar: user.avatar,
+          isVerified: user.isVerified,
+          isActive: user.isActive,
+          lastLogin: user.lastLogin,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt
+        };
+        
+        if (includeCustomFields && user.customFields) {
+          userData.customFields = user.customFields;
+        }
+        
+        return userData;
+      }),
+      metadata: {
+        exportedAt: new Date().toISOString(),
+        totalCount: users.length,
+        projectId: projectId,
+        format: format
+      }
+    };
+    
+    if (format === 'csv') {
+      const fields = [
+        'id', 'email', 'username', 'firstName', 'lastName', 'displayName',
+        'isVerified', 'isActive', 'lastLogin', 'createdAt'
+      ];
+      
+      if (includeCustomFields) {
+        // Add custom field columns
+        const allCustomFields = new Set();
+        users.forEach(user => {
+          if (user.customFields) {
+            Object.keys(user.customFields).forEach(key => allCustomFields.add(`customFields.${key}`));
+          }
+        });
+        fields.push(...Array.from(allCustomFields));
+      }
+      
+      const parser = new Parser({ fields });
+      const csvData = parser.parse(exportData.users);
+      
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="users-export-${Date.now()}.csv"`);
+      res.send(csvData);
+    } else {
+      res.json(exportData);
+    }
+    
+  } catch (error) {
+    console.error('Export users error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to export users'
+    });
+  }
+};
+
+// Add import users endpoint
+export const importUsers = async (req, res) => {
+  try {
+    const projectId = req.project.id;
+    const { data, options = {} } = req.body;
+    const { updateExisting = false, skipInvalid = true } = options;
+    
+    if (!data || !data.users || !Array.isArray(data.users)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid import data format'
+      });
+    }
+    
+    const results = {
+      imported: 0,
+      updated: 0,
+      skipped: 0,
+      errors: []
+    };
+    
+    for (const userData of data.users) {
+      try {
+        // Validate required fields
+        if (!userData.email) {
+          if (skipInvalid) {
+            results.skipped++;
+            continue;
+          } else {
+            throw new Error('Email is required');
+          }
+        }
+        
+        // Check if user already exists
+        const existingUser = await ProjectUser.findOne({
+          projectId,
+          email: userData.email,
+          deletedAt: { $exists: false }
+        });
+        
+        if (existingUser) {
+          if (updateExisting) {
+            // Update existing user
+            const updateFields = {};
+            if (userData.firstName) updateFields.firstName = userData.firstName;
+            if (userData.lastName) updateFields.lastName = userData.lastName;
+            if (userData.username) updateFields.username = userData.username;
+            if (userData.displayName) updateFields.displayName = userData.displayName;
+            if (userData.avatar) updateFields.avatar = userData.avatar;
+            if (userData.customFields) updateFields.customFields = userData.customFields;
+            if (userData.isActive !== undefined) updateFields.isActive = userData.isActive;
+            
+            await ProjectUser.findByIdAndUpdate(existingUser._id, updateFields);
+            results.updated++;
+          } else {
+            results.skipped++;
+          }
+        } else {
+          // Create new user
+          const newUser = new ProjectUser({
+            email: userData.email,
+            firstName: userData.firstName || '',
+            lastName: userData.lastName || '',
+            username: userData.username,
+            displayName: userData.displayName,
+            avatar: userData.avatar,
+            customFields: userData.customFields || {},
+            isActive: userData.isActive !== undefined ? userData.isActive : true,
+            isVerified: userData.isVerified || false,
+            projectId: projectId,
+            // Generate a temporary password that must be reset
+            password: Math.random().toString(36).slice(-12)
+          });
+          
+          await newUser.save();
+          results.imported++;
+        }
+      } catch (error) {
+        if (skipInvalid) {
+          results.errors.push({
+            email: userData.email,
+            error: error.message
+          });
+          results.skipped++;
+        } else {
+          throw error;
+        }
+      }
+    }
+    
+    res.json({
+      success: true,
+      message: 'Import completed',
+      results
+    });
+    
+  } catch (error) {
+    console.error('Import users error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to import users'
+    });
+  }
+};
+
+// Add get all users endpoint (admin functionality)
+export const getAllUsers = async (req, res) => {
+  try {
+    const projectId = req.project.id;
+    const { page = 1, limit = 50, search, status } = req.query;
+    
+    let query = { projectId, deletedAt: { $exists: false } };
+    
+    // Add search filter
+    if (search) {
+      query.$or = [
+        { email: { $regex: search, $options: 'i' } },
+        { firstName: { $regex: search, $options: 'i' } },
+        { lastName: { $regex: search, $options: 'i' } },
+        { username: { $regex: search, $options: 'i' } }
+      ];
+    }
+    
+    // Add status filter
+    if (status === 'active') {
+      query.isActive = true;
+    } else if (status === 'inactive') {
+      query.isActive = false;
+    }
+    
+    const users = await ProjectUser.find(query)
+      .select('-password -emailVerificationToken -passwordResetToken -twoFactorSecret')
+      .sort({ createdAt: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit);
+    
+    const total = await ProjectUser.countDocuments(query);
+    
+    res.json({
+      success: true,
+      data: users,
+      pagination: {
+        current: parseInt(page),
+        pages: Math.ceil(total / limit),
+        total
+      }
+    });
+    
+  } catch (error) {
+    console.error('Get all users error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get users'
+    });
+  }
+};
+
+// Add delete user endpoint
+export const deleteUser = async (req, res) => {
+  try {
+    const projectId = req.project.id;
+    const { userId } = req.params;
+    
+    const user = await ProjectUser.findOne({
+      _id: userId,
+      projectId,
+      deletedAt: { $exists: false }
+    });
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    
+    // Soft delete
+    user.deletedAt = new Date();
+    user.isActive = false;
+    await user.save();
+    
+    res.json({
+      success: true,
+      message: 'User deleted successfully'
+    });
+    
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete user'
+    });
+  }
+};
+
+// Add update user status endpoint
+export const updateUserStatus = async (req, res) => {
+  try {
+    const projectId = req.project.id;
+    const { userId } = req.params;
+    const { isActive } = req.body;
+    
+    const user = await ProjectUser.findOneAndUpdate(
+      {
+        _id: userId,
+        projectId,
+        deletedAt: { $exists: false }
+      },
+      { isActive },
+      { new: true }
+    ).select('-password -emailVerificationToken -passwordResetToken -twoFactorSecret');
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: user,
+      message: 'User status updated successfully'
+    });
+    
+  } catch (error) {
+    console.error('Update user status error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update user status'
     });
   }
 };

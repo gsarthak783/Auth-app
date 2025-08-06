@@ -9,7 +9,10 @@ import {
   getProjectUsers,
   getProjectUserStats,
   deleteProjectUser,
-  updateProjectUserStatus
+  updateProjectUserStatus,
+  exportUsers,
+  importUsers,
+  getAllUsers
 } from '../controllers/projectUserController.js';
 import { verifyProjectAccess, authenticateProjectUser } from '../middleware/auth.js';
 
@@ -152,6 +155,39 @@ router.patch('/:userId/status',
   body('isSuspended').optional().isBoolean(),
   body('isVerified').optional().isBoolean(),
   updateProjectUserStatus
+);
+
+/**
+ * @route   POST /api/project-users/export
+ * @desc    Export users data (admin only)
+ * @access  Private (project admin)
+ */
+router.post('/export',
+  verifyProjectAccess,
+  // TODO: Add admin role verification middleware
+  exportUsers
+);
+
+/**
+ * @route   POST /api/project-users/import
+ * @desc    Import users data (admin only)
+ * @access  Private (project admin)
+ */
+router.post('/import',
+  verifyProjectAccess,
+  // TODO: Add admin role verification middleware
+  importUsers
+);
+
+/**
+ * @route   GET /api/project-users/users
+ * @desc    Get all users with pagination and filtering (admin only)
+ * @access  Private (project admin)
+ */
+router.get('/users',
+  verifyProjectAccess,
+  // TODO: Add admin role verification middleware
+  getAllUsers
 );
 
 export default router;

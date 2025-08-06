@@ -291,15 +291,17 @@ projectSchema.methods.hasAccess = function(userId, requiredRole = 'member') {
   const roleHierarchy = { member: 1, admin: 2, owner: 3 };
   const requiredLevel = roleHierarchy[requiredRole] || 1;
   
-  // Check if user is owner
-  if (this.owner.toString() === userId.toString()) {
+  // Check if user is owner (handle both populated and non-populated owner)
+  const ownerId = this.owner?._id || this.owner;
+  if (ownerId && ownerId.toString() === userId.toString()) {
     return roleHierarchy.owner >= requiredLevel;
   }
   
-  // Check team membership
-  const teamMember = this.team.find(member => 
-    member.user.toString() === userId.toString()
-  );
+  // Check team membership (handle both populated and non-populated team users)
+  const teamMember = this.team.find(member => {
+    const memberId = member.user?._id || member.user;
+    return memberId && memberId.toString() === userId.toString();
+  });
   
   if (teamMember) {
     const userLevel = roleHierarchy[teamMember.role] || 1;

@@ -23,7 +23,14 @@ export const createProject = async (req, res) => {
     }
 
     const { name, description, settings, allowedDomains, allowedOrigins } = req.body;
-    const userId = req.user._id;
+    const userId = req.user.userId;
+    
+    console.log('🚀 Creating project:', { 
+      name, 
+      userId, 
+      userObject: req.user,
+      userIdType: typeof userId 
+    });
 
     // Generate API credentials
     const apiKey = generateApiKey();
@@ -55,14 +62,31 @@ export const createProject = async (req, res) => {
 
     await project.save();
 
-    // Update user's project access
+    // Update user's project access and stats
     const user = await User.findById(userId);
+    
+    // Initialize projectAccess if it doesn't exist (for existing users)
+    if (!user.projectAccess) {
+      user.projectAccess = [];
+    }
+    
     user.projectAccess.push({
       projectId: project._id,
       role: 'owner',
       joinedAt: new Date()
     });
+    
+    // Update user stats - increment total projects
+    if (!user.stats) user.stats = {};
+    user.stats.totalProjects = (user.stats.totalProjects || 0) + 1;
+    
     await user.save();
+
+    console.log('✅ Project created successfully:', {
+      projectId: project._id,
+      projectName: project.name,
+      userTotalProjects: user.stats.totalProjects
+    });
 
     res.status(201).json({
       success: true,
@@ -93,7 +117,7 @@ export const createProject = async (req, res) => {
 // Get user's projects
 export const getUserProjects = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user.userId;
     const { page = 1, limit = 10 } = req.query;
 
     const projects = await Project.findUserProjects(userId)
@@ -144,7 +168,7 @@ export const getUserProjects = async (req, res) => {
 export const getProject = async (req, res) => {
   try {
     const { projectId } = req.params;
-    const userId = req.user._id;
+    const userId = req.user.userId;
 
     const project = await Project.findById(projectId)
       .populate('owner', 'username email displayName')
@@ -157,16 +181,34 @@ export const getProject = async (req, res) => {
       });
     }
 
+    // Debug access check
+    console.log('🔍 Access check debug:', {
+      userId: userId,
+      userIdType: typeof userId,
+      projectOwner: project.owner,
+      projectOwnerId: project.owner?._id || project.owner,
+      ownerType: typeof (project.owner?._id || project.owner),
+      teamMembers: project.team?.length || 0,
+      teamUserIds: project.team?.map(member => member.user?._id || member.user) || []
+    });
+
     // Check if user has access
     if (!project.hasAccess(userId)) {
+      console.log('❌ Access denied for user:', userId);
       return res.status(403).json({
         success: false,
         message: 'No access to this project'
       });
     }
 
-    const userRole = project.owner._id.toString() === userId.toString() ? 'owner' :
-                    project.team.find(member => member.user._id.toString() === userId.toString())?.role;
+    console.log('✅ Access granted for user:', userId);
+
+    const ownerId = project.owner?._id || project.owner;
+    const userRole = ownerId && ownerId.toString() === userId.toString() ? 'owner' :
+                    project.team.find(member => {
+                      const memberId = member.user?._id || member.user;
+                      return memberId && memberId.toString() === userId.toString();
+                    })?.role;
 
     res.json({
       success: true,
@@ -212,7 +254,7 @@ export const updateProject = async (req, res) => {
     }
 
     const { projectId } = req.params;
-    const userId = req.user._id;
+    const userId = req.user.userId;
     const {
       name,
       description,
@@ -285,7 +327,7 @@ export const updateProject = async (req, res) => {
 export const deleteProject = async (req, res) => {
   try {
     const { projectId } = req.params;
-    const userId = req.user._id;
+    const userId = req.user.userId;
 
     const project = await Project.findById(projectId);
 
@@ -316,6 +358,11 @@ export const deleteProject = async (req, res) => {
       { $pull: { projectAccess: { projectId } } }
     );
 
+    // Decrement project count for the owner
+    await User.findByIdAndUpdate(userId, {
+      $inc: { 'stats.totalProjects': -1 }
+    });
+
     res.json({
       success: true,
       message: 'Project deleted successfully'
@@ -334,7 +381,7 @@ export const deleteProject = async (req, res) => {
 export const getProjectUsers = async (req, res) => {
   try {
     const { projectId } = req.params;
-    const userId = req.user._id;
+    const userId = req.user.userId;
     const { page = 1, limit = 20, search, role, status } = req.query;
 
     const project = await Project.findById(projectId);
@@ -433,7 +480,7 @@ export const addTeamMember = async (req, res) => {
   try {
     const { projectId } = req.params;
     const { userIdOrEmail, role = 'member', permissions = [] } = req.body;
-    const userId = req.user._id;
+    const userId = req.user.userId;
 
     const project = await Project.findById(projectId);
 
@@ -517,7 +564,7 @@ export const addTeamMember = async (req, res) => {
 export const removeTeamMember = async (req, res) => {
   try {
     const { projectId, memberId } = req.params;
-    const userId = req.user._id;
+    const userId = req.user.userId;
 
     const project = await Project.findById(projectId);
 
@@ -571,7 +618,7 @@ export const updateTeamMemberRole = async (req, res) => {
   try {
     const { projectId, memberId } = req.params;
     const { role, permissions = [] } = req.body;
-    const userId = req.user._id;
+    const userId = req.user.userId;
 
     const project = await Project.findById(projectId);
 
@@ -630,7 +677,7 @@ export const updateTeamMemberRole = async (req, res) => {
 export const regenerateApiKeys = async (req, res) => {
   try {
     const { projectId } = req.params;
-    const userId = req.user._id;
+    const userId = req.user.userId;
 
     const project = await Project.findById(projectId);
 
@@ -675,7 +722,7 @@ export const regenerateApiKeys = async (req, res) => {
 export const getProjectStats = async (req, res) => {
   try {
     const { projectId } = req.params;
-    const userId = req.user._id;
+    const userId = req.user.userId;
 
     const project = await Project.findById(projectId);
 

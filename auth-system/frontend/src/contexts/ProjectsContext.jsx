@@ -122,9 +122,9 @@ export const ProjectsProvider = ({ children }) => {
     try {
       dispatch({ type: ActionTypes.SET_LOADING, payload: true });
       const response = await projectsAPI.createProject(projectData);
-      dispatch({ type: ActionTypes.ADD_PROJECT, payload: response.data.project });
+      dispatch({ type: ActionTypes.ADD_PROJECT, payload: response.project });
       toast.success(response.message || 'Project created successfully!');
-      return response.data.project;
+      return response.project;
     } catch (error) {
       const errorMessage = utils.getErrorMessage(error);
       dispatch({ type: ActionTypes.SET_ERROR, payload: errorMessage });
@@ -139,8 +139,8 @@ export const ProjectsProvider = ({ children }) => {
     try {
       dispatch({ type: ActionTypes.SET_LOADING, payload: true });
       const response = await projectsAPI.getProject(projectId);
-      dispatch({ type: ActionTypes.SET_CURRENT_PROJECT, payload: response.data.project });
-      return response.data.project;
+      dispatch({ type: ActionTypes.SET_CURRENT_PROJECT, payload: response.project });
+      return response.project;
     } catch (error) {
       const errorMessage = utils.getErrorMessage(error);
       dispatch({ type: ActionTypes.SET_ERROR, payload: errorMessage });
@@ -155,9 +155,9 @@ export const ProjectsProvider = ({ children }) => {
     try {
       dispatch({ type: ActionTypes.SET_LOADING, payload: true });
       const response = await projectsAPI.updateProject(projectId, projectData);
-      dispatch({ type: ActionTypes.UPDATE_PROJECT, payload: response.data.project });
+      dispatch({ type: ActionTypes.UPDATE_PROJECT, payload: response.project });
       toast.success(response.message || 'Project updated successfully!');
-      return response.data.project;
+      return response.project;
     } catch (error) {
       const errorMessage = utils.getErrorMessage(error);
       dispatch({ type: ActionTypes.SET_ERROR, payload: errorMessage });
@@ -187,7 +187,7 @@ export const ProjectsProvider = ({ children }) => {
   const getProjectStats = async (projectId) => {
     try {
       const response = await projectsAPI.getProjectStats(projectId);
-      return response.data.stats;
+      return response.stats;
     } catch (error) {
       const errorMessage = utils.getErrorMessage(error);
       toast.error(errorMessage);
@@ -199,9 +199,9 @@ export const ProjectsProvider = ({ children }) => {
   const regenerateApiKeys = async (projectId) => {
     try {
       const response = await projectsAPI.regenerateApiKeys(projectId);
-      dispatch({ type: ActionTypes.UPDATE_PROJECT, payload: response.data.project });
+      dispatch({ type: ActionTypes.UPDATE_PROJECT, payload: response.project });
       toast.success('API keys regenerated successfully');
-      return response.data.project;
+      return response.project;
     } catch (error) {
       const errorMessage = utils.getErrorMessage(error);
       toast.error(errorMessage);
@@ -213,9 +213,9 @@ export const ProjectsProvider = ({ children }) => {
   const addTeamMember = async (projectId, memberData) => {
     try {
       const response = await projectsAPI.addTeamMember(projectId, memberData);
-      dispatch({ type: ActionTypes.UPDATE_PROJECT, payload: response.data.project });
+      dispatch({ type: ActionTypes.UPDATE_PROJECT, payload: response.project });
       toast.success(response.message || 'Team member added successfully');
-      return response.data.project;
+      return response.project;
     } catch (error) {
       const errorMessage = utils.getErrorMessage(error);
       toast.error(errorMessage);
@@ -227,9 +227,9 @@ export const ProjectsProvider = ({ children }) => {
   const removeTeamMember = async (projectId, memberId) => {
     try {
       const response = await projectsAPI.removeTeamMember(projectId, memberId);
-      dispatch({ type: ActionTypes.UPDATE_PROJECT, payload: response.data.project });
+      dispatch({ type: ActionTypes.UPDATE_PROJECT, payload: response.project });
       toast.success(response.message || 'Team member removed successfully');
-      return response.data.project;
+      return response.project;
     } catch (error) {
       const errorMessage = utils.getErrorMessage(error);
       toast.error(errorMessage);
@@ -241,9 +241,9 @@ export const ProjectsProvider = ({ children }) => {
   const updateTeamMemberRole = async (projectId, memberId, role) => {
     try {
       const response = await projectsAPI.updateTeamMemberRole(projectId, memberId, role);
-      dispatch({ type: ActionTypes.UPDATE_PROJECT, payload: response.data.project });
+      dispatch({ type: ActionTypes.UPDATE_PROJECT, payload: response.project });
       toast.success(response.message || 'Team member role updated successfully');
-      return response.data.project;
+      return response.project;
     } catch (error) {
       const errorMessage = utils.getErrorMessage(error);
       toast.error(errorMessage);

@@ -5,9 +5,9 @@ dotenv.config();
 
 // Create transporter
 const createTransporter = () => {
-  return nodemailer.createTransporter({
+  const config = {
     host: process.env.EMAIL_HOST,
-    port: process.env.EMAIL_PORT,
+    port: parseInt(process.env.EMAIL_PORT) || 587,
     secure: process.env.EMAIL_PORT === '465', // true for 465, false for other ports
     auth: {
       user: process.env.EMAIL_USER,
@@ -16,27 +16,58 @@ const createTransporter = () => {
     tls: {
       rejectUnauthorized: false
     }
+  };
+
+  // Debug logging for email configuration
+  console.log('📧 Email Configuration:', {
+    host: config.host,
+    port: config.port,
+    secure: config.secure,
+    user: config.auth.user,
+    passConfigured: !!config.auth.pass,
+    passLength: config.auth.pass ? config.auth.pass.length : 0
   });
+
+  return nodemailer.createTransport(config);
 };
 
 // Send email
 export const sendEmail = async (to, subject, text, html) => {
   try {
+    // Check if email is configured for development
+    if (!process.env.EMAIL_HOST || !process.env.EMAIL_USER) {
+      console.log('⚠️ Email not configured, skipping email sending in development mode');
+      console.log(`📧 Would have sent email to ${to}: ${subject}`);
+      return { messageId: 'dev-mode-skip' };
+    }
+
     const transporter = createTransporter();
     
     const mailOptions = {
-      from: process.env.EMAIL_FROM,
+      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
       to,
       subject,
       text,
       html
     };
     
+    console.log('📬 Email options:', {
+      from: mailOptions.from,
+      to: mailOptions.to,
+      subject: mailOptions.subject,
+      recipientDefined: !!mailOptions.to
+    });
+    
     const info = await transporter.sendMail(mailOptions);
     console.log('Email sent:', info.messageId);
     return info;
   } catch (error) {
     console.error('Error sending email:', error);
+    // In development, don't fail the entire process if email fails
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🚫 Email failed in development mode, continuing without email...');
+      return { messageId: 'dev-mode-error', error: error.message };
+    }
     throw error;
   }
 };
@@ -191,6 +222,17 @@ export const sendPasswordResetEmail = async (user, token, projectName = 'Auth Sy
 
 // Send welcome email
 export const sendWelcomeEmail = async (user, projectName = 'Auth System') => {
+  console.log('🎉 Sending welcome email to:', { 
+    email: user?.email, 
+    firstName: user?.firstName, 
+    username: user?.username,
+    projectName 
+  });
+  
+  if (!user?.email) {
+    throw new Error('User email is required for sending welcome email');
+  }
+  
   const subject = `Welcome to ${projectName}!`;
   
   const text = `
