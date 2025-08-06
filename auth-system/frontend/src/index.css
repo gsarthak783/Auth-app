@@ -76,7 +76,7 @@
 
 /* Card hover effects */
 .card-hover {
-  @apply transition-all duration-200 hover:shadow-lg hover:scale-[1.02];
+  @apply transition-all duration-200 hover:shadow-lg hover:scale-105;
 }
 
 /* Button loading state */
@@ -97,7 +97,7 @@
 
 /* Form input focus */
 .input-focus {
-  @apply transition-all duration-200 focus:scale-[1.02] focus:shadow-md;
+  @apply transition-all duration-200 focus:scale-105 focus:shadow-md;
 }
 
 /* Gradient backgrounds */
@@ -117,22 +117,30 @@
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
 }
 
-/* Glass morphism */
+/* Glass morphism effects */
 .glass {
-  @apply backdrop-blur-md bg-white/10 border border-white/20;
+  backdrop-filter: blur(16px);
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .glass-dark {
-  @apply backdrop-blur-md bg-black/10 border border-white/10;
+  backdrop-filter: blur(16px);
+  background-color: rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Custom components */
 .navbar-blur {
-  @apply backdrop-blur-md bg-base-100/80 border-b border-base-300;
+  backdrop-filter: blur(16px);
+  background-color: rgba(255, 255, 255, 0.8);
+  @apply border-b border-base-300;
 }
 
 .sidebar-blur {
-  @apply backdrop-blur-md bg-base-100/90 border-r border-base-300;
+  backdrop-filter: blur(16px);
+  background-color: rgba(255, 255, 255, 0.9);
+  @apply border-r border-base-300;
 }
 
 /* Mobile responsiveness */
