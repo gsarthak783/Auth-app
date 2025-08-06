@@ -18,8 +18,7 @@ const projectSchema = new mongoose.Schema({
   apiKey: {
     type: String,
     required: true,
-    unique: true,
-    index: true
+    unique: true
   },
   apiSecret: {
     type: String,

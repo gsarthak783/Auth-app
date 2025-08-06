@@ -7,14 +7,12 @@ const projectUserSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true,
-    lowercase: true,
-    index: true
+    lowercase: true
   },
   username: {
     type: String,
     trim: true,
-    sparse: true,
-    index: true
+    sparse: true
   },
   password: {
     type: String,
@@ -63,8 +61,7 @@ const projectUserSchema = new mongoose.Schema({
   projectId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Project',
-    required: true,
-    index: true
+    required: true
   },
 
   // Account Status
