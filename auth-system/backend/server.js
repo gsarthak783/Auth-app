@@ -257,19 +257,20 @@ app.listen(PORT, () => {
   `);
 });
 
-// Graceful shutdown
-process.on('SIGTERM', async () => {
-  console.log('SIGTERM received. Shutting down gracefully...');
-  await mongoose.connection.close();
-  console.log('MongoDB connection closed.');
-  process.exit(0);
-});
+// Graceful shutdown (disabled for serverless)
+// Note: process.exit() calls can crash Vercel serverless functions
+if (process.env.NODE_ENV !== 'production') {
+  process.on('SIGTERM', async () => {
+    console.log('SIGTERM received. Shutting down gracefully...');
+    await mongoose.connection.close();
+    console.log('MongoDB connection closed.');
+  });
 
-process.on('SIGINT', async () => {
-  console.log('SIGINT received. Shutting down gracefully...');
-  await mongoose.connection.close();
-  console.log('MongoDB connection closed.');
-  process.exit(0);
-});
+  process.on('SIGINT', async () => {
+    console.log('SIGINT received. Shutting down gracefully...');
+    await mongoose.connection.close();
+    console.log('MongoDB connection closed.');
+  });
+}
 
 export default app;

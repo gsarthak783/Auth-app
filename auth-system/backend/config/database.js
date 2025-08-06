@@ -26,7 +26,8 @@ const connectDB = async () => {
   } catch (error) {
     console.error('❌ Error connecting to MongoDB:', error.message);
     console.error('💡 Make sure your MongoDB Atlas connection string is correct in .env file');
-    process.exit(1);
+    // Don't exit in serverless environment - let the function handle the error
+    throw error;
   }
 };
 
