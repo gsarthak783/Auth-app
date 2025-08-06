@@ -1,76 +1,262 @@
-import { verifyAccessToken, extractTokenFromHeader } from '../utils/jwt.js';
+import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import Project from '../models/Project.js';
+import ProjectUser from '../models/ProjectUser.js';
 
-// Authenticate user with JWT token
+// Authenticate platform users (for platform access)
 export const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    const token = extractTokenFromHeader(authHeader);
-    
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: 'Access token is required'
+        message: 'Access token required'
       });
     }
-    
-    // Verify token
-    const decoded = verifyAccessToken(token);
-    
-    // Find user
-    const user = await User.findById(decoded.userId).select('-password');
-    
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'User not found'
-      });
-    }
-    
-    // Check if user is active
-    if (!user.isActive) {
-      return res.status(401).json({
-        success: false,
-        message: 'Account is deactivated'
-      });
-    }
-    
-    // Check if user is suspended
-    if (user.isSuspended) {
-      if (user.suspendedUntil && user.suspendedUntil > new Date()) {
+
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      
+      if (decoded.type !== 'platform_user') {
         return res.status(401).json({
           success: false,
-          message: 'Account is suspended',
-          suspendedUntil: user.suspendedUntil
-        });
-      } else if (user.isSuspended && !user.suspendedUntil) {
-        return res.status(401).json({
-          success: false,
-          message: 'Account is permanently suspended'
+          message: 'Invalid token type'
         });
       }
-    }
-    
-    // Check if account is locked
-    if (user.isLocked) {
+
+      const user = await User.findById(decoded.userId);
+      if (!user || !user.isActive || user.deletedAt) {
+        return res.status(401).json({
+          success: false,
+          message: 'User not found or inactive'
+        });
+      }
+
+      req.user = {
+        userId: user._id,
+        email: user.email,
+        username: user.username,
+        role: user.role,
+        type: 'platform_user'
+      };
+
+      next();
+    } catch (error) {
       return res.status(401).json({
         success: false,
-        message: 'Account is locked due to multiple failed login attempts'
+        message: 'Invalid or expired token'
       });
     }
-    
-    req.user = user;
-    next();
   } catch (error) {
-    return res.status(401).json({
+    console.error('Authentication error:', error);
+    res.status(500).json({
       success: false,
-      message: 'Invalid or expired token'
+      message: 'Internal server error'
     });
   }
 };
 
-// Authorize specific roles
+// Authenticate project users (for project-specific endpoints)
+export const authenticateProjectUser = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'Access token required'
+      });
+    }
+
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      
+      if (decoded.type !== 'project_user') {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid token type'
+        });
+      }
+
+      const projectUser = await ProjectUser.findById(decoded.userId);
+      if (!projectUser || !projectUser.isActive || projectUser.deletedAt) {
+        return res.status(401).json({
+          success: false,
+          message: 'User not found or inactive'
+        });
+      }
+
+      req.projectUser = {
+        userId: projectUser._id,
+        email: projectUser.email,
+        username: projectUser.username,
+        projectId: projectUser.projectId,
+        type: 'project_user'
+      };
+
+      req.projectId = projectUser.projectId;
+      next();
+    } catch (error) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or expired token'
+      });
+    }
+  } catch (error) {
+    console.error('Project user authentication error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
+
+// Verify project access via API key (for project user registration/login)
+export const verifyProjectAccess = async (req, res, next) => {
+  try {
+    const apiKey = req.headers['x-api-key'] || req.body.apiKey || req.query.apiKey;
+
+    if (!apiKey) {
+      return res.status(401).json({
+        success: false,
+        message: 'Project API key is required'
+      });
+    }
+
+    const project = await Project.findOne({ 
+      apiKey, 
+      isActive: true,
+      deletedAt: null 
+    });
+
+    if (!project) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or inactive project API key'
+      });
+    }
+
+    // Check if request origin is allowed
+    const origin = req.headers.origin || req.headers.referer;
+    if (origin && project.allowedOrigins.length > 0) {
+      const isOriginAllowed = project.allowedOrigins.some(allowedOrigin => 
+        origin.includes(allowedOrigin) || allowedOrigin === '*'
+      );
+      
+      if (!isOriginAllowed) {
+        return res.status(403).json({
+          success: false,
+          message: 'Origin not allowed for this project'
+        });
+      }
+    }
+
+    req.project = project;
+    req.projectId = project._id;
+    next();
+  } catch (error) {
+    console.error('Project verification error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
+
+// Verify project member access (platform user must be member/admin of project)
+export const verifyProjectMember = async (req, res, next) => {
+  try {
+    const { projectId } = req.params;
+    const userId = req.user.userId;
+
+    const project = await Project.findById(projectId);
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: 'Project not found'
+      });
+    }
+
+    // Check if user is owner of the project
+    if (project.owner.toString() === userId.toString()) {
+      req.project = project;
+      req.userRole = 'owner';
+      return next();
+    }
+
+    // Check if user is in team members
+    const teamMember = project.team.find(member => 
+      member.userId.toString() === userId.toString()
+    );
+
+    if (!teamMember) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. You are not a member of this project.'
+      });
+    }
+
+    req.project = project;
+    req.userRole = teamMember.role;
+    next();
+  } catch (error) {
+    console.error('Project member verification error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
+
+// Verify project admin access (platform user must be admin/owner of project)
+export const verifyProjectAdmin = async (req, res, next) => {
+  try {
+    const { projectId } = req.params;
+    const userId = req.user.userId;
+
+    const project = await Project.findById(projectId);
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: 'Project not found'
+      });
+    }
+
+    // Check if user is owner
+    if (project.owner.toString() === userId.toString()) {
+      req.project = project;
+      req.userRole = 'owner';
+      return next();
+    }
+
+    // Check if user is admin in team
+    const teamMember = project.team.find(member => 
+      member.userId.toString() === userId.toString() && member.role === 'admin'
+    );
+
+    if (!teamMember) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin privileges required.'
+      });
+    }
+
+    req.project = project;
+    req.userRole = teamMember.role;
+    next();
+  } catch (error) {
+    console.error('Project admin verification error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
+
+// Role-based authorization for platform users
 export const authorize = (...roles) => {
   return (req, res, next) => {
     if (!req.user) {
@@ -79,169 +265,104 @@ export const authorize = (...roles) => {
         message: 'Authentication required'
       });
     }
-    
+
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Insufficient permissions'
       });
     }
-    
+
     next();
   };
 };
 
-// Verify project access with API key
-export const verifyProjectAccess = async (req, res, next) => {
+// Check if email verification is required (for project users)
+export const requireEmailVerification = async (req, res, next) => {
   try {
-    const apiKey = req.headers['x-api-key'] || req.query.apiKey;
-    
-    if (!apiKey) {
+    if (!req.projectUser) {
       return res.status(401).json({
         success: false,
-        message: 'Project API key is required'
+        message: 'Authentication required'
       });
     }
-    
-    // Find project by API key
-    const project = await Project.findByApiKey(apiKey);
-    
-    if (!project) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid API key'
-      });
-    }
-    
-    // Check if project is active
-    if (!project.isActive) {
-      return res.status(401).json({
-        success: false,
-        message: 'Project is deactivated'
-      });
-    }
-    
-    // Check if project is suspended
-    if (project.isSuspended) {
-      return res.status(401).json({
-        success: false,
-        message: 'Project is suspended'
-      });
-    }
-    
-    req.project = project;
-    next();
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: 'Error verifying project access'
-    });
-  }
-};
 
-// Verify project member access
-export const verifyProjectMember = async (req, res, next) => {
-  try {
-    if (!req.user || !req.project) {
-      return res.status(401).json({
-        success: false,
-        message: 'Authentication and project verification required'
-      });
-    }
-    
-    // Check if user has access to the project
-    const hasAccess = req.project.hasAccess(req.user._id);
-    
-    if (!hasAccess) {
+    const projectUser = await ProjectUser.findById(req.projectUser.userId);
+    const project = await Project.findById(req.projectUser.projectId);
+
+    if (project.settings.requireEmailVerification && !projectUser.isVerified) {
       return res.status(403).json({
         success: false,
-        message: 'No access to this project'
+        message: 'Email verification required',
+        needsVerification: true
       });
     }
-    
+
     next();
   } catch (error) {
-    return res.status(500).json({
+    console.error('Email verification check error:', error);
+    res.status(500).json({
       success: false,
-      message: 'Error verifying project membership'
+      message: 'Internal server error'
     });
   }
 };
 
-// Verify project admin access
-export const verifyProjectAdmin = async (req, res, next) => {
-  try {
-    if (!req.user || !req.project) {
-      return res.status(401).json({
-        success: false,
-        message: 'Authentication and project verification required'
-      });
-    }
-    
-    // Check if user has admin access to the project
-    const hasAccess = req.project.hasAccess(req.user._id, 'admin');
-    
-    if (!hasAccess) {
-      return res.status(403).json({
-        success: false,
-        message: 'Admin access required for this project'
-      });
-    }
-    
-    next();
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: 'Error verifying project admin access'
-    });
-  }
-};
-
-// Check if email is verified
-export const requireEmailVerification = (req, res, next) => {
-  if (!req.user) {
-    return res.status(401).json({
-      success: false,
-      message: 'Authentication required'
-    });
-  }
-  
-  if (!req.user.isVerified) {
-    return res.status(403).json({
-      success: false,
-      message: 'Email verification required',
-      needsVerification: true
-    });
-  }
-  
-  next();
-};
-
-// Optional authentication (doesn't fail if no token)
+// Optional authentication (doesn't fail if no token provided)
 export const optionalAuth = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    const token = extractTokenFromHeader(authHeader);
-    
-    if (token) {
-      const decoded = verifyAccessToken(token);
-      const user = await User.findById(decoded.userId).select('-password');
-      
-      if (user && user.isActive) {
-        req.user = user;
-      }
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+      return next();
     }
-    
+
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      
+      if (decoded.type === 'platform_user') {
+        const user = await User.findById(decoded.userId);
+        if (user && user.isActive && !user.deletedAt) {
+          req.user = {
+            userId: user._id,
+            email: user.email,
+            username: user.username,
+            role: user.role,
+            type: 'platform_user'
+          };
+        }
+      } else if (decoded.type === 'project_user') {
+        const projectUser = await ProjectUser.findById(decoded.userId);
+        if (projectUser && projectUser.isActive && !projectUser.deletedAt) {
+          req.projectUser = {
+            userId: projectUser._id,
+            email: projectUser.email,
+            username: projectUser.username,
+            projectId: projectUser.projectId,
+            type: 'project_user'
+          };
+        }
+      }
+    } catch (error) {
+      // Token invalid, but continue without authentication
+    }
+
     next();
   } catch (error) {
-    // Continue without authentication
+    console.error('Optional auth error:', error);
     next();
   }
 };
 
-// Rate limiting check
-export const checkRateLimit = (req, res, next) => {
-  // This would be implemented with a proper rate limiting library
-  // For now, just continue
-  next();
+// Rate limiting for sensitive operations
+export const sensitiveOperationLimit = (windowMs = 60000, max = 5) => {
+  return (req, res, next) => {
+    // This would typically use Redis or a similar store in production
+    // For now, we'll use a simple in-memory store
+    const key = `${req.ip}-${req.user?.userId || req.projectUser?.userId}`;
+    
+    // In production, implement proper rate limiting with Redis
+    next();
+  };
 };

@@ -1,52 +1,60 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
+import mongoose from 'mongoose';
 import connectDB from './config/database.js';
 import authRoutes from './routes/auth.js';
 import projectRoutes from './routes/projects.js';
+import projectUsersRoutes from './routes/projectUsers.js';
+import dotenv from 'dotenv';
 
-// Load environment variables
 dotenv.config();
 
-// Create Express app
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Connect to MongoDB
 connectDB();
 
-// Trust proxy if behind reverse proxy (for rate limiting)
+// Trust proxy (for rate limiting behind reverse proxy)
 app.set('trust proxy', 1);
 
-// Security middleware
+// Security Middleware
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: 'cross-origin' }
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+  crossOriginEmbedderPolicy: false
 }));
 
-// CORS configuration
+// CORS Configuration
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, etc.)
+    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
     const allowedOrigins = [
       process.env.FRONTEND_URL,
       'http://localhost:3000',
-      'http://localhost:3001',
-      'http://127.0.0.1:3000',
-      'http://127.0.0.1:3001'
-    ];
+      'http://localhost:5173',
+      'http://127.0.0.1:5173',
+      'http://127.0.0.1:3000'
+    ].filter(Boolean);
     
-    if (allowedOrigins.includes(origin)) {
+    if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key']
 };
 
@@ -57,22 +65,27 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Global rate limiting
-const globalLimiter = rateLimit({
+const globalRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 500, // limit each IP to 500 requests per windowMs
+  max: 100, // 100 requests per window per IP
   message: {
     success: false,
-    message: 'Too many requests from this IP, please try again later.'
+    message: 'Too many requests from this IP, please try again later'
   },
   standardHeaders: true,
-  legacyHeaders: false,
+  legacyHeaders: false
 });
 
-app.use(globalLimiter);
+app.use(globalRateLimit);
 
 // Request logging middleware
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path} - IP: ${req.ip}`);
+  const timestamp = new Date().toISOString();
+  const method = req.method;
+  const url = req.url;
+  const ip = req.ip;
+  
+  console.log(`[${timestamp}] ${method} ${url} - ${ip}`);
   next();
 });
 
@@ -80,65 +93,98 @@ app.use((req, res, next) => {
 app.get('/health', (req, res) => {
   res.json({
     success: true,
-    message: 'Auth System API is running',
+    message: 'AuthSystem API is running',
     timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
     version: '1.0.0'
   });
 });
 
-// API routes
-app.use('/api/auth', authRoutes);
-app.use('/api/projects', projectRoutes);
-
-// API documentation endpoint
+// API Documentation endpoint
 app.get('/api', (req, res) => {
   res.json({
     success: true,
-    message: 'Auth System API',
+    message: 'AuthSystem API Documentation',
     version: '1.0.0',
     endpoints: {
       auth: {
-        signup: 'POST /api/auth/signup',
-        login: 'POST /api/auth/login',
-        logout: 'POST /api/auth/logout',
-        refreshToken: 'POST /api/auth/refresh-token',
-        profile: 'GET /api/auth/profile',
-        updateProfile: 'PUT /api/auth/profile',
-        changePassword: 'POST /api/auth/change-password',
-        requestPasswordReset: 'POST /api/auth/request-password-reset',
-        resetPassword: 'POST /api/auth/reset-password',
-        verifyEmail: 'GET /api/auth/verify-email',
-        deleteAccount: 'DELETE /api/auth/account'
+        base: '/api/auth',
+        description: 'Platform user authentication endpoints',
+        routes: [
+          'POST /signup - Register platform user',
+          'POST /login - Login platform user',
+          'POST /refresh - Refresh access token',
+          'POST /logout - Logout user',
+          'GET /profile - Get user profile',
+          'PUT /profile - Update user profile',
+          'POST /change-password - Change password',
+          'POST /forgot-password - Request password reset',
+          'POST /reset-password - Reset password',
+          'DELETE /delete-account - Delete account'
+        ]
       },
       projects: {
-        create: 'POST /api/projects',
-        list: 'GET /api/projects',
-        get: 'GET /api/projects/:id',
-        update: 'PUT /api/projects/:id',
-        delete: 'DELETE /api/projects/:id',
-        stats: 'GET /api/projects/:id/stats',
-        users: 'GET /api/projects/:id/users',
-        addUser: 'POST /api/projects/:id/users',
-        removeUser: 'DELETE /api/projects/:id/users/:userId',
-        regenerateKeys: 'POST /api/projects/:id/regenerate-keys'
+        base: '/api/projects',
+        description: 'Project management endpoints',
+        routes: [
+          'GET / - Get user projects',
+          'POST / - Create new project',
+          'GET /:id - Get project details',
+          'PUT /:id - Update project',
+          'DELETE /:id - Delete project',
+          'GET /:id/stats - Get project statistics'
+        ]
+      },
+      projectUsers: {
+        base: '/api/project-users',
+        description: 'Project user authentication and management',
+        routes: [
+          'POST /register - Register project user (requires API key)',
+          'POST /login - Login project user (requires API key)',
+          'GET /profile - Get project user profile',
+          'PUT /profile - Update project user profile',
+          'GET / - Get all project users (admin)',
+          'GET /stats - Get project user statistics (admin)',
+          'DELETE /:userId - Delete project user (admin)',
+          'PATCH /:userId/status - Update user status (admin)'
+        ]
       }
     },
-    documentation: 'https://github.com/your-org/auth-system#api-documentation'
+    authentication: {
+      platformUsers: {
+        description: 'Platform users (who create and manage projects)',
+        tokenType: 'Bearer JWT',
+        header: 'Authorization: Bearer <token>'
+      },
+      projectUsers: {
+        description: 'End-users of individual projects',
+        tokenType: 'Bearer JWT + API Key',
+        headers: [
+          'Authorization: Bearer <token>',
+          'x-api-key: <project-api-key>'
+        ]
+      }
+    }
   });
 });
+
+// API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/projects', projectRoutes);
+app.use('/api/project-users', projectUsersRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({
     success: false,
-    message: 'Endpoint not found',
-    path: req.originalUrl
+    message: 'API endpoint not found',
+    availableEndpoints: ['/api', '/health', '/api/auth', '/api/projects', '/api/project-users']
   });
 });
 
 // Global error handler
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
+  console.error('Global error handler:', err);
 
   // Mongoose validation error
   if (err.name === 'ValidationError') {
@@ -153,9 +199,10 @@ app.use((err, req, res, next) => {
   // Mongoose duplicate key error
   if (err.code === 11000) {
     const field = Object.keys(err.keyValue)[0];
-    return res.status(409).json({
+    return res.status(400).json({
       success: false,
-      message: `${field} already exists`
+      message: `${field} already exists`,
+      field
     });
   }
 
@@ -174,7 +221,7 @@ app.use((err, req, res, next) => {
     });
   }
 
-  // CORS error
+  // CORS errors
   if (err.message === 'Not allowed by CORS') {
     return res.status(403).json({
       success: false,
@@ -182,37 +229,48 @@ app.use((err, req, res, next) => {
     });
   }
 
-  // Default error
-  res.status(err.status || 500).json({
+  // Default server error
+  res.status(500).json({
     success: false,
-    message: process.env.NODE_ENV === 'production' 
-      ? 'Internal server error' 
-      : err.message || 'Internal server error',
-    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
+    message: 'Internal server error',
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
-});
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully');
-  process.exit(0);
-});
-
-process.on('SIGINT', () => {
-  console.log('SIGINT received, shutting down gracefully');
-  process.exit(0);
 });
 
 // Start server
 app.listen(PORT, () => {
   console.log(`
-🚀 Auth System API Server is running!
-📍 Port: ${PORT}
-🌍 Environment: ${process.env.NODE_ENV || 'development'}
-📊 Health check: http://localhost:${PORT}/health
-📚 API docs: http://localhost:${PORT}/api
-🔗 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:3000'}
+🚀 AuthSystem API Server Started
+  
+📍 Environment: ${process.env.NODE_ENV || 'development'}
+🌐 Server: http://localhost:${PORT}
+📚 API Docs: http://localhost:${PORT}/api
+💊 Health: http://localhost:${PORT}/health
+
+🔗 Available Endpoints:
+  • Platform Auth: http://localhost:${PORT}/api/auth
+  • Projects: http://localhost:${PORT}/api/projects  
+  • Project Users: http://localhost:${PORT}/api/project-users
+
+📝 Logs: Server will log all requests
   `);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received. Shutting down gracefully...');
+  mongoose.connection.close(() => {
+    console.log('MongoDB connection closed.');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received. Shutting down gracefully...');
+  mongoose.connection.close(() => {
+    console.log('MongoDB connection closed.');
+    process.exit(0);
+  });
 });
 
 export default app;
