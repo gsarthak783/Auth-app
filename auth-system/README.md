@@ -1,314 +1,277 @@
-# Firebase-like Authentication System
+# AuthSystem - Firebase-like Authentication Platform
 
-A comprehensive user management and authentication system built with Node.js/Express backend and React frontend, designed to provide Firebase-like authentication capabilities for multiple projects.
+A comprehensive authentication system similar to Firebase, built with modern web technologies. Manage users and authentication for multiple projects with a clean, intuitive interface.
 
-## Features
+## 🌟 Features
 
-### 🔐 Authentication & Security
-- User registration and login
-- Email verification
-- Password reset functionality
-- JWT token-based authentication with refresh tokens
-- Account lockout after failed login attempts
-- Session management
-- Role-based access control
-- Multi-project authentication isolation
+### Authentication & User Management
+- **User Registration & Login** - Complete signup/signin flow with validation
+- **Email Verification** - Configurable email verification system  
+- **Password Reset** - Secure password reset via email
+- **Session Management** - JWT-based authentication with refresh tokens
+- **Account Security** - Account lockout, login attempt tracking
+- **Profile Management** - User profile updates and account deletion
 
-### 👥 User Management
-- Comprehensive user profiles with customizable fields
-- User roles and permissions
-- Account status management (active, suspended, verified)
-- User activity tracking
-- Bulk user operations
+### Multi-Project Support
+- **Project Creation** - Create multiple authentication projects
+- **API Key Management** - Unique API keys for each project
+- **User Isolation** - Users are isolated per project
+- **Team Management** - Add team members with different roles
+- **Project Settings** - Configurable authentication settings per project
 
-### 🏢 Multi-Project Support
-- Create and manage multiple authentication projects
-- Isolated user bases per project
-- Project-specific settings and configurations
-- API key-based project authentication
-- Team collaboration with role-based access
+### Admin Dashboard
+- **User Analytics** - Track registrations, logins, and activity
+- **Project Statistics** - Monitor project performance
+- **User Management** - View, edit, and manage users
+- **Real-time Monitoring** - Live statistics and user activity
 
-### 🛡️ Enterprise Security
-- Rate limiting and DDoS protection
-- CORS configuration
-- Helmet security headers
-- Input validation and sanitization
-- Audit logging
-- Account lockout mechanisms
-
-### 🎨 Modern UI/UX
-- Responsive design with TailwindCSS and DaisyUI
-- Dark/light theme support
-- Intuitive user interface
-- Mobile-friendly responsive design
-- Real-time notifications
-
-## Tech Stack
+## 🚀 Tech Stack
 
 ### Backend
 - **Node.js** - Runtime environment
 - **Express.js** - Web framework
-- **MongoDB** - Database with Mongoose ODM
+- **MongoDB Atlas** - Cloud database
+- **Mongoose** - ODM for MongoDB
 - **JWT** - Authentication tokens
-- **Bcrypt** - Password hashing
-- **Nodemailer** - Email functionality
+- **Bcryptjs** - Password hashing
+- **Nodemailer** - Email service
+- **Express Rate Limit** - API rate limiting
 - **Helmet** - Security headers
 - **CORS** - Cross-origin resource sharing
-- **Express Rate Limit** - Rate limiting
 
 ### Frontend
-- **React 18** - UI framework
+- **React 18** - UI library
 - **Vite** - Build tool and dev server
-- **React Router** - Client-side routing
+- **React Router DOM** - Routing
 - **TailwindCSS** - Utility-first CSS framework
 - **DaisyUI** - Component library
 - **Lucide React** - Icon library
 - **Axios** - HTTP client
 - **React Hook Form** - Form handling
 - **React Hot Toast** - Notifications
-- **JS Cookie** - Cookie management
 
-## Quick Start
+## 📋 Prerequisites
 
-### Prerequisites
 - Node.js 18+ and npm
-- MongoDB database
-- SMTP email service (Gmail, SendGrid, etc.)
+- MongoDB Atlas account (recommended) or local MongoDB
+- Email service (Gmail, SendGrid, etc.) for production
 
-### Installation
+## 🏃‍♂️ Quick Start
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd auth-system
-   ```
-
-2. **Set up the backend**
-   ```bash
-   cd backend
-   npm install
-   ```
-
-3. **Configure environment variables**
-   
-   Copy `.env.example` to `.env` and update the values:
-   ```bash
-   cp .env .env.local
-   ```
-   
-   Required environment variables:
-   ```env
-   PORT=5000
-   NODE_ENV=development
-   MONGODB_URI=mongodb://localhost:27017/auth-system
-   JWT_SECRET=your-super-secret-jwt-key
-   JWT_REFRESH_SECRET=your-super-secret-refresh-key
-   EMAIL_HOST=smtp.gmail.com
-   EMAIL_PORT=587
-   EMAIL_USER=your-email@gmail.com
-   EMAIL_PASS=your-app-password
-       FRONTEND_URL=http://localhost:5173
-   ```
-
-4. **Start the backend server**
-   ```bash
-   npm run dev
-   ```
-
-5. **Set up the frontend**
-   ```bash
-   cd ../frontend
-   npm install
-   ```
-
-6. **Start the frontend development server**
-   ```bash
-   npm run dev
-   ```
-
-7. **Access the application**
-   - Frontend: http://localhost:5173
-   - Backend API: http://localhost:5000
-   - API Documentation: http://localhost:5000/api
-
-## API Documentation
-
-### Authentication Endpoints
-
-#### User Authentication
-```
-POST /api/auth/signup          - User registration
-POST /api/auth/login           - User login
-POST /api/auth/logout          - User logout
-POST /api/auth/refresh-token   - Refresh access token
-GET  /api/auth/profile         - Get user profile
-PUT  /api/auth/profile         - Update user profile
+### 1. Clone the Repository
+```bash
+git clone <repository-url>
+cd auth-system
 ```
 
-#### Password Management
-```
-POST /api/auth/request-password-reset  - Request password reset
-POST /api/auth/reset-password          - Reset password
-POST /api/auth/change-password         - Change password (authenticated)
-```
-
-#### Email Verification
-```
-GET /api/auth/verify-email    - Verify email address
-```
-
-### Project Management Endpoints
-
-```
-POST   /api/projects           - Create new project
-GET    /api/projects           - Get user's projects
-GET    /api/projects/:id       - Get project details
-PUT    /api/projects/:id       - Update project
-DELETE /api/projects/:id       - Delete project
-GET    /api/projects/:id/stats - Get project statistics
-```
-
-### Project Users Management
-
-```
-GET    /api/projects/:id/users         - Get project users
-POST   /api/projects/:id/users         - Add user to project
-DELETE /api/projects/:id/users/:userId - Remove user from project
-PUT    /api/projects/:id/users/:userId/role - Update user role
-```
-
-### Request Headers
-
-All authenticated requests require:
-```
-Authorization: Bearer <access_token>
-x-api-key: <project_api_key>  // For project-specific endpoints
-```
-
-## Usage Examples
-
-### Creating a New Project
-
-1. **Sign up/Login** to the auth system
-2. **Navigate to Projects** and click "Create Project"
-3. **Configure project settings**:
-   - Project name and description
-   - Authentication settings (signup enabled, email verification, etc.)
-   - Password requirements
-   - Session timeout settings
-4. **Get your API keys** from the project dashboard
-5. **Configure your application** to use the auth system
-
-### Integrating with Your Application
-
-```javascript
-// Example: User signup in your app
-const response = await fetch('http://localhost:5000/api/auth/signup', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'x-api-key': 'your-project-api-key'
-  },
-  body: JSON.stringify({
-    email: 'user@example.com',
-    username: 'username',
-    password: 'password123',
-    firstName: 'John',
-    lastName: 'Doe'
-  })
-});
-
-const data = await response.json();
-```
-
-### User Schema Fields
-
-The user model includes comprehensive fields:
-
-- **Basic Info**: email, username, password, firstName, lastName, displayName
-- **Contact**: phoneNumber, dateOfBirth, gender
-- **Profile**: avatar, bio
-- **Status**: isVerified, isActive, isSuspended, role
-- **Security**: twoFactorEnabled, lastLogin, loginAttempts
-- **Preferences**: language, timezone, notifications, privacy settings
-- **Project Access**: role-based access to multiple projects
-- **Metadata**: createdAt, updatedAt, deletedAt
-
-## Development
-
-### Backend Development
-
+### 2. Backend Setup
 ```bash
 cd backend
-npm run dev  # Start with nodemon for auto-restart
+npm install
 ```
 
-### Frontend Development
+### 3. Configure MongoDB Atlas
 
+**Important**: This project is configured to use MongoDB Atlas. Follow the detailed setup guide:
+
+📋 **[MongoDB Atlas Setup Guide](./MONGODB_ATLAS_SETUP.md)**
+
+Quick steps:
+1. Create a MongoDB Atlas account at [cloud.mongodb.com](https://cloud.mongodb.com/)
+2. Create a new cluster (free tier available)
+3. Create a database user with read/write permissions
+4. Whitelist your IP address (or allow all for development: 0.0.0.0/0)
+5. Get your connection string and update `.env`
+
+### 4. Environment Configuration
+
+Update `backend/.env` with your MongoDB Atlas connection string:
+```env
+# Replace with your actual MongoDB Atlas connection string
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/auth-system?retryWrites=true&w=majority
+
+# Other configurations are already set with secure defaults
+PORT=5000
+NODE_ENV=development
+JWT_SECRET=super-secret-jwt-key-for-access-tokens-2024-auth-system-v1
+JWT_REFRESH_SECRET=super-secret-refresh-key-for-refresh-tokens-2024-auth-system-v1
+# ... (see full .env file for all options)
+```
+
+### 5. Initialize Demo Data
 ```bash
-cd frontend
-npm run dev  # Start Vite dev server
+# Create demo project and admin user
+npm run seed
 ```
 
-### Building for Production
+This creates:
+- 📧 Demo admin: `admin@demo.com` / `admin123`
+- 🔑 Demo API key: `ak_demo12345`
 
+### 6. Start Backend Server
 ```bash
-# Backend
-cd backend
-npm start
+npm run dev
+```
+Backend will run on `http://localhost:5000`
 
-# Frontend
-cd frontend
-npm run build
-npm run preview
+### 7. Frontend Setup
+```bash
+cd ../frontend
+npm install
+npm run dev
+```
+Frontend will run on `http://localhost:5173`
+
+## 🎯 Demo Credentials
+
+Once you've run the seed script, you can use these credentials to test:
+
+### Admin Login
+- **Email**: `admin@demo.com`
+- **Password**: `admin123`
+- **API Key**: `ak_demo12345`
+
+### Test Registration
+You can register new users using the API key `ak_demo12345` on the signup page.
+
+## 📁 Project Structure
+
+```
+auth-system/
+├── backend/                 # Node.js/Express backend
+│   ├── config/             # Database configuration
+│   ├── controllers/        # Route controllers
+│   ├── middleware/         # Custom middleware
+│   ├── models/            # Mongoose schemas
+│   ├── routes/            # API routes
+│   ├── scripts/           # Utility scripts
+│   ├── utils/             # Helper functions
+│   └── server.js          # Main server file
+│
+├── frontend/               # React frontend
+│   ├── public/            # Static assets
+│   ├── src/
+│   │   ├── components/    # Reusable components
+│   │   ├── contexts/      # React contexts
+│   │   ├── pages/         # Page components
+│   │   ├── utils/         # Utility functions
+│   │   └── App.jsx        # Main app component
+│   └── package.json
+│
+├── MONGODB_ATLAS_SETUP.md  # Detailed MongoDB Atlas guide
+└── README.md
 ```
 
-## Deployment
+## 🔧 Development
+
+### Available Scripts
+
+#### Backend
+```bash
+npm run dev      # Start development server
+npm run start    # Start production server
+npm run seed     # Initialize demo data
+```
+
+#### Frontend
+```bash
+npm run dev      # Start development server
+npm run build    # Build for production
+npm run preview  # Preview production build
+```
+
+### API Endpoints
+
+#### Authentication
+- `POST /api/auth/signup` - User registration
+- `POST /api/auth/login` - User login
+- `POST /api/auth/refresh` - Refresh access token
+- `POST /api/auth/logout` - User logout
+- `GET /api/auth/verify/:token` - Email verification
+- `POST /api/auth/forgot-password` - Request password reset
+- `POST /api/auth/reset-password` - Reset password
+
+#### User Management
+- `GET /api/auth/profile` - Get user profile
+- `PUT /api/auth/profile` - Update user profile
+- `POST /api/auth/change-password` - Change password
+- `DELETE /api/auth/delete-account` - Delete user account
+
+#### Projects
+- `GET /api/projects` - List user projects
+- `POST /api/projects` - Create new project
+- `GET /api/projects/:id` - Get project details
+- `PUT /api/projects/:id` - Update project
+- `DELETE /api/projects/:id` - Delete project
+- `GET /api/projects/:id/users` - List project users
+- `POST /api/projects/:id/users` - Add user to project
+
+## 🔒 Security Features
+
+- **Password Hashing** - Bcrypt with salt rounds
+- **JWT Tokens** - Secure access and refresh tokens
+- **Rate Limiting** - Prevent brute force attacks
+- **CORS Protection** - Configurable origin restrictions
+- **Input Validation** - Comprehensive request validation
+- **Account Lockout** - Automatic lockout after failed attempts
+- **Secure Headers** - Helmet.js security headers
+
+## 🚀 Deployment
 
 ### Backend Deployment
-
-1. Set `NODE_ENV=production`
-2. Configure production database URL
-3. Set secure JWT secrets
-4. Configure production email service
-5. Deploy to your preferred platform (Heroku, Railway, DigitalOcean, etc.)
+1. Set environment variables on your hosting platform
+2. Ensure MongoDB Atlas is properly configured
+3. Configure email service for production
+4. Deploy using platforms like Heroku, Railway, or DigitalOcean
 
 ### Frontend Deployment
+1. Build the production bundle: `npm run build`
+2. Deploy to Netlify, Vercel, or any static hosting service
+3. Update `VITE_API_URL` to point to your backend
 
-1. Update `VITE_API_URL` to production backend URL
-2. Build the application: `npm run build`
-3. Deploy to static hosting (Vercel, Netlify, CloudFlare Pages, etc.)
+## 🛠️ Configuration
 
-## Contributing
+### MongoDB Atlas Connection
+See [MONGODB_ATLAS_SETUP.md](./MONGODB_ATLAS_SETUP.md) for detailed instructions.
+
+### Email Service
+Update the email configuration in `backend/.env`:
+```env
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASS=your-app-password
+```
+
+### CORS Configuration
+Update allowed origins in `backend/.env`:
+```env
+FRONTEND_URL=https://your-frontend-domain.com
+```
+
+## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit your changes: `git commit -m 'Add amazing feature'`
-4. Push to the branch: `git push origin feature/amazing-feature`
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## License
+## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
 
-## Support
+## 🆘 Support
 
-For support, email support@yourapp.com or create an issue in the GitHub repository.
+If you encounter any issues:
+
+1. **MongoDB Atlas Connection**: Check the [setup guide](./MONGODB_ATLAS_SETUP.md)
+2. **Authentication Issues**: Verify API keys and JWT secrets
+3. **CORS Errors**: Check frontend URL configuration
+4. **Email Issues**: Verify SMTP settings
+
+For additional help, please create an issue in the repository.
 
 ---
 
-## Roadmap
-
-### Upcoming Features
-- [ ] Two-factor authentication (2FA)
-- [ ] OAuth provider integration (Google, GitHub, Facebook)
-- [ ] Advanced audit logging
-- [ ] User analytics and insights
-- [ ] API rate limiting per project
-- [ ] Webhook support for user events
-- [ ] Mobile SDKs (React Native, Flutter)
-- [ ] Advanced user segmentation
-- [ ] SAML SSO integration
-- [ ] Custom email templates editor
-
-Built with ❤️ for developers who need reliable authentication.
+**Made with ❤️ for developers who need Firebase-like authentication without the vendor lock-in.**
