@@ -4,9 +4,10 @@ import Project from '../models/Project.js';
 import { generateAccessToken, generateRefreshToken } from '../utils/jwt.js';
 import { sendWelcomeEmail, sendVerificationEmail, sendPasswordResetEmail } from '../utils/email.js';
 import crypto from 'crypto';
-import { Parser } from 'json2csv';
-import csv from 'csv-parser';
-import { Readable } from 'stream';
+// CSV imports temporarily disabled for deployment stability
+// import { Parser } from 'json2csv';
+// import csv from 'csv-parser';
+// import { Readable } from 'stream';
 
 // Register a new user for a specific project
 export const registerProjectUser = async (req, res) => {
@@ -595,8 +596,17 @@ export const updateProjectUserStatus = async (req, res) => {
   }
 };
 
-// Add export users endpoint
+// Export users endpoint temporarily disabled for deployment stability
+// TODO: Re-enable after fixing CSV dependencies
 export const exportUsers = async (req, res) => {
+  res.status(501).json({
+    success: false,
+    message: 'Export feature temporarily unavailable'
+  });
+  return;
+  
+  // Original function commented out:
+  /*
   try {
     const projectId = req.project.id;
     const { format = 'json', includeCustomFields = true, dateRange } = req.body;
@@ -680,10 +690,20 @@ export const exportUsers = async (req, res) => {
       message: 'Failed to export users'
     });
   }
+  */
 };
 
-// Add import users endpoint
+// Import users endpoint temporarily disabled for deployment stability  
+// TODO: Re-enable after fixing CSV dependencies
 export const importUsers = async (req, res) => {
+  res.status(501).json({
+    success: false,
+    message: 'Import feature temporarily unavailable'
+  });
+  return;
+  
+  // Original function commented out:
+  /*
   try {
     const projectId = req.project.id;
     const { data, options = {} } = req.body;
@@ -785,6 +805,7 @@ export const importUsers = async (req, res) => {
       message: 'Failed to import users'
     });
   }
+  */
 };
 
 // Add get all users endpoint (admin functionality)
