@@ -107,7 +107,7 @@ A comprehensive user management and authentication system built with Node.js/Exp
    EMAIL_PORT=587
    EMAIL_USER=your-email@gmail.com
    EMAIL_PASS=your-app-password
-   FRONTEND_URL=http://localhost:3000
+       FRONTEND_URL=http://localhost:5173
    ```
 
 4. **Start the backend server**
@@ -127,7 +127,7 @@ A comprehensive user management and authentication system built with Node.js/Exp
    ```
 
 7. **Access the application**
-   - Frontend: http://localhost:3000
+   - Frontend: http://localhost:5173
    - Backend API: http://localhost:5000
    - API Documentation: http://localhost:5000/api
 
