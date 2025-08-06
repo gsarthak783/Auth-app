@@ -5,18 +5,12 @@ import {
   login,
   refreshToken,
   logout,
-  logoutAll,
-  verifyEmail,
-  requestPasswordReset,
+  forgotPassword,
   resetPassword,
   changePassword,
   getProfile,
   updateProfile,
-  deleteAccount,
-  validateSignup,
-  validateLogin,
-  validatePasswordReset,
-  validatePasswordChange
+  deleteAccount
 } from '../controllers/authController.js';
 import {
   authenticate,
@@ -46,20 +40,18 @@ const generalLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Public routes (with project verification)
-router.post('/signup', authLimiter, verifyProjectAccess, validateSignup, signup);
-router.post('/login', authLimiter, verifyProjectAccess, validateLogin, login);
+// Public routes (platform users - no project verification needed)
+router.post('/signup', authLimiter, signup);
+router.post('/login', authLimiter, login);
 router.post('/refresh-token', generalLimiter, refreshToken);
-router.get('/verify-email', generalLimiter, verifyEmail);
-router.post('/request-password-reset', authLimiter, optionalAuth, validatePasswordReset, requestPasswordReset);
-router.post('/reset-password', authLimiter, validatePasswordChange, resetPassword);
+router.post('/forgot-password', authLimiter, forgotPassword);
+router.post('/reset-password', authLimiter, resetPassword);
 
 // Protected routes (require authentication)
 router.use(authenticate); // All routes below require authentication
 
 router.post('/logout', generalLimiter, logout);
-router.post('/logout-all', generalLimiter, logoutAll);
-router.post('/change-password', authLimiter, validatePasswordChange, changePassword);
+router.post('/change-password', authLimiter, changePassword);
 
 // Profile routes
 router.get('/profile', generalLimiter, getProfile);

@@ -1,6 +1,6 @@
 import { validationResult } from 'express-validator';
 import User from '../models/User.js';
-import { generateAccessToken, generateRefreshToken, verifyToken } from '../utils/jwt.js';
+import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt.js';
 import { sendWelcomeEmail, sendVerificationEmail, sendPasswordResetEmail } from '../utils/email.js';
 import crypto from 'crypto';
 
@@ -268,7 +268,7 @@ export const refreshToken = async (req, res) => {
     }
 
     try {
-      const decoded = verifyToken(refreshToken, process.env.JWT_REFRESH_SECRET);
+      const decoded = verifyRefreshToken(refreshToken);
       
       // Find user and check if refresh token exists and is valid
       const user = await User.findById(decoded.userId);
