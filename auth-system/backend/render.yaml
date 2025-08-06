@@ -3,12 +3,14 @@ services:
     name: auth-system-backend
     env: node
     plan: free
-    buildCommand: rm -rf node_modules package-lock.json && npm ci
+    buildCommand: chmod +x build.sh && ./build.sh
     startCommand: node server.js
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
+      - key: NODE_VERSION
+        value: 18.20.4
       - key: PORT
         value: 10000
     # Environment variables to be set in Render dashboard:
