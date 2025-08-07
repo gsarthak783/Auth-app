@@ -167,8 +167,19 @@ const login = async (req, res) => {
     }
 
     // Verify password
-    const isValidPassword = await user.comparePassword(password);
-    if (!isValidPassword) {
+    const passwordResult = await user.comparePassword(password);
+    
+    // Handle password reset requirement (for legacy bcryptjs hashes)
+    if (passwordResult.needsPasswordReset) {
+      return res.status(400).json({
+        success: false,
+        message: 'Your account needs a password reset due to a security update. Please use the forgot password feature.',
+        needsPasswordReset: true,
+        email: user.email
+      });
+    }
+    
+    if (!passwordResult.isValid) {
       await user.incrementLoginAttempts();
       return res.status(401).json({
         success: false,
@@ -503,8 +514,18 @@ const changePassword = async (req, res) => {
     }
 
     // Verify current password
-    const isValidPassword = await user.comparePassword(currentPassword);
-    if (!isValidPassword) {
+    const passwordResult = await user.comparePassword(currentPassword);
+    
+    // Handle password reset requirement (for legacy bcryptjs hashes)
+    if (passwordResult.needsPasswordReset) {
+      return res.status(400).json({
+        success: false,
+        message: 'Your account needs a password reset due to a security update. Please use the forgot password feature.',
+        needsPasswordReset: true
+      });
+    }
+    
+    if (!passwordResult.isValid) {
       return res.status(400).json({
         success: false,
         message: 'Current password is incorrect'

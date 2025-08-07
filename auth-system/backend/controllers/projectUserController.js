@@ -222,8 +222,19 @@ const loginProjectUser = async (req, res) => {
     }
 
     // Verify password
-    const isValidPassword = await projectUser.comparePassword(password);
-    if (!isValidPassword) {
+    const passwordResult = await projectUser.comparePassword(password);
+    
+    // Handle password reset requirement (for legacy bcryptjs hashes)
+    if (passwordResult.needsPasswordReset) {
+      return res.status(400).json({
+        success: false,
+        message: 'Your account needs a password reset due to a security update. Please use the forgot password feature.',
+        needsPasswordReset: true,
+        email: projectUser.email
+      });
+    }
+    
+    if (!passwordResult.isValid) {
       await projectUser.incrementLoginAttempts();
       return res.status(401).json({
         success: false,

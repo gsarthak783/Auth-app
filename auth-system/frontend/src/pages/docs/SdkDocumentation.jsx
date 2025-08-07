@@ -1,786 +1,873 @@
 import React, { useState } from 'react';
-import { Copy, Check, Code, Package, Zap, Settings, Users, Database } from 'lucide-react';
-import DocsLayout from '../../components/Layout/DocsLayout';
+import { Copy, Check, Code, Package, Download, ExternalLink, Zap, Shield, Users } from 'lucide-react';
 
 const SdkDocumentation = () => {
-  const [copiedCode, setCopiedCode] = useState('');
-  const [activeTab, setActiveTab] = useState('installation');
+  const [copiedCode, setCopiedCode] = useState(null);
 
-  const copyToClipboard = async (code, id) => {
+  const copyToClipboard = async (text, id) => {
     try {
-      await navigator.clipboard.writeText(code);
+      await navigator.clipboard.writeText(text);
       setCopiedCode(id);
-      setTimeout(() => setCopiedCode(''), 2000);
-    } catch (error) {
-      console.error('Failed to copy:', error);
+      setTimeout(() => setCopiedCode(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
     }
   };
 
-  const CodeBlock = ({ code, language = 'javascript', id }) => (
+  const CodeBlock = ({ code, language, id }) => (
     <div className="relative">
-      <div className="flex items-center justify-between bg-base-300 px-4 py-2 rounded-t-lg">
-        <span className="text-sm font-medium text-base-content">{language}</span>
-        <button
-          onClick={() => copyToClipboard(code, id)}
-          className="flex items-center space-x-1 text-sm text-base-content/70 hover:text-base-content transition-colors"
-        >
-          {copiedCode === id ? (
-            <>
-              <Check className="w-4 h-4" />
-              <span>Copied!</span>
-            </>
-          ) : (
-            <>
-              <Copy className="w-4 h-4" />
-              <span>Copy</span>
-            </>
-          )}
-        </button>
-      </div>
-      <pre className="bg-base-100 p-4 rounded-b-lg overflow-x-auto border border-base-300">
-        <code>{code}</code>
+      <pre className="bg-base-200 p-4 rounded-lg overflow-x-auto">
+        <code className={`language-${language}`}>{code}</code>
       </pre>
+      <button
+        onClick={() => copyToClipboard(code, id)}
+        className="absolute top-2 right-2 btn btn-sm btn-ghost"
+        title="Copy to clipboard"
+      >
+        {copiedCode === id ? <Check size={16} /> : <Copy size={16} />}
+      </button>
     </div>
   );
 
-  const tabs = [
-    { id: 'installation', name: 'Installation', icon: Package },
-    { id: 'basic-usage', name: 'Basic Usage', icon: Zap },
-    { id: 'advanced', name: 'Advanced Features', icon: Settings },
-    { id: 'admin', name: 'Admin Functions', icon: Users },
-  ];
-
   return (
-    <DocsLayout>
-      <div className="max-w-6xl mx-auto px-6 py-12">
-        {/* Header */}
-        <div className="mb-12">
-          <div className="flex items-center space-x-3 mb-4">
-            <Code className="w-8 h-8 text-primary" />
-            <h1 className="text-4xl font-bold text-base-content">JavaScript SDK</h1>
-          </div>
-          <p className="text-xl text-base-content/70">
-            Complete JavaScript/TypeScript SDK for AuthSystem. Works in browsers, Node.js, and React Native.
-          </p>
+    <div className="max-w-6xl mx-auto">
+      {/* Header */}
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold text-base-content mb-4">
+          SDK Documentation
+        </h1>
+        <p className="text-xl text-base-content/70 mb-6">
+          Comprehensive documentation for AccessKit's JavaScript/TypeScript and React SDKs
+        </p>
+        <div className="flex flex-wrap justify-center gap-4">
+          <a 
+            href="https://npmjs.com/package/@gsarthak783/accesskit-auth" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="btn btn-primary"
+          >
+            <Download size={16} />
+            Core SDK
+            <ExternalLink size={16} />
+          </a>
+          <a 
+            href="https://npmjs.com/package/@gsarthak783/accesskit-react" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="btn btn-secondary"
+          >
+            <Download size={16} />
+            React SDK
+            <ExternalLink size={16} />
+          </a>
         </div>
+      </div>
 
-        {/* Features Overview */}
-        <section className="mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-base-200 p-6 rounded-lg text-center">
-              <Zap className="w-8 h-8 text-primary mx-auto mb-3" />
-              <h3 className="font-semibold text-base-content mb-2">Easy Setup</h3>
-              <p className="text-sm text-base-content/70">One-line installation and simple configuration</p>
-            </div>
-            <div className="bg-base-200 p-6 rounded-lg text-center">
-              <Code className="w-8 h-8 text-primary mx-auto mb-3" />
-              <h3 className="font-semibold text-base-content mb-2">TypeScript</h3>
-              <p className="text-sm text-base-content/70">Full TypeScript support with type definitions</p>
-            </div>
-            <div className="bg-base-200 p-6 rounded-lg text-center">
-              <Settings className="w-8 h-8 text-primary mx-auto mb-3" />
-              <h3 className="font-semibold text-base-content mb-2">Auto Refresh</h3>
-              <p className="text-sm text-base-content/70">Automatic token refresh and retry logic</p>
-            </div>
-            <div className="bg-base-200 p-6 rounded-lg text-center">
-              <Database className="w-8 h-8 text-primary mx-auto mb-3" />
-              <h3 className="font-semibold text-base-content mb-2">Multi Storage</h3>
-              <p className="text-sm text-base-content/70">localStorage, cookies, or memory storage</p>
+      {/* Overview */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-base-content mb-6">Overview</h2>
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="card bg-base-100 shadow-xl">
+            <div className="card-body">
+              <h3 className="card-title">
+                <Code size={20} />
+                Core SDK (@gsarthak783/accesskit-auth)
+              </h3>
+              <p className="text-base-content/70 mb-4">
+                Universal JavaScript/TypeScript SDK that works with any framework or environment.
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-sm text-base-content/70">
+                <li>Framework agnostic</li>
+                <li>Full TypeScript support</li>
+                <li>Complete authentication API</li>
+                <li>Token management</li>
+                <li>Event system</li>
+              </ul>
+              <div className="card-actions justify-end mt-4">
+                <div className="badge badge-primary">Universal</div>
+                <div className="badge badge-outline">TypeScript</div>
+              </div>
             </div>
           </div>
-        </section>
 
-        {/* Tabs */}
-        <div className="tabs tabs-boxed mb-8">
-          {tabs.map(tab => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                className={`tab ${activeTab === tab.id ? 'tab-active' : ''}`}
-                onClick={() => setActiveTab(tab.id)}
-              >
-                <Icon className="w-4 h-4 mr-2" />
-                {tab.name}
-              </button>
-            );
-          })}
+          <div className="card bg-base-100 shadow-xl">
+            <div className="card-body">
+              <h3 className="card-title">
+                <Package size={20} />
+                React SDK (@gsarthak783/accesskit-react)
+              </h3>
+              <p className="text-base-content/70 mb-4">
+                React-specific SDK with hooks, context provider, and ready-to-use components.
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-sm text-base-content/70">
+                <li>useAuth hook</li>
+                <li>AuthProvider context</li>
+                <li>Ready-to-use components</li>
+                <li>Auto dependency management</li>
+                <li>TypeScript support</li>
+              </ul>
+              <div className="card-actions justify-end mt-4">
+                <div className="badge badge-secondary">React</div>
+                <div className="badge badge-outline">Hooks</div>
+              </div>
+            </div>
+          </div>
         </div>
+      </section>
 
-        {/* Content based on active tab */}
-        {activeTab === 'installation' && (
-          <div>
-            <h2 className="text-2xl font-semibold text-base-content mb-6">Installation & Setup</h2>
-            
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-base-content mb-4">Install via NPM</h3>
-              <CodeBlock
-                code="npm install @your-auth/sdk"
-                language="bash"
-                id="install-npm"
-              />
-            </div>
-
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-base-content mb-4">Install via Yarn</h3>
-              <CodeBlock
-                code="yarn add @your-auth/sdk"
-                language="bash"
-                id="install-yarn"
-              />
-            </div>
-
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-base-content mb-4">Basic Setup</h3>
-              <CodeBlock
-                code={`import { AuthClient } from '@your-auth/sdk';
-
-// Initialize the client
-const authClient = new AuthClient({
-  apiKey: 'your-project-api-key',
-  baseUrl: 'https://your-auth-service.com/api/project-users'
-});
-
-// Optional: Custom configuration
-const authClient = new AuthClient({
-  apiKey: 'your-project-api-key',
-  baseUrl: 'https://your-auth-service.com/api/project-users',
-  timeout: 10000,          // Request timeout in ms
-  retryAttempts: 3         // Number of retry attempts
-});`}
-                language="javascript"
-                id="basic-setup"
-              />
-            </div>
-
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-base-content mb-4">Environment Variables</h3>
-              <CodeBlock
-                code={`// .env
-VITE_AUTH_API_KEY=your-project-api-key
-VITE_AUTH_BASE_URL=https://your-auth-service.com/api/project-users
-
-// In your code
-const authClient = new AuthClient({
-  apiKey: import.meta.env.VITE_AUTH_API_KEY,
-  baseUrl: import.meta.env.VITE_AUTH_BASE_URL
-});`}
-                language="javascript"
-                id="env-vars"
-              />
-            </div>
-
-            <div className="bg-amber-50 border border-amber-200 p-6 rounded-lg">
-              <h3 className="font-semibold text-amber-900 mb-3">⚠️ Security Note</h3>
-              <p className="text-amber-800">
-                Never expose your API key in frontend code for production apps. 
-                Consider proxying requests through your backend or using environment variables.
+      {/* Features */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-base-content mb-6">Key Features</h2>
+        <div className="grid md:grid-cols-3 gap-6">
+          <div className="card bg-base-100 shadow-xl">
+            <div className="card-body text-center">
+              <Zap size={32} className="mx-auto mb-4 text-primary" />
+              <h3 className="card-title justify-center">Easy Integration</h3>
+              <p className="text-base-content/70">
+                Get started in minutes with simple installation and intuitive APIs
               </p>
             </div>
           </div>
-        )}
-
-        {activeTab === 'basic-usage' && (
-          <div>
-            <h2 className="text-2xl font-semibold text-base-content mb-6">Basic Usage</h2>
-            
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-base-content mb-4">User Registration</h3>
-              <CodeBlock
-                code={`// Register a new user
-const user = await authClient.register({
-  email: 'user@example.com',
-  password: 'securePassword123',
-  firstName: 'John',
-  lastName: 'Doe',
-  username: 'johndoe',           // optional
-  customFields: {                // optional
-    company: 'Acme Corp',
-    role: 'Developer'
-  }
-});
-
-console.log('User registered:', user);`}
-                language="javascript"
-                id="register-user"
-              />
-            </div>
-
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-base-content mb-4">User Login</h3>
-              <CodeBlock
-                code={`// Login user
-const response = await authClient.login({
-  email: 'user@example.com',
-  password: 'securePassword123'
-});
-
-console.log('User:', response.user);
-console.log('Access Token:', response.accessToken);
-
-// Check if user is authenticated
-if (authClient.isAuthenticated()) {
-  console.log('User is logged in!');
-}`}
-                language="javascript"
-                id="login-user"
-              />
-            </div>
-
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-base-content mb-4">Get User Profile</h3>
-              <CodeBlock
-                code={`// Get current user profile
-const user = await authClient.getProfile();
-console.log('Current user:', user);
-
-// Access user properties
-console.log('Email:', user.email);
-console.log('Name:', user.firstName, user.lastName);
-console.log('Custom fields:', user.customFields);`}
-                language="javascript"
-                id="get-profile"
-              />
-            </div>
-
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-base-content mb-4">Update Profile</h3>
-              <CodeBlock
-                code={`// Update user profile
-const updatedUser = await authClient.updateProfile({
-  firstName: 'Jane',
-  lastName: 'Smith',
-  displayName: 'Jane Smith',
-  customFields: {
-    company: 'New Company',
-    role: 'Senior Developer',
-    preferences: {
-      newsletter: true,
-      theme: 'dark'
-    }
-  }
-});
-
-console.log('Profile updated:', updatedUser);`}
-                language="javascript"
-                id="update-profile"
-              />
-            </div>
-
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-base-content mb-4">Logout</h3>
-              <CodeBlock
-                code={`// Logout user
-await authClient.logout();
-console.log('User logged out');
-
-// Check authentication status
-console.log('Is authenticated:', authClient.isAuthenticated()); // false`}
-                language="javascript"
-                id="logout-user"
-              />
-            </div>
-
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-base-content mb-4">Password Reset</h3>
-              <CodeBlock
-                code={`// Request password reset
-await authClient.requestPasswordReset('user@example.com');
-console.log('Password reset email sent');
-
-// Reset password with token (from email)
-await authClient.resetPassword('reset-token', 'newPassword123');
-console.log('Password reset successful');`}
-                language="javascript"
-                id="password-reset"
-              />
+          <div className="card bg-base-100 shadow-xl">
+            <div className="card-body text-center">
+              <Shield size={32} className="mx-auto mb-4 text-secondary" />
+              <h3 className="card-title justify-center">Secure by Default</h3>
+              <p className="text-base-content/70">
+                Built-in security features including automatic token management
+              </p>
             </div>
           </div>
-        )}
+          <div className="card bg-base-100 shadow-xl">
+            <div className="card-body text-center">
+              <Users size={32} className="mx-auto mb-4 text-accent" />
+              <h3 className="card-title justify-center">Complete User Management</h3>
+              <p className="text-base-content/70">
+                Full user lifecycle including registration, login, and profile management
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
-        {activeTab === 'advanced' && (
-          <div>
-            <h2 className="text-2xl font-semibold text-base-content mb-6">Advanced Features</h2>
-            
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-base-content mb-4">Event System</h3>
-              <CodeBlock
-                code={`// Listen for authentication events
-authClient.on('login', (data) => {
+      {/* Installation */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-base-content mb-6">Installation</h2>
+        
+        <div className="tabs tabs-boxed mb-6">
+          <input type="radio" name="install_tabs" className="tab" aria-label="JavaScript SDK" defaultChecked />
+          <div className="tab-content bg-base-100 border-base-300 rounded-box p-6">
+            <h3 className="text-xl font-semibold mb-4">Core JavaScript/TypeScript SDK</h3>
+            <p className="text-base-content/70 mb-4">
+              For any JavaScript/TypeScript project including Node.js, Vue, Angular, vanilla JS, etc.
+            </p>
+            <CodeBlock
+              code="npm install @gsarthak783/accesskit-auth"
+              language="bash"
+              id="install-core"
+            />
+          </div>
+
+          <input type="radio" name="install_tabs" className="tab" aria-label="React SDK" />
+          <div className="tab-content bg-base-100 border-base-300 rounded-box p-6">
+            <h3 className="text-xl font-semibold mb-4">React SDK</h3>
+            <p className="text-base-content/70 mb-4">
+              For React applications. Automatically includes the core SDK as a dependency.
+            </p>
+            <CodeBlock
+              code="npm install @gsarthak783/accesskit-react"
+              language="bash"
+              id="install-react"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Core SDK Documentation */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-base-content mb-6">Core SDK (@gsarthak783/accesskit-auth)</h2>
+
+        <div className="card bg-base-100 shadow-xl mb-6">
+          <div className="card-body">
+            <h3 className="card-title">Basic Setup</h3>
+            <CodeBlock
+              code={`import { AuthClient } from '@gsarthak783/accesskit-auth';
+
+const auth = new AuthClient({
+  projectId: 'your-project-id',
+  apiKey: 'your-api-key'
+  // baseUrl: 'https://access-kit-server.vercel.app/api/project-users' // Optional, defaults to this
+});
+
+// Register user
+const user = await auth.register({
+  email: 'user@example.com',
+  password: 'securepassword',
+  firstName: 'John',
+  lastName: 'Doe'
+});
+
+// Login user
+const response = await auth.login({
+  email: 'user@example.com',
+  password: 'securepassword'
+});
+
+// Check authentication
+if (auth.isAuthenticated()) {
+  const profile = await auth.getProfile();
+  console.log('User profile:', profile);
+}`}
+              language="javascript"
+              id="core-setup"
+            />
+          </div>
+        </div>
+
+        <div className="card bg-base-100 shadow-xl mb-6">
+          <div className="card-body">
+            <h3 className="card-title">Configuration Options</h3>
+            <div className="overflow-x-auto">
+              <table className="table table-zebra">
+                <thead>
+                  <tr>
+                    <th>Property</th>
+                    <th>Type</th>
+                    <th>Required</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>projectId</code></td>
+                    <td>string</td>
+                    <td>✅</td>
+                    <td>Your project ID from AccessKit dashboard</td>
+                  </tr>
+                  <tr>
+                    <td><code>apiKey</code></td>
+                    <td>string</td>
+                    <td>✅</td>
+                    <td>Your project API key</td>
+                  </tr>
+                  <tr>
+                    <td><code>baseUrl</code></td>
+                    <td>string</td>
+                    <td>❌</td>
+                    <td>API base URL (defaults to live server)</td>
+                  </tr>
+                  <tr>
+                    <td><code>timeout</code></td>
+                    <td>number</td>
+                    <td>❌</td>
+                    <td>Request timeout in milliseconds (default: 10000)</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div className="card bg-base-100 shadow-xl mb-6">
+          <div className="card-body">
+            <h3 className="card-title">Core Methods</h3>
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold text-base-content mb-2">Authentication</h4>
+                <CodeBlock
+                  code={`// Register new user
+const user = await auth.register({
+  email: 'user@example.com',
+  password: 'securepassword',
+  firstName: 'John',
+  lastName: 'Doe',
+  username: 'johndoe', // optional
+  customFields: { role: 'user' } // optional
+});
+
+// Login user
+const response = await auth.login({
+  email: 'user@example.com',
+  password: 'securepassword'
+});
+
+// Logout user
+await auth.logout();
+
+// Check authentication status
+const isLoggedIn = auth.isAuthenticated();`}
+                  language="javascript"
+                  id="auth-methods"
+                />
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-base-content mb-2">Profile Management</h4>
+                <CodeBlock
+                  code={`// Get user profile
+const profile = await auth.getProfile();
+
+// Update profile
+const updatedUser = await auth.updateProfile({
+  firstName: 'Jane',
+  customFields: { role: 'admin' }
+});
+
+// Request password reset
+await auth.requestPasswordReset('user@example.com');
+
+// Reset password with token
+await auth.resetPassword('reset-token', 'newpassword');
+
+// Verify email
+await auth.verifyEmail('verification-token');`}
+                  language="javascript"
+                  id="profile-methods"
+                />
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-base-content mb-2">Admin Functions (API Key Required)</h4>
+                <CodeBlock
+                  code={`// Get all users
+const users = await auth.getAllUsers({
+  page: 1,
+  limit: 50,
+  search: 'john@example.com',
+  status: 'active'
+});
+
+// Delete user
+await auth.deleteUser('user-id');
+
+// Update user status
+await auth.updateUserStatus('user-id', 'suspended');
+
+// Get statistics
+const stats = await auth.getStats();`}
+                  language="javascript"
+                  id="admin-methods"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="card bg-base-100 shadow-xl mb-6">
+          <div className="card-body">
+            <h3 className="card-title">Event Handling</h3>
+            <CodeBlock
+              code={`// Listen to authentication events
+auth.on('login', (data) => {
   console.log('User logged in:', data.user);
-  // Update UI, redirect, etc.
 });
 
-authClient.on('logout', () => {
+auth.on('logout', () => {
   console.log('User logged out');
-  // Clear user data, redirect to login
 });
 
-authClient.on('token_refresh', () => {
-  console.log('Token refreshed automatically');
+auth.on('token_refresh', (data) => {
+  console.log('Token refreshed:', data.accessToken);
 });
 
-authClient.on('error', (data) => {
-  console.error('Auth error:', data.error);
-  // Handle authentication errors
+auth.on('error', (error) => {
+  console.error('Authentication error:', error);
 });
 
 // Remove event listeners
-const handleLogin = (data) => console.log('Login:', data.user);
-authClient.on('login', handleLogin);
-authClient.off('login', handleLogin); // Remove listener`}
-                language="javascript"
-                id="event-system"
-              />
-            </div>
+auth.off('login', loginHandler);`}
+              language="javascript"
+              id="events"
+            />
+          </div>
+        </div>
+      </section>
 
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-base-content mb-4">Custom Token Storage</h3>
-              <CodeBlock
-                code={`import { AuthClient, LocalTokenStorage, MemoryTokenStorage, CookieTokenStorage } from '@your-auth/sdk';
+      {/* React SDK Documentation */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-base-content mb-6">React SDK (@gsarthak783/accesskit-react)</h2>
 
-// Default: localStorage
-const authClient = new AuthClient(config);
+        <div className="card bg-base-100 shadow-xl mb-6">
+          <div className="card-body">
+            <h3 className="card-title">Basic Setup</h3>
+            <CodeBlock
+              code={`import React from 'react';
+import { AuthProvider, useAuth } from '@gsarthak783/accesskit-react';
 
-// Memory storage (SSR-friendly)
-const memoryStorage = new MemoryTokenStorage();
-const authClient = new AuthClient(config, memoryStorage);
-
-// Cookie storage (more secure)
-const cookieStorage = new CookieTokenStorage('myapp');
-const authClient = new AuthClient(config, cookieStorage);
-
-// Custom storage implementation
-class CustomStorage {
-  getAccessToken() {
-    return sessionStorage.getItem('access_token');
-  }
-  
-  setAccessToken(token) {
-    sessionStorage.setItem('access_token', token);
-  }
-  
-  getRefreshToken() {
-    return sessionStorage.getItem('refresh_token');
-  }
-  
-  setRefreshToken(token) {
-    sessionStorage.setItem('refresh_token', token);
-  }
-  
-  clearTokens() {
-    sessionStorage.removeItem('access_token');
-    sessionStorage.removeItem('refresh_token');
-  }
+// 1. Wrap your app with AuthProvider
+function App() {
+  return (
+    <AuthProvider config={{
+      projectId: 'your-project-id',
+      apiKey: 'your-api-key'
+    }}>
+      <MyComponent />
+    </AuthProvider>
+  );
 }
 
-const customStorage = new CustomStorage();
-const authClient = new AuthClient(config, customStorage);`}
-                language="javascript"
-                id="custom-storage"
-              />
-            </div>
+// 2. Use the useAuth hook in components
+function MyComponent() {
+  const { user, isAuthenticated, login, logout } = useAuth();
 
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-base-content mb-4">Error Handling</h3>
-              <CodeBlock
-                code={`// Try-catch for specific operations
-try {
-  const user = await authClient.login(credentials);
-  console.log('Login successful:', user);
-} catch (error) {
-  if (error.message.includes('Invalid credentials')) {
-    // Handle invalid login
-    showError('Invalid email or password');
-  } else if (error.message.includes('Account not verified')) {
-    // Handle unverified account
-    showVerificationPrompt();
-  } else {
-    // Handle other errors
-    showError('Login failed. Please try again.');
+  if (!isAuthenticated) {
+    return (
+      <button onClick={() => login('user@example.com', 'password')}>
+        Login
+      </button>
+    );
   }
+
+  return (
+    <div>
+      <h1>Welcome, {user.firstName}!</h1>
+      <button onClick={logout}>Logout</button>
+    </div>
+  );
+}`}
+              language="jsx"
+              id="react-setup"
+            />
+          </div>
+        </div>
+
+        <div className="card bg-base-100 shadow-xl mb-6">
+          <div className="card-body">
+            <h3 className="card-title">useAuth Hook Properties</h3>
+            <div className="overflow-x-auto">
+              <table className="table table-zebra">
+                <thead>
+                  <tr>
+                    <th>Property</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>user</code></td>
+                    <td>User | null</td>
+                    <td>Current user object or null</td>
+                  </tr>
+                  <tr>
+                    <td><code>isLoading</code></td>
+                    <td>boolean</td>
+                    <td>Loading state for auth operations</td>
+                  </tr>
+                  <tr>
+                    <td><code>isAuthenticated</code></td>
+                    <td>boolean</td>
+                    <td>Whether user is authenticated</td>
+                  </tr>
+                  <tr>
+                    <td><code>login</code></td>
+                    <td>function</td>
+                    <td>Login with email and password</td>
+                  </tr>
+                  <tr>
+                    <td><code>register</code></td>
+                    <td>function</td>
+                    <td>Register a new user</td>
+                  </tr>
+                  <tr>
+                    <td><code>logout</code></td>
+                    <td>function</td>
+                    <td>Logout current user</td>
+                  </tr>
+                  <tr>
+                    <td><code>updateProfile</code></td>
+                    <td>function</td>
+                    <td>Update user profile</td>
+                  </tr>
+                  <tr>
+                    <td><code>client</code></td>
+                    <td>AuthClient</td>
+                    <td>Direct access to core SDK</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div className="card bg-base-100 shadow-xl mb-6">
+          <div className="card-body">
+            <h3 className="card-title">Ready-to-Use Components</h3>
+            <CodeBlock
+              code={`import { LoginForm } from '@gsarthak783/accesskit-react';
+
+function LoginPage() {
+  return (
+    <LoginForm
+      onSuccess={() => console.log('Login successful!')}
+      onError={(error) => console.error('Login failed:', error)}
+      className="custom-login-form"
+      buttonText="Sign In"
+      showSignupLink={true}
+      onSignupClick={() => navigate('/signup')}
+    />
+  );
+}`}
+              language="jsx"
+              id="login-component"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Framework Integration Examples */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-base-content mb-6">Framework Integration Examples</h2>
+
+        <div className="tabs tabs-boxed mb-6">
+          <input type="radio" name="framework_tabs" className="tab" aria-label="Next.js" defaultChecked />
+          <div className="tab-content bg-base-100 border-base-300 rounded-box p-6">
+            <h3 className="text-xl font-semibold mb-4">Next.js Integration</h3>
+            <CodeBlock
+              code={`// pages/_app.js
+import { AuthProvider } from '@gsarthak783/accesskit-react';
+
+function MyApp({ Component, pageProps }) {
+  return (
+    <AuthProvider config={{ projectId: 'xxx', apiKey: 'xxx' }}>
+      <Component {...pageProps} />
+    </AuthProvider>
+  );
 }
 
-// Global error handling
-authClient.on('error', (data) => {
-  const error = data.error;
-  
-  if (error.message.includes('Network')) {
-    showNetworkError();
-  } else if (error.message.includes('401')) {
-    redirectToLogin();
-  } else {
-    showGenericError(error.message);
+// pages/api/auth/register.js
+import { AuthClient } from '@gsarthak783/accesskit-auth';
+
+const auth = new AuthClient({
+  projectId: process.env.AUTH_PROJECT_ID,
+  apiKey: process.env.AUTH_API_KEY
+});
+
+export default async function handler(req, res) {
+  if (req.method === 'POST') {
+    try {
+      const user = await auth.register(req.body);
+      res.status(200).json({ user });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+}`}
+              language="javascript"
+              id="nextjs-example"
+            />
+          </div>
+
+          <input type="radio" name="framework_tabs" className="tab" aria-label="Vue.js" />
+          <div className="tab-content bg-base-100 border-base-300 rounded-box p-6">
+            <h3 className="text-xl font-semibold mb-4">Vue.js Integration</h3>
+            <CodeBlock
+              code={`// main.js
+import { createApp } from 'vue';
+import { AuthClient } from '@gsarthak783/accesskit-auth';
+
+const auth = new AuthClient({
+  projectId: 'your-project-id',
+  apiKey: 'your-api-key'
+});
+
+const app = createApp(App);
+app.config.globalProperties.$auth = auth;
+app.mount('#app');
+
+// In component
+export default {
+  async mounted() {
+    if (this.$auth.isAuthenticated()) {
+      this.user = await this.$auth.getProfile();
+    }
+  }
+}`}
+              language="javascript"
+              id="vue-example"
+            />
+          </div>
+
+          <input type="radio" name="framework_tabs" className="tab" aria-label="Angular" />
+          <div className="tab-content bg-base-100 border-base-300 rounded-box p-6">
+            <h3 className="text-xl font-semibold mb-4">Angular Integration</h3>
+            <CodeBlock
+              code={`// auth.service.ts
+import { Injectable } from '@angular/core';
+import { AuthClient } from '@gsarthak783/accesskit-auth';
+
+@Injectable({ providedIn: 'root' })
+export class AuthService {
+  private auth = new AuthClient({
+    projectId: 'your-project-id',
+    apiKey: 'your-api-key'
+  });
+
+  async login(email: string, password: string) {
+    return this.auth.login({ email, password });
+  }
+
+  isAuthenticated(): boolean {
+    return this.auth.isAuthenticated();
+  }
+}`}
+              language="typescript"
+              id="angular-example"
+            />
+          </div>
+
+          <input type="radio" name="framework_tabs" className="tab" aria-label="Node.js" />
+          <div className="tab-content bg-base-100 border-base-300 rounded-box p-6">
+            <h3 className="text-xl font-semibold mb-4">Node.js/Express Integration</h3>
+            <CodeBlock
+              code={`const express = require('express');
+const { AuthClient } = require('@gsarthak783/accesskit-auth');
+
+const app = express();
+const auth = new AuthClient({
+  projectId: process.env.AUTH_PROJECT_ID,
+  apiKey: process.env.AUTH_API_KEY
+});
+
+app.post('/api/register', async (req, res) => {
+  try {
+    const user = await auth.register(req.body);
+    res.json({ success: true, user });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
   }
 });`}
+              language="javascript"
+              id="nodejs-example"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Security Best Practices */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-base-content mb-6">Security Best Practices</h2>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="card bg-red-50 border border-red-200 shadow-xl">
+            <div className="card-body">
+              <h3 className="card-title text-red-900">❌ Don't Expose API Keys</h3>
+              <CodeBlock
+                code={`// Never do this in frontend code!
+const config = {
+  projectId: 'proj_123',
+  apiKey: 'sk_live_abc123' // Visible to users!
+};`}
                 language="javascript"
-                id="error-handling"
+                id="bad-security"
               />
             </div>
+          </div>
 
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-base-content mb-4">Request Interceptors</h3>
+          <div className="card bg-green-50 border border-green-200 shadow-xl">
+            <div className="card-body">
+              <h3 className="card-title text-green-900">✅ Use Environment Variables</h3>
               <CodeBlock
-                code={`// Access the underlying HTTP client (axios)
-const httpClient = authClient.http;
-
-// Add custom request headers
-httpClient.interceptors.request.use((config) => {
-  config.headers['X-App-Version'] = '1.0.0';
-  config.headers['X-Device-ID'] = getDeviceId();
-  return config;
-});
-
-// Add custom response handling
-httpClient.interceptors.response.use(
-  (response) => {
-    // Log successful requests
-    console.log('API Request:', response.config.method, response.config.url);
-    return response;
-  },
-  (error) => {
-    // Custom error handling
-    if (error.response?.status === 503) {
-      showMaintenanceMessage();
-    }
-    return Promise.reject(error);
-  }
-);`}
+                code={`// Do this instead
+const config = {
+  projectId: process.env.REACT_APP_PROJECT_ID,
+  // Keep API keys server-side only
+};`}
                 language="javascript"
-                id="interceptors"
+                id="good-security"
               />
             </div>
+          </div>
+        </div>
 
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-base-content mb-4">Email Verification</h3>
-              <CodeBlock
-                code={`// Verify email with token from email link
-const verifyEmailFromUrl = async () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const token = urlParams.get('token');
-  
-  if (token) {
-    try {
-      await authClient.verifyEmail(token);
-      console.log('Email verified successfully');
-      // Redirect to success page or login
-    } catch (error) {
-      console.error('Email verification failed:', error);
-      // Show error message
-    }
-  }
+        <div className="alert alert-warning mt-6">
+          <div>
+            <strong>Important:</strong> API keys should only be used in server-side code. For client-side applications, use only the project ID and implement a server-side proxy for API key authentication.
+          </div>
+        </div>
+      </section>
+
+      {/* Environment Configuration */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-base-content mb-6">Environment Configuration</h2>
+
+        <div className="card bg-base-100 shadow-xl mb-6">
+          <div className="card-body">
+            <h3 className="card-title">Environment Variables</h3>
+            <CodeBlock
+              code={`# Frontend (.env)
+REACT_APP_AUTH_PROJECT_ID=your-project-id
+
+# Backend (.env)
+AUTH_PROJECT_ID=your-project-id
+AUTH_API_KEY=your-api-key
+AUTH_BASE_URL=https://access-kit-server.vercel.app/api/project-users
+
+# Next.js (.env.local)
+NEXT_PUBLIC_AUTH_PROJECT_ID=your-project-id
+AUTH_API_KEY=your-api-key  # Server-side only`}
+              language="bash"
+              id="env-config"
+            />
+          </div>
+        </div>
+
+        <div className="card bg-base-100 shadow-xl">
+          <div className="card-body">
+            <h3 className="card-title">Getting API Keys</h3>
+            <div className="steps steps-vertical lg:steps-horizontal">
+              <div className="step step-primary">
+                <div className="step-content">
+                  <h4 className="font-semibold">Visit Dashboard</h4>
+                  <p className="text-sm">Go to <a href="https://access-kit-server.vercel.app" className="link">access-kit-server.vercel.app</a></p>
+                </div>
+              </div>
+              <div className="step step-primary">
+                <div className="step-content">
+                  <h4 className="font-semibold">Create Project</h4>
+                  <p className="text-sm">Set up a new project in your dashboard</p>
+                </div>
+              </div>
+              <div className="step step-primary">
+                <div className="step-content">
+                  <h4 className="font-semibold">Copy Keys</h4>
+                  <p className="text-sm">Get your Project ID and API Key from settings</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* TypeScript Support */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-base-content mb-6">TypeScript Support</h2>
+
+        <div className="card bg-base-100 shadow-xl mb-6">
+          <div className="card-body">
+            <h3 className="card-title">Type Definitions</h3>
+            <p className="text-base-content/70 mb-4">
+              Both SDKs include complete TypeScript definitions for excellent developer experience.
+            </p>
+            <CodeBlock
+              code={`import { 
+  AuthClient, 
+  User, 
+  AuthConfig, 
+  LoginCredentials, 
+  CreateUserData,
+  AuthResponse 
+} from '@gsarthak783/accesskit-auth';
+
+import { useAuth, AuthProvider } from '@gsarthak783/accesskit-react';
+
+// Type-safe configuration
+const config: AuthConfig = {
+  projectId: 'your-project-id',
+  apiKey: 'your-api-key',
+  timeout: 10000
 };
 
-// Call on page load
-verifyEmailFromUrl();`}
-                language="javascript"
-                id="email-verification"
-              />
-            </div>
+// Type-safe user data
+const userData: CreateUserData = {
+  email: 'user@example.com',
+  password: 'securepassword',
+  firstName: 'John',
+  lastName: 'Doe'
+};`}
+              language="typescript"
+              id="typescript"
+            />
           </div>
-        )}
+        </div>
+      </section>
 
-        {activeTab === 'admin' && (
+      {/* Testing */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-base-content mb-6">Testing</h2>
+
+        <div className="card bg-base-100 shadow-xl mb-6">
+          <div className="card-body">
+            <h3 className="card-title">Unit Testing</h3>
+            <CodeBlock
+              code={`// Jest example
+import { AuthClient } from '@gsarthak783/accesskit-auth';
+
+describe('AuthClient', () => {
+  let auth;
+
+  beforeEach(() => {
+    auth = new AuthClient({
+      projectId: 'test-project-id',
+      apiKey: 'test-api-key'
+    });
+  });
+
+  test('should register user successfully', async () => {
+    const userData = {
+      email: 'test@example.com',
+      password: 'testpass123',
+      firstName: 'Test',
+      lastName: 'User'
+    };
+
+    const user = await auth.register(userData);
+    expect(user.email).toBe(userData.email);
+  });
+});`}
+              language="javascript"
+              id="testing"
+            />
+          </div>
+        </div>
+
+        <div className="card bg-base-100 shadow-xl">
+          <div className="card-body">
+            <h3 className="card-title">React Testing</h3>
+            <CodeBlock
+              code={`// React Testing Library example
+import { render, screen } from '@testing-library/react';
+import { AuthProvider } from '@gsarthak783/accesskit-react';
+import MyComponent from './MyComponent';
+
+test('renders login form when not authenticated', () => {
+  render(
+    <AuthProvider config={{ projectId: 'test', apiKey: 'test' }}>
+      <MyComponent />
+    </AuthProvider>
+  );
+
+  expect(screen.getByText('Login')).toBeInTheDocument();
+});`}
+              language="javascript"
+              id="react-testing"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Links and Resources */}
+      <section className="mb-12">
+        <div className="alert alert-info">
           <div>
-            <h2 className="text-2xl font-semibold text-base-content mb-6">Admin Functions</h2>
-            
-            <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6">
-              <p className="text-blue-800">
-                <strong>Note:</strong> Admin functions require appropriate permissions. Currently, project owners have admin access.
-              </p>
-            </div>
-
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-base-content mb-4">Get All Users</h3>
-              <CodeBlock
-                code={`// Get users with pagination
-const usersResponse = await authClient.getUsers({
-  page: 1,
-  limit: 50
-});
-
-console.log('Users:', usersResponse.data);
-console.log('Pagination:', usersResponse.pagination);
-
-// Search and filter users
-const searchResults = await authClient.getUsers({
-  page: 1,
-  limit: 20,
-  search: 'john',      // Search by name, email, username
-  status: 'active'     // Filter by status
-});
-
-// Access pagination info
-const { current, pages, total } = searchResults.pagination;
-console.log(\`Page \${current} of \${pages} (total: \${total} users)\`);`}
-                language="javascript"
-                id="get-users"
-              />
-            </div>
-
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-base-content mb-4">User Management</h3>
-              <CodeBlock
-                code={`// Get specific user
-const user = await authClient.getUser('user-id-here');
-console.log('User details:', user);
-
-// Update user status
-const updatedUser = await authClient.updateUserStatus('user-id-here', false);
-console.log('User deactivated:', updatedUser);
-
-// Reactivate user
-const reactivatedUser = await authClient.updateUserStatus('user-id-here', true);
-console.log('User reactivated:', reactivatedUser);
-
-// Delete user (soft delete)
-await authClient.deleteUser('user-id-here');
-console.log('User deleted');`}
-                language="javascript"
-                id="user-management"
-              />
-            </div>
-
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-base-content mb-4">Export Users</h3>
-              <CodeBlock
-                code={`// Export all users as JSON
-const exportData = await authClient.exportUsers({
-  format: 'json',
-  includeCustomFields: true
-});
-
-console.log('Exported users:', exportData.users);
-console.log('Export metadata:', exportData.metadata);
-
-// Export with date range filter
-const filteredExport = await authClient.exportUsers({
-  format: 'json',
-  includeCustomFields: true,
-  dateRange: {
-    from: '2024-01-01',
-    to: '2024-12-31'
-  }
-});
-
-// Export as CSV (returns CSV string)
-const csvData = await authClient.exportUsers({
-  format: 'csv',
-  includeCustomFields: false
-});
-
-// Download CSV file
-const downloadCsv = (csvData) => {
-  const blob = new Blob([csvData], { type: 'text/csv' });
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = \`users-export-\${Date.now()}.csv\`;
-  a.click();
-  window.URL.revokeObjectURL(url);
-};`}
-                language="javascript"
-                id="export-users"
-              />
-            </div>
-
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-base-content mb-4">Import Users</h3>
-              <CodeBlock
-                code={`// Import users from exported data
-const importResult = await authClient.importUsers(exportData, {
-  updateExisting: true,    // Update existing users
-  skipInvalid: true       // Skip invalid records
-});
-
-console.log('Import results:', importResult.results);
-
-// Check import results
-const { imported, updated, skipped, errors } = importResult.results;
-console.log(\`Imported: \${imported}, Updated: \${updated}, Skipped: \${skipped}\`);
-
-if (errors.length > 0) {
-  console.log('Import errors:', errors);
-  errors.forEach(error => {
-    console.log(\`Error with \${error.email}: \${error.error}\`);
-  });
-}
-
-// Import from file upload
-const handleFileImport = async (file) => {
-  const text = await file.text();
-  const data = JSON.parse(text);
-  
-  const result = await authClient.importUsers(data, {
-    updateExisting: false,
-    skipInvalid: true
-  });
-  
-  console.log('File import completed:', result);
-};`}
-                language="javascript"
-                id="import-users"
-              />
-            </div>
-
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-base-content mb-4">Complete Admin Dashboard Example</h3>
-              <CodeBlock
-                code={`class UserDashboard {
-  constructor(authClient) {
-    this.authClient = authClient;
-    this.users = [];
-    this.currentPage = 1;
-    this.totalPages = 1;
-  }
-
-  async loadUsers(page = 1, search = '') {
-    try {
-      const response = await this.authClient.getUsers({
-        page,
-        limit: 20,
-        search
-      });
-      
-      this.users = response.data;
-      this.currentPage = response.pagination.current;
-      this.totalPages = response.pagination.pages;
-      
-      this.renderUsers();
-    } catch (error) {
-      console.error('Failed to load users:', error);
-    }
-  }
-
-  async toggleUserStatus(userId, currentStatus) {
-    try {
-      const newStatus = !currentStatus;
-      await this.authClient.updateUserStatus(userId, newStatus);
-      
-      // Reload current page
-      await this.loadUsers(this.currentPage);
-      
-      console.log(\`User \${newStatus ? 'activated' : 'deactivated'}\`);
-    } catch (error) {
-      console.error('Failed to update user status:', error);
-    }
-  }
-
-  async exportAllUsers() {
-    try {
-      const exportData = await this.authClient.exportUsers({
-        format: 'json',
-        includeCustomFields: true
-      });
-      
-      // Download as JSON file
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], { 
-        type: 'application/json' 
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = \`users-export-\${Date.now()}.json\`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Export failed:', error);
-    }
-  }
-
-  renderUsers() {
-    // Render users in your UI
-    console.log(\`Showing \${this.users.length} users (Page \${this.currentPage} of \${this.totalPages})\`);
-  }
-}
-
-// Usage
-const dashboard = new UserDashboard(authClient);
-dashboard.loadUsers();`}
-                language="javascript"
-                id="admin-dashboard"
-              />
+            <h3 className="font-semibold">Resources & Support</h3>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-2 mt-4">
+              <a href="https://access-kit-server.vercel.app" target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-sm">
+                Live Dashboard <ExternalLink size={16} />
+              </a>
+              <a href="https://npmjs.com/package/@gsarthak783/accesskit-auth" target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-sm">
+                Core SDK <ExternalLink size={16} />
+              </a>
+              <a href="https://npmjs.com/package/@gsarthak783/accesskit-react" target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-sm">
+                React SDK <ExternalLink size={16} />
+              </a>
+              <a href="https://github.com/gsarthak783/Auth-app" target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-sm">
+                GitHub <ExternalLink size={16} />
+              </a>
             </div>
           </div>
-        )}
-
-        {/* TypeScript Types */}
-        <section className="mt-12">
-          <h2 className="text-2xl font-semibold text-base-content mb-6">TypeScript Types</h2>
-          <CodeBlock
-            code={`// Main interfaces
-interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  username?: string;
-  displayName?: string;
-  avatar?: string;
-  isVerified: boolean;
-  isActive: boolean;
-  customFields?: Record<string, any>;
-  createdAt: string;
-  lastLogin?: string;
-}
-
-interface AuthResponse {
-  success: boolean;
-  user: User;
-  accessToken: string;
-  refreshToken: string;
-  message?: string;
-}
-
-interface CreateUserData {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  username?: string;
-  customFields?: Record<string, any>;
-}
-
-interface AuthConfig {
-  apiKey: string;
-  baseUrl?: string;
-  timeout?: number;
-  retryAttempts?: number;
-}
-
-// Event types
-type AuthEvent = 'login' | 'logout' | 'register' | 'token_refresh' | 'profile_update' | 'error';
-
-interface AuthEventData {
-  user?: User;
-  error?: Error;
-  timestamp: number;
-}
-
-// Export/Import types
-interface ExportOptions {
-  format?: 'json' | 'csv';
-  includeCustomFields?: boolean;
-  dateRange?: {
-    from: string;
-    to: string;
-  };
-}
-
-interface ExportData {
-  users: User[];
-  metadata: {
-    exportedAt: string;
-    totalCount: number;
-    projectId: string;
-  };
-}`}
-            language="typescript"
-            id="typescript-types"
-          />
-        </section>
-      </div>
-    </DocsLayout>
+        </div>
+      </section>
+    </div>
   );
 };
 

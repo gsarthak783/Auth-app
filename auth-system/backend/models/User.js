@@ -309,8 +309,8 @@ userSchema.pre('save', async function(next) {
   }
 
   try {
-    const salt = await bcrypt.genSalt(12);
-    this.password = await bcrypt.hash(this.password, salt);
+    // Pass rounds directly to hash function
+    this.password = await bcrypt.hash(this.password, 12);
     next();
   } catch (error) {
     next(error);
@@ -325,7 +325,15 @@ userSchema.pre('save', function(next) {
 
 // Instance methods
 userSchema.methods.comparePassword = async function(password) {
-  return await bcrypt.compare(password, this.password);
+  const result = await bcrypt.compare(password, this.password);
+  
+  // If it's an object with needsPasswordReset, return that info
+  if (typeof result === 'object') {
+    return result;
+  }
+  
+  // Otherwise, return simple boolean for backwards compatibility
+  return { needsPasswordReset: false, isValid: result };
 };
 
 userSchema.methods.incrementLoginAttempts = function() {

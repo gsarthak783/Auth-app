@@ -1,110 +1,177 @@
 import React, { useState } from 'react';
-import { Copy, Check, Code, Package, Zap, Settings, Users } from 'lucide-react';
-import DocsLayout from '../../components/Layout/DocsLayout';
+import { Copy, Check, Code, Download, ExternalLink, Heart, Zap, Shield } from 'lucide-react';
 
 const ReactSdk = () => {
-  const [copiedCode, setCopiedCode] = useState('');
+  const [copiedCode, setCopiedCode] = useState(null);
 
-  const copyToClipboard = async (code, id) => {
+  const copyToClipboard = async (text, id) => {
     try {
-      await navigator.clipboard.writeText(code);
+      await navigator.clipboard.writeText(text);
       setCopiedCode(id);
-      setTimeout(() => setCopiedCode(''), 2000);
-    } catch (error) {
-      console.error('Failed to copy:', error);
+      setTimeout(() => setCopiedCode(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
     }
   };
 
-  const CodeBlock = ({ code, language = 'jsx', id }) => (
+  const CodeBlock = ({ code, language, id }) => (
     <div className="relative">
-      <div className="flex items-center justify-between bg-base-300 px-4 py-2 rounded-t-lg">
-        <span className="text-sm font-medium text-base-content">{language}</span>
-        <button
-          onClick={() => copyToClipboard(code, id)}
-          className="flex items-center space-x-1 text-sm text-base-content/70 hover:text-base-content transition-colors"
-        >
-          {copiedCode === id ? (
-            <>
-              <Check className="w-4 h-4" />
-              <span>Copied!</span>
-            </>
-          ) : (
-            <>
-              <Copy className="w-4 h-4" />
-              <span>Copy</span>
-            </>
-          )}
-        </button>
-      </div>
-      <pre className="bg-base-100 p-4 rounded-b-lg overflow-x-auto border border-base-300">
-        <code>{code}</code>
+      <pre className="bg-base-200 p-4 rounded-lg overflow-x-auto">
+        <code className={`language-${language}`}>{code}</code>
       </pre>
+      <button
+        onClick={() => copyToClipboard(code, id)}
+        className="absolute top-2 right-2 btn btn-sm btn-ghost"
+        title="Copy to clipboard"
+      >
+        {copiedCode === id ? <Check size={16} /> : <Copy size={16} />}
+      </button>
     </div>
   );
 
   return (
-    <DocsLayout>
-      <div className="max-w-6xl mx-auto px-6 py-12">
-        {/* Header */}
-        <div className="mb-12">
-          <div className="flex items-center space-x-3 mb-4">
-            <Code className="w-8 h-8 text-primary" />
-            <h1 className="text-4xl font-bold text-base-content">React SDK</h1>
+    <div className="max-w-5xl mx-auto">
+      {/* Header */}
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold text-base-content mb-4">
+          React SDK
+        </h1>
+        <p className="text-xl text-base-content/70 mb-6">
+          Ready-to-use React hooks and components for AccessKit Authentication
+        </p>
+        <div className="flex flex-wrap justify-center gap-4">
+          <a 
+            href="https://npmjs.com/package/@gsarthak783/accesskit-react" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="btn btn-primary"
+          >
+            <Download size={16} />
+            Install from npm
+            <ExternalLink size={16} />
+          </a>
+          <a 
+            href="https://github.com/gsarthak783/Auth-app" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="btn btn-outline"
+          >
+            <Code size={16} />
+            View Source
+            <ExternalLink size={16} />
+          </a>
+        </div>
+        <div className="flex flex-wrap justify-center gap-2 mt-4">
+          <div className="badge badge-primary">React 16.8+</div>
+          <div className="badge badge-secondary">TypeScript</div>
+          <div className="badge badge-accent">Hooks</div>
+          <div className="badge badge-info">Context</div>
+        </div>
+      </div>
+
+      {/* Features */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-base-content mb-6">Features</h2>
+        <div className="grid md:grid-cols-3 gap-6">
+          <div className="card bg-base-100 shadow-xl">
+            <div className="card-body text-center">
+              <Zap size={32} className="mx-auto mb-4 text-primary" />
+              <h3 className="card-title justify-center">Easy Setup</h3>
+              <p className="text-base-content/70">
+                Get started in minutes with our AuthProvider and useAuth hook
+              </p>
+            </div>
           </div>
-          <p className="text-xl text-base-content/70">
-            React hooks and components for seamless authentication integration in React applications.
-          </p>
+          <div className="card bg-base-100 shadow-xl">
+            <div className="card-body text-center">
+              <Shield size={32} className="mx-auto mb-4 text-secondary" />
+              <h3 className="card-title justify-center">Secure by Default</h3>
+              <p className="text-base-content/70">
+                Automatic token management and secure storage options
+              </p>
+            </div>
+          </div>
+          <div className="card bg-base-100 shadow-xl">
+            <div className="card-body text-center">
+              <Heart size={32} className="mx-auto mb-4 text-accent" />
+              <h3 className="card-title justify-center">Developer Friendly</h3>
+              <p className="text-base-content/70">
+                Full TypeScript support and excellent developer experience
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Installation */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-base-content mb-6">Installation</h2>
+        
+        <div className="card bg-base-100 shadow-xl mb-6">
+          <div className="card-body">
+            <h3 className="card-title">Install the Package</h3>
+            <p className="text-base-content/70 mb-4">
+              The React SDK automatically includes the core SDK as a dependency.
+            </p>
+            <CodeBlock
+              code="npm install @gsarthak783/accesskit-react"
+              language="bash"
+              id="install-react"
+            />
+          </div>
         </div>
 
-        {/* Installation */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold text-base-content mb-6">Installation</h2>
-          <CodeBlock
-            code="npm install @your-auth/react"
-            language="bash"
-            id="install-react"
-          />
-        </section>
+        <div className="alert alert-info">
+          <div>
+            <strong>Note:</strong> This package automatically includes <code>@gsarthak783/accesskit-auth</code> as a dependency.
+          </div>
+        </div>
+      </section>
 
-        {/* Quick Setup */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold text-base-content mb-6">Quick Setup</h2>
-          <div className="mb-6">
-            <h3 className="text-xl font-semibold text-base-content mb-4">1. Wrap your app with AuthProvider</h3>
+      {/* Quick Start */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-base-content mb-6">Quick Start</h2>
+
+        <div className="card bg-base-100 shadow-xl mb-6">
+          <div className="card-body">
+            <h3 className="card-title">1. Wrap Your App with AuthProvider</h3>
             <CodeBlock
               code={`import React from 'react';
-import { AuthProvider } from '@your-auth/react';
+import { AuthProvider } from '@gsarthak783/accesskit-react';
 
 function App() {
   return (
-    <AuthProvider
+    <AuthProvider 
       config={{
-        apiKey: process.env.REACT_APP_AUTH_API_KEY,
-        baseUrl: process.env.REACT_APP_AUTH_BASE_URL
+        projectId: 'your-project-id',
+        apiKey: 'your-api-key'
       }}
     >
-      <AppContent />
+      <YourApp />
     </AuthProvider>
   );
 }
 
 export default App;`}
-              id="setup-provider"
+              language="jsx"
+              id="auth-provider-setup"
             />
           </div>
+        </div>
 
-          <div className="mb-6">
-            <h3 className="text-xl font-semibold text-base-content mb-4">2. Use the useAuth hook</h3>
+        <div className="card bg-base-100 shadow-xl mb-6">
+          <div className="card-body">
+            <h3 className="card-title">2. Use the useAuth Hook</h3>
             <CodeBlock
-              code={`import React from 'react';
-import { useAuth } from '@your-auth/react';
+              code={`import { useAuth } from '@gsarthak783/accesskit-react';
 
-function LoginPage() {
+function MyComponent() {
   const { 
     user, 
-    isLoading, 
     isAuthenticated, 
+    isLoading, 
     login, 
+    register, 
     logout 
   } = useAuth();
 
@@ -112,111 +179,449 @@ function LoginPage() {
     return <div>Loading...</div>;
   }
 
-  if (isAuthenticated) {
+  if (!isAuthenticated) {
     return (
       <div>
-        <h1>Welcome, {user.firstName}!</h1>
-        <button onClick={logout}>Logout</button>
+        <button onClick={() => login('user@example.com', 'password')}>
+          Login
+        </button>
+        <button onClick={() => register({
+          email: 'user@example.com',
+          password: 'password',
+          firstName: 'John',
+          lastName: 'Doe'
+        })}>
+          Register
+        </button>
       </div>
     );
   }
 
-  return <LoginForm />;
-}`}
-              id="useauth-hook"
-            />
-          </div>
-        </section>
-
-        {/* Ready-made Components */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold text-base-content mb-6">Ready-to-Use Components</h2>
-          
-          <div className="mb-8">
-            <h3 className="text-xl font-semibold text-base-content mb-4">LoginForm Component</h3>
-            <CodeBlock
-              code={`import { LoginForm } from '@your-auth/react';
-
-function LoginPage() {
-  const navigate = useNavigate();
-
   return (
-    <div className="login-page">
-      <h1>Welcome Back</h1>
-      <LoginForm
-        onSuccess={() => {
-          console.log('Login successful!');
-          navigate('/dashboard');
-        }}
-        onError={(error) => {
-          console.error('Login failed:', error);
-          // Show error toast
-        }}
-        showSignupLink={true}
-        onSignupClick={() => navigate('/signup')}
-        buttonText="Sign In"
-        className="custom-login-form"
-      />
+    <div>
+      <h1>Welcome, {user.firstName}!</h1>
+      <p>Email: {user.email}</p>
+      <button onClick={logout}>Logout</button>
     </div>
   );
 }`}
+              language="jsx"
+              id="use-auth-basic"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* AuthProvider Configuration */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-base-content mb-6">AuthProvider Configuration</h2>
+
+        <div className="card bg-base-100 shadow-xl mb-6">
+          <div className="card-body">
+            <h3 className="card-title">Configuration Options</h3>
+            <CodeBlock
+              code={`<AuthProvider 
+  config={{
+    projectId: 'your-project-id',
+    apiKey: 'your-api-key',
+    baseUrl: 'https://access-kit-server.vercel.app/api/project-users', // Optional
+    timeout: 10000 // Optional, request timeout in ms
+  }}
+  storage={customStorage}      // Optional, custom token storage
+  autoInitialize={true}        // Optional, auto-check auth on mount
+>
+  <App />
+</AuthProvider>`}
+              language="jsx"
+              id="auth-provider-config"
+            />
+          </div>
+        </div>
+
+        <div className="card bg-base-100 shadow-xl mb-6">
+          <div className="card-body">
+            <h3 className="card-title">Custom Storage (React Native Example)</h3>
+            <p className="text-base-content/70 mb-4">
+              For React Native or when you need secure storage:
+            </p>
+            <CodeBlock
+              code={`import { AuthProvider } from '@gsarthak783/accesskit-react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Custom storage for React Native
+const customStorage = {
+  getItem: async (key) => await AsyncStorage.getItem(key),
+  setItem: async (key, value) => await AsyncStorage.setItem(key, value),
+  removeItem: async (key) => await AsyncStorage.removeItem(key)
+};
+
+<AuthProvider config={config} storage={customStorage}>
+  <App />
+</AuthProvider>`}
+              language="jsx"
+              id="custom-storage"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* useAuth Hook */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-base-content mb-6">useAuth Hook Reference</h2>
+
+        <div className="card bg-base-100 shadow-xl mb-6">
+          <div className="card-body">
+            <h3 className="card-title">Available Properties and Methods</h3>
+            <div className="overflow-x-auto">
+              <table className="table table-zebra">
+                <thead>
+                  <tr>
+                    <th>Property/Method</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>user</code></td>
+                    <td><code>User | null</code></td>
+                    <td>Current user object or null if not authenticated</td>
+                  </tr>
+                  <tr>
+                    <td><code>isLoading</code></td>
+                    <td><code>boolean</code></td>
+                    <td>Loading state for authentication operations</td>
+                  </tr>
+                  <tr>
+                    <td><code>isAuthenticated</code></td>
+                    <td><code>boolean</code></td>
+                    <td>Whether the user is currently authenticated</td>
+                  </tr>
+                  <tr>
+                    <td><code>login</code></td>
+                    <td><code>(email, password) =&gt; Promise&lt;void&gt;</code></td>
+                    <td>Login with email and password</td>
+                  </tr>
+                  <tr>
+                    <td><code>register</code></td>
+                    <td><code>(userData) =&gt; Promise&lt;void&gt;</code></td>
+                    <td>Register a new user</td>
+                  </tr>
+                  <tr>
+                    <td><code>logout</code></td>
+                    <td><code>() =&gt; Promise&lt;void&gt;</code></td>
+                    <td>Logout the current user</td>
+                  </tr>
+                  <tr>
+                    <td><code>updateProfile</code></td>
+                    <td><code>(userData) =&gt; Promise&lt;void&gt;</code></td>
+                    <td>Update user profile information</td>
+                  </tr>
+                  <tr>
+                    <td><code>requestPasswordReset</code></td>
+                    <td><code>(email) =&gt; Promise&lt;void&gt;</code></td>
+                    <td>Request password reset email</td>
+                  </tr>
+                  <tr>
+                    <td><code>resetPassword</code></td>
+                    <td><code>(token, password) =&gt; Promise&lt;void&gt;</code></td>
+                    <td>Reset password with token</td>
+                  </tr>
+                  <tr>
+                    <td><code>verifyEmail</code></td>
+                    <td><code>(token) =&gt; Promise&lt;void&gt;</code></td>
+                    <td>Verify email with verification token</td>
+                  </tr>
+                  <tr>
+                    <td><code>client</code></td>
+                    <td><code>AuthClient</code></td>
+                    <td>Direct access to the underlying AuthClient instance</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Component Examples */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-base-content mb-6">Component Examples</h2>
+
+        {/* Login Form */}
+        <div className="card bg-base-100 shadow-xl mb-6">
+          <div className="card-body">
+            <h3 className="card-title">Login Form Component</h3>
+            <CodeBlock
+              code={`import { useState } from 'react';
+import { useAuth } from '@gsarthak783/accesskit-react';
+
+function LoginForm() {
+  const { login, isLoading } = useAuth();
+  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    
+    try {
+      await login(formData.email, formData.password);
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <input
+          type="email"
+          value={formData.email}
+          onChange={(e) => setFormData({...formData, email: e.target.value})}
+          placeholder="Email"
+          className="input input-bordered w-full"
+          required
+        />
+      </div>
+      <div>
+        <input
+          type="password"
+          value={formData.password}
+          onChange={(e) => setFormData({...formData, password: e.target.value})}
+          placeholder="Password"
+          className="input input-bordered w-full"
+          required
+        />
+      </div>
+      {error && (
+        <div className="alert alert-error">
+          <span>{error}</span>
+        </div>
+      )}
+      <button 
+        type="submit" 
+        disabled={isLoading}
+        className="btn btn-primary w-full"
+      >
+        {isLoading ? 'Logging in...' : 'Login'}
+      </button>
+    </form>
+  );
+}`}
+              language="jsx"
               id="login-form"
             />
           </div>
+        </div>
 
-          <div className="mb-8">
-            <h3 className="text-xl font-semibold text-base-content mb-4">SignupForm Component</h3>
+        {/* Registration Form */}
+        <div className="card bg-base-100 shadow-xl mb-6">
+          <div className="card-body">
+            <h3 className="card-title">Registration Form Component</h3>
             <CodeBlock
-              code={`import { SignupForm } from '@your-auth/react';
+              code={`import { useState } from 'react';
+import { useAuth } from '@gsarthak783/accesskit-react';
 
-function SignupPage() {
+function RegisterForm() {
+  const { register, isLoading } = useAuth();
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    firstName: '',
+    lastName: '',
+    username: ''
+  });
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    
+    try {
+      await register(formData);
+      // User is automatically logged in after registration
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
   return (
-    <div className="signup-page">
-      <h1>Create Account</h1>
-      <SignupForm
-        onSuccess={(user) => {
-          console.log('Signup successful:', user);
-          // Redirect to dashboard or verification page
-        }}
-        onError={(error) => {
-          console.error('Signup failed:', error);
-        }}
-        showLoginLink={true}
-        onLoginClick={() => navigate('/login')}
-        requireTerms={true}
-        customFields={[
-          {
-            name: 'company',
-            label: 'Company',
-            type: 'text',
-            required: false
-          }
-        ]}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <input
+          type="text"
+          value={formData.firstName}
+          onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+          placeholder="First Name"
+          className="input input-bordered"
+          required
+        />
+        <input
+          type="text"
+          value={formData.lastName}
+          onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+          placeholder="Last Name"
+          className="input input-bordered"
+        />
+      </div>
+      <input
+        type="email"
+        value={formData.email}
+        onChange={(e) => setFormData({...formData, email: e.target.value})}
+        placeholder="Email"
+        className="input input-bordered w-full"
+        required
       />
+      <input
+        type="text"
+        value={formData.username}
+        onChange={(e) => setFormData({...formData, username: e.target.value})}
+        placeholder="Username (optional)"
+        className="input input-bordered w-full"
+      />
+      <input
+        type="password"
+        value={formData.password}
+        onChange={(e) => setFormData({...formData, password: e.target.value})}
+        placeholder="Password"
+        className="input input-bordered w-full"
+        required
+      />
+      {error && (
+        <div className="alert alert-error">
+          <span>{error}</span>
+        </div>
+      )}
+      <button 
+        type="submit" 
+        disabled={isLoading}
+        className="btn btn-primary w-full"
+      >
+        {isLoading ? 'Creating Account...' : 'Register'}
+      </button>
+    </form>
+  );
+}`}
+              language="jsx"
+              id="register-form"
+            />
+          </div>
+        </div>
+
+        {/* User Profile */}
+        <div className="card bg-base-100 shadow-xl mb-6">
+          <div className="card-body">
+            <h3 className="card-title">User Profile Component</h3>
+            <CodeBlock
+              code={`import { useState } from 'react';
+import { useAuth } from '@gsarthak783/accesskit-react';
+
+function UserProfile() {
+  const { user, updateProfile, logout } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || ''
+  });
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      await updateProfile(formData);
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Update failed:', error);
+    }
+  };
+
+  return (
+    <div className="card bg-base-100 shadow-xl">
+      <div className="card-body">
+        <h2 className="card-title">Profile</h2>
+        
+        {isEditing ? (
+          <form onSubmit={handleUpdate} className="space-y-4">
+            <input
+              type="text"
+              value={formData.firstName}
+              onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+              placeholder="First Name"
+              className="input input-bordered w-full"
+            />
+            <input
+              type="text"
+              value={formData.lastName}
+              onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+              placeholder="Last Name"
+              className="input input-bordered w-full"
+            />
+            <div className="flex gap-2">
+              <button type="submit" className="btn btn-primary">Save</button>
+              <button 
+                type="button" 
+                onClick={() => setIsEditing(false)}
+                className="btn btn-outline"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        ) : (
+          <div className="space-y-4">
+            <div>
+              <p><strong>Name:</strong> {user.firstName} {user.lastName}</p>
+              <p><strong>Email:</strong> {user.email}</p>
+              <p><strong>Status:</strong> 
+                <span className={\`badge \${user.status === 'active' ? 'badge-success' : 'badge-warning'}\`}>
+                  {user.status}
+                </span>
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => setIsEditing(true)}
+                className="btn btn-primary"
+              >
+                Edit Profile
+              </button>
+              <button 
+                onClick={logout}
+                className="btn btn-outline btn-error"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }`}
-              id="signup-form"
+              language="jsx"
+              id="user-profile"
             />
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Authentication Patterns */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold text-base-content mb-6">Authentication Patterns</h2>
-          
-          <div className="mb-8">
-            <h3 className="text-xl font-semibold text-base-content mb-4">Protected Routes</h3>
+      {/* Protected Routes */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-base-content mb-6">Protected Routes</h2>
+
+        <div className="card bg-base-100 shadow-xl mb-6">
+          <div className="card-body">
+            <h3 className="card-title">ProtectedRoute Component</h3>
             <CodeBlock
-              code={`import { useAuth } from '@your-auth/react';
+              code={`import { useAuth } from '@gsarthak783/accesskit-react';
 import { Navigate } from 'react-router-dom';
 
-function ProtectedRoute({ children }) {
-  const { isAuthenticated, isLoading } = useAuth();
+function ProtectedRoute({ children, requiredRole = null }) {
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex justify-center items-center min-h-screen">
         <div className="loading loading-spinner loading-lg"></div>
       </div>
     );
@@ -226,76 +631,10 @@ function ProtectedRoute({ children }) {
     return <Navigate to="/login" replace />;
   }
 
-  return children;
-}
-
-// Usage in routes
-<Route 
-  path="/dashboard" 
-  element={
-    <ProtectedRoute>
-      <Dashboard />
-    </ProtectedRoute>
-  } 
-/>`}
-              id="protected-routes"
-            />
-          </div>
-
-          <div className="mb-8">
-            <h3 className="text-xl font-semibold text-base-content mb-4">Public Routes (Redirect if authenticated)</h3>
-            <CodeBlock
-              code={`import { useAuth } from '@your-auth/react';
-import { Navigate } from 'react-router-dom';
-
-function PublicRoute({ children, redirectTo = '/dashboard' }) {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (isAuthenticated) {
-    return <Navigate to={redirectTo} replace />;
-  }
-
-  return children;
-}
-
-// Usage - redirect authenticated users away from login/signup
-<Route 
-  path="/login" 
-  element={
-    <PublicRoute>
-      <LoginPage />
-    </PublicRoute>
-  } 
-/>`}
-              id="public-routes"
-            />
-          </div>
-
-          <div className="mb-8">
-            <h3 className="text-xl font-semibold text-base-content mb-4">Role-based Access</h3>
-            <CodeBlock
-              code={`import { useAuth } from '@your-auth/react';
-
-function AdminRoute({ children }) {
-  const { user, isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) return <div>Loading...</div>;
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  const isAdmin = user?.customFields?.role === 'admin';
-  
-  if (!isAdmin) {
+  if (requiredRole && user.customFields?.role !== requiredRole) {
     return (
-      <div className="text-center p-8">
-        <h2>Access Denied</h2>
-        <p>You don't have permission to view this page.</p>
+      <div className="alert alert-error">
+        <span>Access denied. Required role: {requiredRole}</span>
       </div>
     );
   }
@@ -303,363 +642,408 @@ function AdminRoute({ children }) {
   return children;
 }
 
-// Usage
-<Route 
-  path="/admin" 
-  element={
-    <AdminRoute>
-      <AdminDashboard />
-    </AdminRoute>
-  } 
-/>`}
-              id="role-based"
-            />
-          </div>
-        </section>
-
-        {/* Advanced Usage */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold text-base-content mb-6">Advanced Usage</h2>
-          
-          <div className="mb-8">
-            <h3 className="text-xl font-semibold text-base-content mb-4">Custom Storage Provider</h3>
-            <CodeBlock
-              code={`import { AuthProvider } from '@your-auth/react';
-import { CookieTokenStorage } from '@your-auth/sdk';
-
-// Use cookie storage instead of localStorage
-const cookieStorage = new CookieTokenStorage('myapp');
-
+// Usage in App.jsx
 function App() {
   return (
-    <AuthProvider
-      config={{
-        apiKey: process.env.REACT_APP_AUTH_API_KEY,
-        baseUrl: process.env.REACT_APP_AUTH_BASE_URL
-      }}
-      storage={cookieStorage}
-      autoInitialize={true}
-    >
-      <AppContent />
-    </AuthProvider>
-  );
-}`}
-              id="custom-storage"
-            />
-          </div>
-
-          <div className="mb-8">
-            <h3 className="text-xl font-semibold text-base-content mb-4">Manual Authentication</h3>
-            <CodeBlock
-              code={`import { useAuth } from '@your-auth/react';
-
-function CustomLoginForm() {
-  const { login, register, isLoading } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setError('');
-    
-    try {
-      await login(email, password);
-      // User is automatically updated in context
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  const handleSignup = async (userData) => {
-    try {
-      await register(userData);
-      // User is automatically updated in context
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  return (
-    <form onSubmit={handleLogin}>
-      <input
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="Email"
-        disabled={isLoading}
-      />
-      <input
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        placeholder="Password"
-        disabled={isLoading}
-      />
-      {error && <div className="error">{error}</div>}
-      <button type="submit" disabled={isLoading}>
-        {isLoading ? 'Logging in...' : 'Login'}
-      </button>
-    </form>
-  );
-}`}
-              id="manual-auth"
-            />
-          </div>
-
-          <div className="mb-8">
-            <h3 className="text-xl font-semibold text-base-content mb-4">Profile Management</h3>
-            <CodeBlock
-              code={`import { useAuth } from '@your-auth/react';
-
-function ProfilePage() {
-  const { user, updateProfile, isLoading } = useAuth();
-  const [formData, setFormData] = useState({
-    firstName: user?.firstName || '',
-    lastName: user?.lastName || '',
-    displayName: user?.displayName || '',
-    customFields: user?.customFields || {}
-  });
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    try {
-      await updateProfile(formData);
-      // User is automatically updated in context
-      alert('Profile updated successfully!');
-    } catch (error) {
-      alert('Failed to update profile: ' + error.message);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <input
-        type="text"
-        value={formData.firstName}
-        onChange={(e) => setFormData({
-          ...formData,
-          firstName: e.target.value
-        })}
-        placeholder="First Name"
-      />
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
       
-      <input
-        type="text"
-        value={formData.lastName}
-        onChange={(e) => setFormData({
-          ...formData,
-          lastName: e.target.value
-        })}
-        placeholder="Last Name"
-      />
+      <Route path="/dashboard" element={
+        <ProtectedRoute>
+          <Dashboard />
+        </ProtectedRoute>
+      } />
       
-      <button type="submit" disabled={isLoading}>
-        {isLoading ? 'Updating...' : 'Update Profile'}
-      </button>
-    </form>
+      <Route path="/admin" element={
+        <ProtectedRoute requiredRole="admin">
+          <AdminPanel />
+        </ProtectedRoute>
+      } />
+    </Routes>
   );
 }`}
-              id="profile-management"
+              language="jsx"
+              id="protected-route"
             />
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Error Handling */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold text-base-content mb-6">Error Handling</h2>
-          <CodeBlock
-            code={`import { useAuth } from '@your-auth/react';
-import { useEffect } from 'react';
+      {/* Ready-to-Use Components */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-base-content mb-6">Ready-to-Use Components</h2>
 
-function App() {
-  const { client } = useAuth();
+        <div className="card bg-base-100 shadow-xl mb-6">
+          <div className="card-body">
+            <h3 className="card-title">LoginForm Component</h3>
+            <p className="text-base-content/70 mb-4">
+              A complete login form with validation and error handling:
+            </p>
+            <CodeBlock
+              code={`import { LoginForm } from '@gsarthak783/accesskit-react';
+
+function LoginPage() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="max-w-md w-full">
+        <LoginForm
+          onSuccess={() => {
+            console.log('Login successful!');
+            // Redirect or update UI
+          }}
+          onError={(error) => {
+            console.error('Login failed:', error);
+            // Show error message
+          }}
+          className="card bg-base-100 shadow-xl p-6"
+          buttonText="Sign In"
+          showSignupLink={true}
+          onSignupClick={() => navigate('/signup')}
+        />
+      </div>
+    </div>
+  );
+}`}
+              language="jsx"
+              id="ready-login-form"
+            />
+          </div>
+        </div>
+
+        <div className="card bg-base-100 shadow-xl mb-6">
+          <div className="card-body">
+            <h3 className="card-title">LoginForm Props</h3>
+            <div className="overflow-x-auto">
+              <table className="table table-zebra">
+                <thead>
+                  <tr>
+                    <th>Prop</th>
+                    <th>Type</th>
+                    <th>Default</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>onSuccess</code></td>
+                    <td><code>() => void</code></td>
+                    <td>-</td>
+                    <td>Called on successful login</td>
+                  </tr>
+                  <tr>
+                    <td><code>onError</code></td>
+                    <td><code>(error: Error) =&gt; void</code></td>
+                    <td>-</td>
+                    <td>Called on login error</td>
+                  </tr>
+                  <tr>
+                    <td><code>className</code></td>
+                    <td><code>string</code></td>
+                    <td>-</td>
+                    <td>CSS classes for the form container</td>
+                  </tr>
+                  <tr>
+                    <td><code>buttonText</code></td>
+                    <td><code>string</code></td>
+                    <td>"Login"</td>
+                    <td>Text for the submit button</td>
+                  </tr>
+                  <tr>
+                    <td><code>showSignupLink</code></td>
+                    <td><code>boolean</code></td>
+                    <td>false</td>
+                    <td>Whether to show signup link</td>
+                  </tr>
+                  <tr>
+                    <td><code>onSignupClick</code></td>
+                    <td><code>() =&gt; void</code></td>
+                    <td>-</td>
+                    <td>Called when signup link is clicked</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Admin Features */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-base-content mb-6">Admin Features</h2>
+
+        <div className="card bg-base-100 shadow-xl mb-6">
+          <div className="card-body">
+            <h3 className="card-title">Admin Panel Example</h3>
+            <p className="text-base-content/70 mb-4">
+              Access admin functions through the client property:
+            </p>
+            <CodeBlock
+              code={`import { useAuth } from '@gsarthak783/accesskit-react';
+import { useState, useEffect } from 'react';
+
+function AdminPanel() {
+  const { client, user } = useAuth();
+  const [users, setUsers] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Global error handling
-    const handleAuthError = (data) => {
-      const error = data.error;
-      
-      if (error.message.includes('Network')) {
-        // Show network error
-        toast.error('Network error. Please check your connection.');
-      } else if (error.message.includes('401')) {
-        // Handle unauthorized
-        toast.error('Session expired. Please login again.');
-      } else {
-        // Handle other errors
-        toast.error(error.message);
-      }
-    };
+    loadData();
+  }, []);
 
-    client.on('error', handleAuthError);
-
-    return () => {
-      client.off('error', handleAuthError);
-    };
-  }, [client]);
-
-  return <AppContent />;
-}`}
-            id="error-handling"
-          />
-        </section>
-
-        {/* Next.js Integration */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold text-base-content mb-6">Next.js Integration</h2>
-          
-          <div className="mb-6">
-            <h3 className="text-xl font-semibold text-base-content mb-4">App Router (Next.js 13+)</h3>
-            <CodeBlock
-              code={`// app/providers.tsx
-'use client';
-
-import { AuthProvider } from '@your-auth/react';
-
-export function Providers({ children }) {
-  return (
-    <AuthProvider
-      config={{
-        apiKey: process.env.NEXT_PUBLIC_AUTH_API_KEY!,
-        baseUrl: process.env.NEXT_PUBLIC_AUTH_BASE_URL!
-      }}
-    >
-      {children}
-    </AuthProvider>
-  );
-}
-
-// app/layout.tsx
-import { Providers } from './providers';
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <html lang="en">
-      <body>
-        <Providers>
-          {children}
-        </Providers>
-      </body>
-    </html>
-  );
-}`}
-              id="nextjs-app-router"
-            />
-          </div>
-
-          <div className="mb-6">
-            <h3 className="text-xl font-semibold text-base-content mb-4">Pages Router (Next.js 12 and below)</h3>
-            <CodeBlock
-              code={`// pages/_app.tsx
-import type { AppProps } from 'next/app';
-import { AuthProvider } from '@your-auth/react';
-
-export default function App({ Component, pageProps }: AppProps) {
-  return (
-    <AuthProvider
-      config={{
-        apiKey: process.env.NEXT_PUBLIC_AUTH_API_KEY!,
-        baseUrl: process.env.NEXT_PUBLIC_AUTH_BASE_URL!
-      }}
-    >
-      <Component {...pageProps} />
-    </AuthProvider>
-  );
-}`}
-              id="nextjs-pages-router"
-            />
-          </div>
-        </section>
-
-        {/* TypeScript Support */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold text-base-content mb-6">TypeScript Support</h2>
-          <CodeBlock
-            code={`import { useAuth } from '@your-auth/react';
-import type { User } from '@your-auth/sdk';
-
-// Extend User type with custom fields
-interface ExtendedUser extends User {
-  customFields: {
-    company?: string;
-    role?: 'admin' | 'user' | 'moderator';
-    preferences?: {
-      theme: 'light' | 'dark';
-      newsletter: boolean;
-    };
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [usersResponse, statsResponse] = await Promise.all([
+        client.getAllUsers({ page: 1, limit: 50 }),
+        client.getStats()
+      ]);
+      setUsers(usersResponse.data);
+      setStats(statsResponse.data);
+    } catch (error) {
+      console.error('Failed to load data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleDeleteUser = async (userId) => {
+    if (!confirm('Are you sure you want to delete this user?')) return;
+    
+    try {
+      await client.deleteUser(userId);
+      loadData(); // Refresh data
+    } catch (error) {
+      console.error('Failed to delete user:', error);
+    }
+  };
+
+  const handleUpdateUserStatus = async (userId, status) => {
+    try {
+      await client.updateUserStatus(userId, status);
+      loadData(); // Refresh data
+    } catch (error) {
+      console.error('Failed to update user status:', error);
+    }
+  };
+
+  if (loading) {
+    return <div className="loading loading-spinner loading-lg"></div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      <h1 className="text-3xl font-bold">Admin Panel</h1>
+      
+      {/* Statistics */}
+      {stats && (
+        <div className="stats shadow">
+          <div className="stat">
+            <div className="stat-title">Total Users</div>
+            <div className="stat-value">{stats.totalUsers}</div>
+          </div>
+          <div className="stat">
+            <div className="stat-title">Active Users</div>
+            <div className="stat-value">{stats.activeUsers}</div>
+          </div>
+          <div className="stat">
+            <div className="stat-title">New Users Today</div>
+            <div className="stat-value">{stats.newUsersToday}</div>
+          </div>
+        </div>
+      )}
+
+      {/* Users Table */}
+      <div className="card bg-base-100 shadow-xl">
+        <div className="card-body">
+          <h2 className="card-title">Users</h2>
+          <div className="overflow-x-auto">
+            <table className="table table-zebra">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map(user => (
+                  <tr key={user.id}>
+                    <td>{user.firstName} {user.lastName}</td>
+                    <td>{user.email}</td>
+                    <td>
+                      <span className={\`badge \${
+                        user.status === 'active' ? 'badge-success' : 
+                        user.status === 'suspended' ? 'badge-error' : 'badge-warning'
+                      }\`}>
+                        {user.status}
+                      </span>
+                    </td>
+                    <td className="space-x-2">
+                      <button 
+                        onClick={() => handleUpdateUserStatus(user.id, 'suspended')}
+                        className="btn btn-warning btn-sm"
+                        disabled={user.status === 'suspended'}
+                      >
+                        Suspend
+                      </button>
+                      <button 
+                        onClick={() => handleUpdateUserStatus(user.id, 'active')}
+                        className="btn btn-success btn-sm"
+                        disabled={user.status === 'active'}
+                      >
+                        Activate
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteUser(user.id)}
+                        className="btn btn-error btn-sm"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}`}
+              language="jsx"
+              id="admin-panel"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* TypeScript Support */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-base-content mb-6">TypeScript Support</h2>
+
+        <div className="card bg-base-100 shadow-xl mb-6">
+          <div className="card-body">
+            <h3 className="card-title">Type-Safe Components</h3>
+            <CodeBlock
+              code={`import { useAuth } from '@gsarthak783/accesskit-react';
+import type { User } from '@gsarthak783/accesskit-auth';
+
+interface UserProfileProps {
+  onUpdate?: (user: User) => void;
 }
 
-function TypedComponent() {
+const UserProfile: React.FC<UserProfileProps> = ({ onUpdate }) => {
   const { user, updateProfile } = useAuth();
-  
-  // Type-safe access to custom fields
-  const userRole = (user as ExtendedUser)?.customFields?.role;
-  const company = (user as ExtendedUser)?.customFields?.company;
-  
-  const handleUpdatePreferences = async () => {
-    await updateProfile({
-      customFields: {
-        ...user?.customFields,
-        preferences: {
-          theme: 'dark',
-          newsletter: true
-        }
-      }
-    });
+
+  const handleUpdate = async (data: Partial<User>) => {
+    try {
+      const updatedUser = await updateProfile(data);
+      onUpdate?.(updatedUser);
+    } catch (error) {
+      console.error('Update failed:', error);
+    }
   };
 
   return (
     <div>
-      <p>Role: {userRole}</p>
-      <p>Company: {company}</p>
-      <button onClick={handleUpdatePreferences}>
-        Update Preferences
+      <h2>{user?.firstName} {user?.lastName}</h2>
+      <button onClick={() => handleUpdate({ firstName: 'New Name' })}>
+        Update Profile
       </button>
     </div>
   );
-}`}
-            id="typescript-support"
-          />
-        </section>
+};`}
+              language="tsx"
+              id="typescript-example"
+            />
+          </div>
+        </div>
+      </section>
 
-        {/* Performance Tips */}
-        <section className="bg-base-200 p-8 rounded-lg">
-          <h2 className="text-2xl font-semibold text-base-content mb-6">Performance Tips</h2>
-          <div className="space-y-4">
-            <div>
-              <h3 className="font-semibold text-base-content mb-2">1. Minimize Re-renders</h3>
-              <p className="text-base-content/70 text-sm">
-                The AuthProvider uses React context optimally to minimize re-renders. 
-                Only components that access changed auth state will re-render.
-              </p>
+      {/* Security Best Practices */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-base-content mb-6">Security Best Practices</h2>
+
+        <div className="card bg-base-100 shadow-xl mb-6">
+          <div className="card-body">
+            <h3 className="card-title">Environment Variables</h3>
+            <div className="bg-red-50 border border-red-200 p-4 rounded-lg mb-4">
+              <h4 className="font-semibold text-red-900 mb-2">❌ Don't do this:</h4>
+              <CodeBlock
+                code={`// Never expose API keys in frontend code!
+const config = {
+  projectId: 'proj_123',
+  apiKey: 'sk_live_abc123' // This is visible to users!
+};`}
+                language="jsx"
+                id="bad-example"
+              />
             </div>
-            
-            <div>
-              <h3 className="font-semibold text-base-content mb-2">2. Use Loading States</h3>
-              <p className="text-base-content/70 text-sm">
-                Always check `isLoading` before rendering auth-dependent content to provide 
-                better user experience during authentication state changes.
-              </p>
-            </div>
-            
-            <div>
-              <h3 className="font-semibold text-base-content mb-2">3. Lazy Load Protected Routes</h3>
-              <p className="text-base-content/70 text-sm">
-                Use React.lazy() to code-split protected routes and only load them when 
-                the user is authenticated.
-              </p>
+            <div className="bg-green-50 border border-green-200 p-4 rounded-lg">
+              <h4 className="font-semibold text-green-900 mb-2">✅ Do this instead:</h4>
+              <CodeBlock
+                code={`// Use environment variables and only expose what's needed
+const config = {
+  projectId: process.env.REACT_APP_PROJECT_ID,
+  // API keys should only be used server-side
+  // For client-side, use public project ID only
+};`}
+                language="jsx"
+                id="good-example"
+              />
             </div>
           </div>
-        </section>
-      </div>
-    </DocsLayout>
+        </div>
+
+        <div className="card bg-base-100 shadow-xl mb-6">
+          <div className="card-body">
+            <h3 className="card-title">Secure Token Storage</h3>
+            <CodeBlock
+              code={`// For React Native with secure storage
+import * as SecureStore from 'expo-secure-store';
+
+const secureStorage = {
+  getItem: async (key) => await SecureStore.getItemAsync(key),
+  setItem: async (key, value) => await SecureStore.setItemAsync(key, value),
+  removeItem: async (key) => await SecureStore.deleteItemAsync(key)
+};
+
+<AuthProvider config={config} storage={secureStorage}>
+  <App />
+</AuthProvider>`}
+              language="jsx"
+              id="secure-storage"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Links and Resources */}
+      <section className="mb-12">
+        <div className="alert alert-info">
+          <div>
+            <h3 className="font-semibold">Useful Links</h3>
+            <div className="flex flex-wrap gap-2 mt-2">
+              <a href="https://npmjs.com/package/@gsarthak783/accesskit-react" target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-sm">
+                npm Package <ExternalLink size={16} />
+              </a>
+              <a href="https://npmjs.com/package/@gsarthak783/accesskit-auth" target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-sm">
+                Core SDK <ExternalLink size={16} />
+              </a>
+              <a href="https://github.com/gsarthak783/Auth-app" target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-sm">
+                GitHub <ExternalLink size={16} />
+              </a>
+              <a href="/docs/api-reference" className="btn btn-outline btn-sm">
+                API Reference
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 };
 
