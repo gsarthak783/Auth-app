@@ -1,18 +1,34 @@
 // Simple bcrypt-compatible wrapper using Node.js crypto
 const crypto = require('crypto');
 
-// Generate a salt
+// Generate a salt (async version for compatibility)
+function genSalt(rounds = 10) {
+  return new Promise((resolve) => {
+    const salt = crypto.randomBytes(16).toString('hex');
+    resolve(salt);
+  });
+}
+
+// Generate a salt (sync version)
 function generateSalt(rounds = 10) {
   return crypto.randomBytes(16).toString('hex');
 }
 
-// Hash a password
-function hash(data, saltRounds = 10) {
+// Hash a password with provided salt
+function hash(data, salt) {
   return new Promise((resolve, reject) => {
     try {
-      const salt = generateSalt();
-      const hash = crypto.pbkdf2Sync(data, salt, 10000, 64, 'sha512').toString('hex');
-      resolve(`$2b$${saltRounds}$${salt}${hash}`);
+      // If salt is a number, treat it as rounds and generate salt
+      if (typeof salt === 'number') {
+        const saltRounds = salt;
+        const generatedSalt = generateSalt();
+        const hash = crypto.pbkdf2Sync(data, generatedSalt, 10000, 64, 'sha512').toString('hex');
+        resolve(`$2b$${saltRounds}$${generatedSalt}${hash}`);
+      } else {
+        // Use provided salt
+        const hash = crypto.pbkdf2Sync(data, salt, 10000, 64, 'sha512').toString('hex');
+        resolve(hash);
+      }
     } catch (error) {
       reject(error);
     }
@@ -70,6 +86,7 @@ function compareSync(data, encrypted) {
 }
 
 module.exports = {
+  genSalt,
   hash,
   compare,
   hashSync,
