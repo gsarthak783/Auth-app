@@ -1,225 +1,310 @@
-# 🚀 Your Auth System SDK Documentation
+# AccessKit SDK Documentation
 
-Complete documentation for integrating Your Auth System using our JavaScript and React SDKs.
+Comprehensive documentation for AccessKit's JavaScript/TypeScript and React SDKs.
 
-## 📋 Table of Contents
+## 📦 Available Packages
 
-1. [Quick Start](#quick-start)
-2. [JavaScript SDK](#javascript-sdk)
-3. [React SDK](#react-sdk)
-4. [API Reference](#api-reference)
-5. [Advanced Usage](#advanced-usage)
-6. [Deployment Guide](#deployment-guide)
-7. [Examples](#examples)
+### Core SDK - JavaScript/TypeScript
+```bash
+npm install @gsarthak783/accesskit-auth
+```
+- **Universal**: Works with any JavaScript/TypeScript project
+- **Framework Agnostic**: React, Vue, Angular, Node.js, etc.
+- **Full Featured**: Complete authentication API
+- **TypeScript**: Full type definitions included
 
----
+### React SDK
+```bash
+npm install @gsarthak783/accesskit-react
+```
+- **React Hooks**: `useAuth` hook for easy integration
+- **Context Provider**: `AuthProvider` for app-wide state
+- **Ready Components**: Pre-built login forms and components
+- **Auto Dependency**: Includes core SDK automatically
 
-## 🚀 Quick Start
+## 🚀 Core SDK (@gsarthak783/accesskit-auth)
 
-### Installation
+### Installation & Setup
 
 ```bash
-# For vanilla JavaScript/Node.js projects
-npm install @your-auth/sdk
-
-# For React projects (includes the base SDK)
-npm install @your-auth/react
-
-# Or with yarn
-yarn add @your-auth/sdk
-yarn add @your-auth/react
+npm install @gsarthak783/accesskit-auth
 ```
 
-### Basic Setup
+### Basic Configuration
 
 ```javascript
-import { AuthClient } from '@your-auth/sdk';
+import { AuthClient } from '@gsarthak783/accesskit-auth';
 
-const authClient = new AuthClient({
-  apiKey: 'your-project-api-key',
-  baseUrl: 'https://your-auth-service.com/api/project-users'
+const auth = new AuthClient({
+  projectId: 'your-project-id',      // From AccessKit dashboard
+  apiKey: 'your-api-key',            // From project settings
+  baseUrl: 'https://access-kit-server.vercel.app/api/project-users', // Optional, defaults to this
+  timeout: 10000                     // Optional, request timeout
 });
-
-// Login a user
-const user = await authClient.login({
-  email: 'user@example.com',
-  password: 'password123'
-});
-
-console.log('Logged in user:', user);
-```
-
----
-
-## 📚 JavaScript SDK
-
-### Configuration
-
-```javascript
-import { AuthClient, LocalTokenStorage } from '@your-auth/sdk';
-
-const authClient = new AuthClient({
-  apiKey: 'your-project-api-key',
-  baseUrl: 'https://your-auth-service.com/api/project-users',
-  timeout: 10000,
-  retryAttempts: 3
-}, new LocalTokenStorage());
 ```
 
 ### Authentication Methods
 
-#### Register User
+#### User Registration
 ```javascript
-const user = await authClient.register({
-  email: 'user@example.com',
-  password: 'securePassword123',
-  firstName: 'John',
-  lastName: 'Doe',
-  customFields: {
-    company: 'Acme Corp',
-    role: 'Developer'
-  }
-});
+try {
+  const result = await auth.register({
+    email: 'user@example.com',
+    password: 'securepassword',
+    firstName: 'John',
+    lastName: 'Doe',
+    username: 'johndoe',              // Optional
+    customFields: {                   // Optional
+      role: 'user',
+      department: 'engineering'
+    }
+  });
+  
+  console.log('User created:', result.user);
+  console.log('Access token:', result.accessToken);
+} catch (error) {
+  console.error('Registration failed:', error.message);
+}
 ```
 
-#### Login User
+#### User Login
 ```javascript
-const response = await authClient.login({
-  email: 'user@example.com',
-  password: 'securePassword123'
-});
-
-console.log('User:', response.user);
-console.log('Access Token:', response.accessToken);
+try {
+  const result = await auth.login({
+    email: 'user@example.com',
+    password: 'securepassword'
+  });
+  
+  console.log('Login successful:', result.user);
+  // Tokens are automatically stored
+} catch (error) {
+  console.error('Login failed:', error.message);
+}
 ```
 
-#### Get User Profile
+#### Check Authentication Status
 ```javascript
-const user = await authClient.getProfile();
-console.log('Current user:', user);
-```
-
-#### Update Profile
-```javascript
-const updatedUser = await authClient.updateProfile({
-  firstName: 'Jane',
-  customFields: {
-    company: 'New Company'
-  }
-});
+if (auth.isAuthenticated()) {
+  console.log('User is logged in');
+  const token = auth.getAccessToken();
+  console.log('Current token:', token);
+} else {
+  console.log('User needs to log in');
+}
 ```
 
 #### Logout
 ```javascript
-await authClient.logout();
+await auth.logout();
+console.log('User logged out successfully');
 ```
 
-### Event System
+### Profile Management
+
+#### Get User Profile
+```javascript
+try {
+  const profile = await auth.getProfile();
+  console.log('User profile:', profile);
+} catch (error) {
+  console.error('Failed to get profile:', error.message);
+}
+```
+
+#### Update Profile
+```javascript
+try {
+  const updatedUser = await auth.updateProfile({
+    firstName: 'Jane',
+    lastName: 'Smith',
+    customFields: {
+      role: 'admin',
+      bio: 'Software engineer'
+    }
+  });
+  console.log('Profile updated:', updatedUser);
+} catch (error) {
+  console.error('Update failed:', error.message);
+}
+```
+
+### Password Management
+
+#### Request Password Reset
+```javascript
+try {
+  await auth.requestPasswordReset('user@example.com');
+  console.log('Reset email sent');
+} catch (error) {
+  console.error('Reset request failed:', error.message);
+}
+```
+
+#### Reset Password with Token
+```javascript
+try {
+  await auth.resetPassword('reset-token-from-email', 'newpassword123');
+  console.log('Password reset successful');
+} catch (error) {
+  console.error('Password reset failed:', error.message);
+}
+```
+
+#### Verify Email
+```javascript
+try {
+  await auth.verifyEmail('verification-token-from-email');
+  console.log('Email verified successfully');
+} catch (error) {
+  console.error('Email verification failed:', error.message);
+}
+```
+
+### Token Management
+
+#### Manual Token Refresh
+```javascript
+try {
+  const newToken = await auth.refreshAccessToken();
+  console.log('Token refreshed:', newToken);
+} catch (error) {
+  console.error('Token refresh failed:', error.message);
+  // User will be logged out automatically
+}
+```
+
+#### Get Current Token
+```javascript
+const accessToken = auth.getAccessToken();
+const refreshToken = auth.getRefreshToken();
+```
+
+### Admin Functions (API Key Required)
+
+#### Get All Users
+```javascript
+try {
+  const users = await auth.getAllUsers({
+    page: 1,
+    limit: 50,
+    search: 'john@example.com',
+    status: 'active'
+  });
+  
+  console.log('Users:', users.data);
+  console.log('Total:', users.total);
+  console.log('Pages:', users.pages);
+} catch (error) {
+  console.error('Failed to get users:', error.message);
+}
+```
+
+#### Delete User
+```javascript
+try {
+  await auth.deleteUser('user-id-123');
+  console.log('User deleted successfully');
+} catch (error) {
+  console.error('Delete failed:', error.message);
+}
+```
+
+#### Update User Status
+```javascript
+try {
+  await auth.updateUserStatus('user-id-123', 'suspended');
+  console.log('User status updated');
+} catch (error) {
+  console.error('Status update failed:', error.message);
+}
+```
+
+#### Get Statistics
+```javascript
+try {
+  const stats = await auth.getStats();
+  console.log('User statistics:', stats);
+} catch (error) {
+  console.error('Failed to get stats:', error.message);
+}
+```
+
+### Event Handling
 
 ```javascript
-// Listen for authentication events
-authClient.on('login', (data) => {
+// Listen to authentication events
+auth.on('login', (data) => {
   console.log('User logged in:', data.user);
 });
 
-authClient.on('logout', () => {
+auth.on('logout', () => {
   console.log('User logged out');
 });
 
-authClient.on('error', (data) => {
-  console.error('Auth error:', data.error);
+auth.on('token_refresh', (data) => {
+  console.log('Token refreshed:', data.accessToken);
 });
 
-authClient.on('token_refresh', () => {
-  console.log('Token refreshed');
+auth.on('error', (error) => {
+  console.error('Authentication error:', error);
 });
+
+auth.on('profile_update', (data) => {
+  console.log('Profile updated:', data.user);
+});
+
+// Remove event listeners
+auth.off('login', loginHandler);
 ```
 
-### Token Storage Options
+### Custom Storage
 
-#### localStorage (Default)
 ```javascript
-import { LocalTokenStorage } from '@your-auth/sdk';
+import { TokenStorage } from '@gsarthak783/accesskit-auth';
 
-const storage = new LocalTokenStorage('myapp'); // Optional prefix
-const authClient = new AuthClient(config, storage);
-```
-
-#### Memory Storage (SSR-friendly)
-```javascript
-import { MemoryTokenStorage } from '@your-auth/sdk';
-
-const storage = new MemoryTokenStorage();
-const authClient = new AuthClient(config, storage);
-```
-
-#### Cookie Storage
-```javascript
-import { CookieTokenStorage } from '@your-auth/sdk';
-
-const storage = new CookieTokenStorage('myapp');
-const authClient = new AuthClient(config, storage);
-```
-
-### Admin Functions
-
-#### Export Users
-```javascript
-const exportData = await authClient.exportUsers({
-  format: 'json', // or 'csv'
-  includeCustomFields: true,
-  dateRange: {
-    from: '2024-01-01',
-    to: '2024-12-31'
+class CustomStorage implements TokenStorage {
+  getItem(key: string): string | null {
+    // Your custom storage logic (e.g., AsyncStorage for React Native)
+    return localStorage.getItem(key);
   }
-});
+  
+  setItem(key: string, value: string): void {
+    localStorage.setItem(key, value);
+  }
+  
+  removeItem(key: string): void {
+    localStorage.removeItem(key);
+  }
+}
 
-console.log('Exported users:', exportData.users);
+const auth = new AuthClient(config, new CustomStorage());
 ```
 
-#### Import Users
-```javascript
-const importResult = await authClient.importUsers(exportData, {
-  updateExisting: true,
-  skipInvalid: false
-});
+## ⚛️ React SDK (@gsarthak783/accesskit-react)
 
-console.log('Import results:', importResult.results);
+### Installation & Setup
+
+```bash
+npm install @gsarthak783/accesskit-react
 ```
 
-#### Get All Users (with pagination)
-```javascript
-const usersResponse = await authClient.getUsers({
-  page: 1,
-  limit: 50
-});
-
-console.log('Users:', usersResponse.data);
-console.log('Pagination:', usersResponse.pagination);
-```
-
----
-
-## ⚛️ React SDK
-
-### Setup
+### AuthProvider Setup
 
 ```jsx
 import React from 'react';
-import { AuthProvider } from '@your-auth/react';
-import { LocalTokenStorage } from '@your-auth/sdk';
+import { AuthProvider } from '@gsarthak783/accesskit-react';
 
 function App() {
   return (
-    <AuthProvider
+    <AuthProvider 
       config={{
-        apiKey: 'your-project-api-key',
-        baseUrl: 'https://your-auth-service.com/api/project-users'
+        projectId: 'your-project-id',
+        apiKey: 'your-api-key'
       }}
-      storage={new LocalTokenStorage()}
-      autoInitialize={true}
+      autoInitialize={true}        // Optional: auto-check auth on mount
+      storage={customStorage}      // Optional: custom token storage
     >
-      <AppContent />
+      <YourApp />
     </AuthProvider>
   );
 }
@@ -228,46 +313,241 @@ function App() {
 ### useAuth Hook
 
 ```jsx
-import React from 'react';
-import { useAuth } from '@your-auth/react';
+import { useAuth } from '@gsarthak783/accesskit-react';
 
-function LoginPage() {
-  const { 
-    user, 
-    isLoading, 
-    isAuthenticated, 
-    login, 
-    logout, 
-    register 
+function MyComponent() {
+  const {
+    // State
+    user,                    // Current user object or null
+    isLoading,              // Loading state boolean
+    isAuthenticated,        // Authentication status boolean
+    
+    // Authentication methods
+    login,                  // (email, password) => Promise<void>
+    register,               // (userData) => Promise<void>
+    logout,                 // () => Promise<void>
+    
+    // Profile methods
+    updateProfile,          // (userData) => Promise<void>
+    requestPasswordReset,   // (email) => Promise<void>
+    resetPassword,          // (token, password) => Promise<void>
+    verifyEmail,            // (token) => Promise<void>
+    
+    // Direct SDK access
+    client                  // AuthClient instance
   } = useAuth();
 
-  const handleLogin = async (email, password) => {
+  // Component logic here...
+}
+```
+
+### Authentication Components
+
+#### Login Flow
+```jsx
+function LoginPage() {
+  const { login, isLoading, isAuthenticated } = useAuth();
+  const [formData, setFormData] = useState({ email: '', password: '' });
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" />;
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
-      await login(email, password);
-      // User automatically updated in context
+      await login(formData.email, formData.password);
     } catch (error) {
       console.error('Login failed:', error);
     }
   };
 
-  if (isLoading) return <div>Loading...</div>;
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        type="email"
+        value={formData.email}
+        onChange={(e) => setFormData({...formData, email: e.target.value})}
+        placeholder="Email"
+        required
+      />
+      <input
+        type="password"
+        value={formData.password}
+        onChange={(e) => setFormData({...formData, password: e.target.value})}
+        placeholder="Password"
+        required
+      />
+      <button type="submit" disabled={isLoading}>
+        {isLoading ? 'Logging in...' : 'Login'}
+      </button>
+    </form>
+  );
+}
+```
 
-  if (isAuthenticated) {
-    return (
-      <div>
-        <h1>Welcome, {user.firstName}!</h1>
-        <button onClick={logout}>Logout</button>
-      </div>
-    );
-  }
+#### Registration Flow
+```jsx
+function RegisterPage() {
+  const { register, isLoading } = useAuth();
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    firstName: '',
+    lastName: '',
+    username: ''
+  });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await register(formData);
+      // User is automatically logged in after registration
+    } catch (error) {
+      console.error('Registration failed:', error);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        type="email"
+        value={formData.email}
+        onChange={(e) => setFormData({...formData, email: e.target.value})}
+        placeholder="Email"
+        required
+      />
+      <input
+        type="password"
+        value={formData.password}
+        onChange={(e) => setFormData({...formData, password: e.target.value})}
+        placeholder="Password"
+        required
+      />
+      <input
+        type="text"
+        value={formData.firstName}
+        onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+        placeholder="First Name"
+        required
+      />
+      <input
+        type="text"
+        value={formData.lastName}
+        onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+        placeholder="Last Name"
+      />
+      <input
+        type="text"
+        value={formData.username}
+        onChange={(e) => setFormData({...formData, username: e.target.value})}
+        placeholder="Username"
+      />
+      <button type="submit" disabled={isLoading}>
+        {isLoading ? 'Creating Account...' : 'Register'}
+      </button>
+    </form>
+  );
+}
+```
+
+#### User Profile Component
+```jsx
+function UserProfile() {
+  const { user, updateProfile, logout } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || ''
+  });
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      await updateProfile(formData);
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Update failed:', error);
+    }
+  };
 
   return (
     <div>
-      {/* Your login form */}
-      <button onClick={() => handleLogin('user@example.com', 'password')}>
-        Login
-      </button>
+      <h2>Profile</h2>
+      {isEditing ? (
+        <form onSubmit={handleUpdate}>
+          <input
+            type="text"
+            value={formData.firstName}
+            onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+            placeholder="First Name"
+          />
+          <input
+            type="text"
+            value={formData.lastName}
+            onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+            placeholder="Last Name"
+          />
+          <button type="submit">Save</button>
+          <button type="button" onClick={() => setIsEditing(false)}>Cancel</button>
+        </form>
+      ) : (
+        <div>
+          <p>Name: {user.firstName} {user.lastName}</p>
+          <p>Email: {user.email}</p>
+          <p>Status: {user.status}</p>
+          <button onClick={() => setIsEditing(true)}>Edit Profile</button>
+          <button onClick={logout}>Logout</button>
+        </div>
+      )}
     </div>
+  );
+}
+```
+
+### Protected Routes
+
+```jsx
+import { useAuth } from '@gsarthak783/accesskit-react';
+import { Navigate } from 'react-router-dom';
+
+function ProtectedRoute({ children, requiredRole = null }) {
+  const { isAuthenticated, isLoading, user } = useAuth();
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+
+  if (requiredRole && user.customFields?.role !== requiredRole) {
+    return <div>Access denied. Required role: {requiredRole}</div>;
+  }
+
+  return children;
+}
+
+// Usage
+function App() {
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      
+      <Route path="/dashboard" element={
+        <ProtectedRoute>
+          <Dashboard />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/admin" element={
+        <ProtectedRoute requiredRole="admin">
+          <AdminPanel />
+        </ProtectedRoute>
+      } />
+    </Routes>
   );
 }
 ```
@@ -276,7 +556,7 @@ function LoginPage() {
 
 #### LoginForm Component
 ```jsx
-import { LoginForm } from '@your-auth/react';
+import { LoginForm } from '@gsarthak783/accesskit-react';
 
 function LoginPage() {
   return (
@@ -288,482 +568,270 @@ function LoginPage() {
         }}
         onError={(error) => {
           console.error('Login failed:', error);
+          // Show error message
         }}
+        className="custom-login-form"
+        buttonText="Sign In"
         showSignupLink={true}
-        onSignupClick={() => {
-          // Navigate to signup page
-        }}
+        onSignupClick={() => navigate('/signup')}
       />
     </div>
   );
 }
 ```
 
-### Protected Routes
+### Admin Features with React
 
 ```jsx
-import { useAuth } from '@your-auth/react';
-import { Navigate } from 'react-router-dom';
-
-function ProtectedRoute({ children }) {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return children;
-}
-
-// Usage
-<Route path="/dashboard" element={
-  <ProtectedRoute>
-    <Dashboard />
-  </ProtectedRoute>
-} />
-```
-
----
-
-## 📖 API Reference
-
-### AuthClient Methods
-
-| Method | Description | Parameters | Returns |
-|--------|-------------|------------|---------|
-| `register(userData)` | Register new user | `CreateUserData` | `Promise<AuthResponse>` |
-| `login(credentials)` | Login user | `LoginCredentials` | `Promise<AuthResponse>` |
-| `logout()` | Logout user | - | `Promise<void>` |
-| `getProfile()` | Get current user | - | `Promise<User>` |
-| `updateProfile(data)` | Update user profile | `UpdateUserData` | `Promise<User>` |
-| `refreshToken()` | Refresh access token | - | `Promise<string>` |
-| `requestPasswordReset(email)` | Request password reset | `string` | `Promise<void>` |
-| `resetPassword(token, password)` | Reset password | `string, string` | `Promise<void>` |
-| `verifyEmail(token)` | Verify email | `string` | `Promise<void>` |
-| `isAuthenticated()` | Check auth status | - | `boolean` |
-| `exportUsers(options)` | Export users (admin) | `ExportOptions` | `Promise<ExportData>` |
-| `importUsers(data, options)` | Import users (admin) | `ExportData, ImportOptions` | `Promise<ApiResponse>` |
-| `getUsers(options)` | Get all users (admin) | `PaginationOptions` | `Promise<PaginatedResponse<User>>` |
-
-### TypeScript Types
-
-```typescript
-interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  username?: string;
-  displayName?: string;
-  avatar?: string;
-  isVerified: boolean;
-  isActive: boolean;
-  customFields?: Record<string, any>;
-  createdAt: string;
-  lastLogin?: string;
-}
-
-interface AuthResponse {
-  success: boolean;
-  user: User;
-  accessToken: string;
-  refreshToken: string;
-  message?: string;
-}
-
-interface CreateUserData {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  username?: string;
-  customFields?: Record<string, any>;
-}
-```
-
----
-
-## 🔧 Advanced Usage
-
-### Custom Token Storage
-
-```javascript
-import { TokenStorage } from '@your-auth/sdk';
-
-class CustomTokenStorage implements TokenStorage {
-  getAccessToken(): string | null {
-    // Your custom logic
-    return localStorage.getItem('custom_access_token');
-  }
-
-  setAccessToken(token: string): void {
-    localStorage.setItem('custom_access_token', token);
-  }
-
-  getRefreshToken(): string | null {
-    return localStorage.getItem('custom_refresh_token');
-  }
-
-  setRefreshToken(token: string): void {
-    localStorage.setItem('custom_refresh_token', token);
-  }
-
-  clearTokens(): void {
-    localStorage.removeItem('custom_access_token');
-    localStorage.removeItem('custom_refresh_token');
-  }
-}
-
-const authClient = new AuthClient(config, new CustomTokenStorage());
-```
-
-### Request Interceptors
-
-```javascript
-// Access the underlying axios instance
-const httpClient = authClient.http;
-
-// Add custom request interceptor
-httpClient.interceptors.request.use((config) => {
-  config.headers['Custom-Header'] = 'value';
-  return config;
-});
-```
-
-### Error Handling
-
-```javascript
-authClient.on('error', (data) => {
-  if (data.error.message.includes('network')) {
-    // Handle network errors
-    showNetworkErrorModal();
-  } else if (data.error.message.includes('401')) {
-    // Handle authentication errors
-    redirectToLogin();
-  }
-});
-```
-
----
-
-## 🚀 Deployment Guide
-
-### 1. Deploy Your Auth Service
-
-#### Option A: Railway
-```bash
-# Install Railway CLI
-npm install -g @railway/cli
-
-# Login and deploy
-railway login
-railway init
-railway up
-```
-
-#### Option B: Vercel
-```bash
-# Install Vercel CLI
-npm install -g vercel
-
-# Deploy
-vercel --prod
-```
-
-#### Option C: Docker
-```dockerfile
-# Dockerfile
-FROM node:18-alpine
-
-WORKDIR /app
-
-COPY package*.json ./
-RUN npm install --production
-
-COPY . .
-
-EXPOSE 5000
-
-CMD ["npm", "start"]
-```
-
-```bash
-# Build and run
-docker build -t your-auth-service .
-docker run -p 5000:5000 your-auth-service
-```
-
-### 2. Environment Variables
-
-```bash
-# .env.production
-NODE_ENV=production
-PORT=5000
-MONGODB_URI=your-production-mongodb-uri
-JWT_ACCESS_SECRET=your-secure-jwt-secret
-JWT_REFRESH_SECRET=your-secure-refresh-secret
-EMAIL_HOST=smtp.your-provider.com
-EMAIL_USER=your-email@domain.com
-EMAIL_PASSWORD=your-email-password
-CLIENT_URL=https://your-frontend-domain.com
-```
-
-### 3. Configure CORS
-
-```javascript
-// In your deployed service
-const allowedOrigins = [
-  'https://your-frontend-domain.com',
-  'https://your-app.vercel.app',
-  'http://localhost:3000' // For development
-];
-```
-
-### 4. Publish SDKs to NPM
-
-```bash
-# Build the SDK
-cd auth-system/sdk
-npm run build
-
-# Publish to NPM
-npm publish --access public
-
-# Build and publish React SDK
-cd ../sdk-react
-npm run build
-npm publish --access public
-```
-
-### 5. Update SDK Configuration
-
-```javascript
-// In your apps, use the production URL
-const authClient = new AuthClient({
-  apiKey: 'your-project-api-key',
-  baseUrl: 'https://your-auth-service.railway.app/api/project-users'
-});
-```
-
----
-
-## 💡 Examples
-
-### Example 1: Next.js App
-
-```jsx
-// pages/_app.js
-import { AuthProvider } from '@your-auth/react';
-
-function MyApp({ Component, pageProps }) {
-  return (
-    <AuthProvider
-      config={{
-        apiKey: process.env.NEXT_PUBLIC_AUTH_API_KEY,
-        baseUrl: process.env.NEXT_PUBLIC_AUTH_BASE_URL
-      }}
-    >
-      <Component {...pageProps} />
-    </AuthProvider>
-  );
-}
-
-// pages/dashboard.js
-import { useAuth } from '@your-auth/react';
-import { useRouter } from 'next/router';
-import { useEffect } from 'react';
-
-export default function Dashboard() {
-  const { user, isAuthenticated, isLoading } = useAuth();
-  const router = useRouter();
+function AdminPanel() {
+  const { client } = useAuth(); // Direct access to AuthClient
+  const [users, setUsers] = useState([]);
+  const [stats, setStats] = useState(null);
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/login');
-    }
-  }, [isAuthenticated, isLoading, router]);
+    loadUsers();
+    loadStats();
+  }, []);
 
-  if (isLoading) return <div>Loading...</div>;
-  if (!isAuthenticated) return null;
+  const loadUsers = async () => {
+    try {
+      const response = await client.getAllUsers({ page: 1, limit: 50 });
+      setUsers(response.data);
+    } catch (error) {
+      console.error('Failed to load users:', error);
+    }
+  };
+
+  const loadStats = async () => {
+    try {
+      const response = await client.getStats();
+      setStats(response.data);
+    } catch (error) {
+      console.error('Failed to load stats:', error);
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    try {
+      await client.deleteUser(userId);
+      loadUsers(); // Refresh list
+    } catch (error) {
+      console.error('Failed to delete user:', error);
+    }
+  };
+
+  const handleUpdateUserStatus = async (userId, status) => {
+    try {
+      await client.updateUserStatus(userId, status);
+      loadUsers(); // Refresh list
+    } catch (error) {
+      console.error('Failed to update user status:', error);
+    }
+  };
 
   return (
     <div>
-      <h1>Welcome to your dashboard, {user.firstName}!</h1>
-      <p>Email: {user.email}</p>
+      <h2>Admin Panel</h2>
+      
+      {stats && (
+        <div className="stats">
+          <p>Total Users: {stats.totalUsers}</p>
+          <p>Active Users: {stats.activeUsers}</p>
+          <p>New Users Today: {stats.newUsersToday}</p>
+        </div>
+      )}
+
+      <div className="users-list">
+        <h3>Users</h3>
+        {users.map(user => (
+          <div key={user.id} className="user-item">
+            <span>{user.firstName} {user.lastName} ({user.email})</span>
+            <span>Status: {user.status}</span>
+            <button onClick={() => handleUpdateUserStatus(user.id, 'suspended')}>
+              Suspend
+            </button>
+            <button onClick={() => handleDeleteUser(user.id)}>
+              Delete
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
 ```
 
-### Example 2: Express.js Backend Integration
+## 🔗 Framework Integrations
 
+### Next.js Integration
 ```javascript
-// middleware/auth.js
-import { AuthClient } from '@your-auth/sdk';
+// pages/_app.js
+import { AuthProvider } from '@gsarthak783/accesskit-react';
 
-const authClient = new AuthClient({
-  apiKey: process.env.AUTH_API_KEY,
-  baseUrl: process.env.AUTH_BASE_URL
+function MyApp({ Component, pageProps }) {
+  return (
+    <AuthProvider config={{ projectId: 'xxx', apiKey: 'xxx' }}>
+      <Component {...pageProps} />
+    </AuthProvider>
+  );
+}
+
+// pages/api/auth/[...nextauth].js
+import { AuthClient } from '@gsarthak783/accesskit-auth';
+
+const auth = new AuthClient({
+  projectId: process.env.AUTH_PROJECT_ID,
+  apiKey: process.env.AUTH_API_KEY
 });
 
-export const requireAuth = async (req, res, next) => {
-  try {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    
-    if (!token) {
-      return res.status(401).json({ message: 'No token provided' });
-    }
-
-    // Verify token with auth service
-    authClient.storage.setAccessToken(token);
-    const user = await authClient.getProfile();
-    
-    req.user = user;
-    next();
-  } catch (error) {
-    res.status(401).json({ message: 'Invalid token' });
-  }
-};
-
-// routes/api.js
-import express from 'express';
-import { requireAuth } from '../middleware/auth.js';
-
-const router = express.Router();
-
-router.get('/protected', requireAuth, (req, res) => {
-  res.json({
-    message: 'This is a protected route',
-    user: req.user
-  });
-});
-
-export default router;
+export default async function handler(req, res) {
+  // Handle auth API routes
+}
 ```
 
-### Example 3: Vue.js Integration
-
+### Vue.js Integration
 ```javascript
 // main.js
 import { createApp } from 'vue';
-import { AuthClient } from '@your-auth/sdk';
-import App from './App.vue';
+import { AuthClient } from '@gsarthak783/accesskit-auth';
 
-const authClient = new AuthClient({
-  apiKey: import.meta.env.VITE_AUTH_API_KEY,
-  baseUrl: import.meta.env.VITE_AUTH_BASE_URL
+const auth = new AuthClient({
+  projectId: 'your-project-id',
+  apiKey: 'your-api-key'
 });
 
 const app = createApp(App);
-
-// Make auth client available globally
-app.config.globalProperties.$auth = authClient;
-app.provide('auth', authClient);
-
+app.config.globalProperties.$auth = auth;
 app.mount('#app');
 ```
 
-```vue
-<!-- Login.vue -->
-<template>
-  <form @submit.prevent="login">
-    <input v-model="email" type="email" placeholder="Email" required />
-    <input v-model="password" type="password" placeholder="Password" required />
-    <button type="submit" :disabled="loading">
-      {{ loading ? 'Logging in...' : 'Login' }}
-    </button>
-  </form>
-</template>
+### Angular Integration
+```typescript
+// auth.service.ts
+import { Injectable } from '@angular/core';
+import { AuthClient } from '@gsarthak783/accesskit-auth';
 
-<script>
-import { inject, ref } from 'vue';
+@Injectable({ providedIn: 'root' })
+export class AuthService {
+  private auth = new AuthClient({
+    projectId: 'your-project-id',
+    apiKey: 'your-api-key'
+  });
 
-export default {
-  setup() {
-    const auth = inject('auth');
-    const email = ref('');
-    const password = ref('');
-    const loading = ref(false);
+  async login(email: string, password: string) {
+    return this.auth.login({ email, password });
+  }
 
-    const login = async () => {
-      loading.value = true;
-      try {
-        await auth.login({
-          email: email.value,
-          password: password.value
-        });
-        // Redirect to dashboard
-        this.$router.push('/dashboard');
-      } catch (error) {
-        console.error('Login failed:', error);
-      } finally {
-        loading.value = false;
-      }
-    };
+  isAuthenticated(): boolean {
+    return this.auth.isAuthenticated();
+  }
+}
+```
 
-    return { email, password, loading, login };
+## 🔒 Security Best Practices
+
+### Environment Variables
+```bash
+# .env.local (Next.js)
+NEXT_PUBLIC_AUTH_PROJECT_ID=your-project-id
+AUTH_API_KEY=your-api-key  # Server-side only
+
+# .env (React)
+REACT_APP_AUTH_PROJECT_ID=your-project-id
+# Don't expose API keys in React - use server-side proxy
+
+# .env (Node.js)
+AUTH_PROJECT_ID=your-project-id
+AUTH_API_KEY=your-api-key
+AUTH_BASE_URL=https://access-kit-server.vercel.app/api/project-users
+```
+
+### Token Security
+```javascript
+// For React Native or secure environments
+import * as SecureStore from 'expo-secure-store';
+
+const secureStorage = {
+  getItem: async (key) => await SecureStore.getItemAsync(key),
+  setItem: async (key, value) => await SecureStore.setItemAsync(key, value),
+  removeItem: async (key) => await SecureStore.deleteItemAsync(key)
+};
+
+const auth = new AuthClient(config, secureStorage);
+```
+
+### Input Validation
+```javascript
+const validateEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+const validatePassword = (password) => {
+  return password.length >= 8 && 
+         /[A-Z]/.test(password) && 
+         /[a-z]/.test(password) && 
+         /\d/.test(password);
+};
+```
+
+## 📊 TypeScript Support
+
+Both SDKs are written in TypeScript and include complete type definitions:
+
+```typescript
+import { 
+  AuthClient, 
+  User, 
+  AuthConfig, 
+  LoginCredentials, 
+  CreateUserData,
+  AuthResponse,
+  ApiResponse 
+} from '@gsarthak783/accesskit-auth';
+
+import { 
+  useAuth, 
+  AuthProvider 
+} from '@gsarthak783/accesskit-react';
+
+// Type-safe configuration
+const config: AuthConfig = {
+  projectId: 'your-project-id',
+  apiKey: 'your-api-key',
+  timeout: 10000
+};
+
+// Type-safe user data
+const userData: CreateUserData = {
+  email: 'user@example.com',
+  password: 'securepassword',
+  firstName: 'John',
+  lastName: 'Doe',
+  customFields: {
+    role: 'user' as const
   }
 };
-</script>
 ```
-
----
-
-## 🛡️ Security Best Practices
-
-### 1. API Key Security
-```javascript
-// ❌ Never expose API keys in frontend
-const API_KEY = 'your-secret-key';
-
-// ✅ Use environment variables
-const API_KEY = process.env.REACT_APP_AUTH_API_KEY;
-
-// ✅ Even better - proxy through your backend
-const response = await fetch('/api/auth/login', {
-  // Your backend adds the API key
-});
-```
-
-### 2. Token Storage
-```javascript
-// ✅ For production apps, use httpOnly cookies
-import { CookieTokenStorage } from '@your-auth/sdk';
-
-const storage = new CookieTokenStorage();
-const authClient = new AuthClient(config, storage);
-```
-
-### 3. HTTPS Only
-```javascript
-// ✅ Always use HTTPS in production
-const authClient = new AuthClient({
-  apiKey: 'your-key',
-  baseUrl: 'https://your-auth-service.com/api/project-users' // HTTPS
-});
-```
-
----
 
 ## 📞 Support & Resources
 
-- **Dashboard**: Manage your projects at your auth service dashboard
-- **API Documentation**: Complete API reference in your project guide
-- **GitHub**: Report issues and contribute
-- **Community**: Join our Discord/Slack for support
+### Links
+- **Live API**: [https://access-kit-server.vercel.app](https://access-kit-server.vercel.app)
+- **GitHub Repository**: [https://github.com/gsarthak783/Auth-app](https://github.com/gsarthak783/Auth-app)
+- **Core SDK**: [https://npmjs.com/package/@gsarthak783/accesskit-auth](https://npmjs.com/package/@gsarthak783/accesskit-auth)
+- **React SDK**: [https://npmjs.com/package/@gsarthak783/accesskit-react](https://npmjs.com/package/@gsarthak783/accesskit-react)
+- **Issues & Support**: [https://github.com/gsarthak783/Auth-app/issues](https://github.com/gsarthak783/Auth-app/issues)
+
+### Getting Help
+1. Check the [API documentation](https://access-kit-server.vercel.app) first
+2. Search [existing issues](https://github.com/gsarthak783/Auth-app/issues)
+3. Create a new issue with:
+   - SDK version
+   - Framework/environment
+   - Code example
+   - Error messages
 
 ---
 
-## 🎉 What's Next?
-
-1. **Deploy Your Service**: Follow the deployment guide
-2. **Integrate SDK**: Use our JavaScript or React SDK
-3. **Customize**: Add custom fields, styling, and logic
-4. **Scale**: Monitor usage and upgrade as needed
-5. **Contribute**: Help improve the SDKs and documentation
-
-Happy coding! 🚀 
+Built with ❤️ by the AccessKit Team 

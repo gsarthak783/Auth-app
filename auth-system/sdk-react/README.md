@@ -1,37 +1,36 @@
-# @accesskit/react
+# @gsarthak783/accesskit-react
 
-> ⚛️ React SDK for AccessKit Authentication System
+React SDK for AccessKit Authentication System - Ready-to-use hooks and components for React applications.
 
-[![npm version](https://badge.fury.io/js/@accesskit%2Freact.svg)](https://badge.fury.io/js/@accesskit%2Freact)
-[![React](https://img.shields.io/badge/React-16.8%2B-blue)](https://reactjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue)](https://www.typescriptlang.org/)
+[![npm version](https://badge.fury.io/js/@gsarthak783%2Faccesskit-react.svg)](https://badge.fury.io/js/@gsarthak783%2Faccesskit-react)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-Ready-to-use React hooks and components for AccessKit authentication. Get started in minutes!
 
 ## 🚀 Quick Start
 
 ### Installation
 
 ```bash
-npm install @accesskit/react @accesskit/auth
-# or
-yarn add @accesskit/react @accesskit/auth
-# or
-pnpm add @accesskit/react @accesskit/auth
+npm install @gsarthak783/accesskit-react
 ```
+
+> **Note**: This package automatically includes `@gsarthak783/accesskit-auth` as a dependency.
 
 ### Basic Setup
 
-```tsx
+Wrap your app with the `AuthProvider`:
+
+```jsx
 import React from 'react';
-import { AuthProvider } from '@accesskit/react';
+import { AuthProvider } from '@gsarthak783/accesskit-react';
 
 function App() {
   return (
     <AuthProvider 
-      apiKey="your-project-api-key"
-      projectId="your-project-id"
+      config={{
+        projectId: 'your-project-id',
+        apiKey: 'your-api-key'
+        // baseUrl automatically points to https://access-kit-server.vercel.app/api/project-users
+      }}
     >
       <YourApp />
     </AuthProvider>
@@ -41,453 +40,532 @@ function App() {
 export default App;
 ```
 
-### Using Authentication
+### Using the useAuth Hook
 
-```tsx
-import React from 'react';
-import { useAuth } from '@accesskit/react';
+```jsx
+import { useAuth } from '@gsarthak783/accesskit-react';
 
-function LoginForm() {
-  const { login, register, user, loading, error } = useAuth();
+function MyComponent() {
+  const { 
+    user, 
+    isLoading, 
+    isAuthenticated, 
+    login, 
+    register, 
+    logout 
+  } = useAuth();
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div>
+        <button onClick={() => login('user@example.com', 'password')}>
+          Login
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h1>Welcome, {user.firstName}!</h1>
+      <button onClick={logout}>Logout</button>
+    </div>
+  );
+}
+```
+
+## 🎯 Get Your API Keys
+
+1. Visit the [AccessKit Dashboard](https://access-kit-server.vercel.app)
+2. Create an account or login
+3. Create a new project
+4. Copy your Project ID and API Key from the project settings
+
+## 🪝 useAuth Hook
+
+The `useAuth` hook provides all authentication functionality:
+
+```typescript
+interface AuthContextType {
+  // State
+  user: User | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  
+  // Actions
+  login: (email: string, password: string) => Promise<void>;
+  register: (userData: RegisterData) => Promise<void>;
+  logout: () => Promise<void>;
+  updateProfile: (userData: Partial<User>) => Promise<void>;
+  requestPasswordReset: (email: string) => Promise<void>;
+  resetPassword: (token: string, password: string) => Promise<void>;
+  verifyEmail: (token: string) => Promise<void>;
+  
+  // Direct SDK access
+  client: AuthClient;
+}
+```
+
+### Registration
+
+```jsx
+function SignupForm() {
+  const { register, isLoading } = useAuth();
+  
+  const handleSubmit = async (formData) => {
     try {
-      await login({
-        email: 'user@example.com',
-        password: 'password123'
+      await register({
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        username: formData.username,
+        customFields: { role: 'user' }
       });
-    } catch (err) {
-      console.error('Login failed:', err);
+      // User is automatically logged in after registration
+    } catch (error) {
+      console.error('Registration failed:', error);
     }
   };
 
-  if (loading) return <div>Loading...</div>;
-  if (user) return <div>Welcome, {user.firstName}!</div>;
-
   return (
-    <form onSubmit={handleLogin}>
-      {error && <div className="error">{error}</div>}
-      <input type="email" placeholder="Email" required />
-      <input type="password" placeholder="Password" required />
-      <button type="submit">Login</button>
+    <form onSubmit={handleSubmit}>
+      {/* Your form fields */}
+      <button type="submit" disabled={isLoading}>
+        {isLoading ? 'Creating Account...' : 'Sign Up'}
+      </button>
     </form>
   );
 }
 ```
 
-## 📖 Documentation
+### Profile Management
 
-### AuthProvider
+```jsx
+function UserProfile() {
+  const { user, updateProfile } = useAuth();
 
-Wrap your app with `AuthProvider` to enable authentication throughout your component tree:
+  const handleUpdate = async (newData) => {
+    try {
+      await updateProfile(newData);
+      // User state is automatically updated
+    } catch (error) {
+      console.error('Update failed:', error);
+    }
+  };
 
-```tsx
+  return (
+    <div>
+      <h2>{user.firstName} {user.lastName}</h2>
+      <p>{user.email}</p>
+      <button onClick={() => handleUpdate({ firstName: 'NewName' })}>
+        Update Name
+      </button>
+    </div>
+  );
+}
+```
+
+## 🧩 Ready-to-Use Components
+
+### LoginForm Component
+
+A complete login form with validation:
+
+```jsx
+import { LoginForm } from '@gsarthak783/accesskit-react';
+
+function LoginPage() {
+  return (
+    <div className="login-page">
+      <LoginForm
+        onSuccess={() => console.log('Login successful!')}
+        onError={(error) => console.error('Login failed:', error)}
+        className="custom-login-form"
+        buttonText="Sign In"
+        showSignupLink={true}
+        onSignupClick={() => navigate('/signup')}
+      />
+    </div>
+  );
+}
+```
+
+### LoginForm Props
+
+```typescript
+interface LoginFormProps {
+  onSuccess?: () => void;
+  onError?: (error: Error) => void;
+  className?: string;
+  buttonText?: string;
+  showSignupLink?: boolean;
+  onSignupClick?: () => void;
+}
+```
+
+## ⚙️ AuthProvider Configuration
+
+```jsx
 <AuthProvider 
-  apiKey="your-api-key"
-  projectId="your-project-id"
   config={{
-    baseUrl: 'https://your-custom-api.com', // optional
-    timeout: 10000,                         // optional
+    projectId: 'your-project-id',
+    apiKey: 'your-api-key',
+    baseUrl: 'https://access-kit-server.vercel.app/api/project-users', // Optional, defaults to this
+    timeout: 10000 // Optional, request timeout in ms
   }}
+  storage={customStorage} // Optional, custom token storage
+  autoInitialize={true}   // Optional, auto-check authentication on mount
 >
   <App />
 </AuthProvider>
 ```
 
-### useAuth Hook
+### Custom Storage
 
-The main hook for authentication operations:
+```jsx
+import { AuthProvider } from '@gsarthak783/accesskit-react';
 
-```tsx
-const {
-  // User state
-  user,              // Current user object or null
-  loading,           // Loading state boolean
-  error,             // Error message string or null
-  isAuthenticated,   // Authentication status boolean
+// Custom storage for React Native or other environments
+const customStorage = {
+  getItem: (key) => AsyncStorage.getItem(key),
+  setItem: (key, value) => AsyncStorage.setItem(key, value),
+  removeItem: (key) => AsyncStorage.removeItem(key)
+};
 
-  // Authentication methods
-  login,             // Login function
-  register,          // Register function
-  logout,            // Logout function
-  
-  // Profile methods
-  updateProfile,     // Update user profile function
-  refreshToken,      // Manually refresh token function
-  
-  // Password methods
-  requestPasswordReset,  // Request password reset
-  resetPassword,         // Reset password with token
-  
-  // Admin methods (if user has admin access)
-  getUsers,          // Get all users
-  updateUserStatus,  // Update user status
-  deleteUser,        // Delete user
-} = useAuth();
+<AuthProvider config={config} storage={customStorage}>
+  <App />
+</AuthProvider>
 ```
 
-### Authentication Methods
+## 🎨 Advanced Usage
 
-#### Login
-```tsx
-const { login } = useAuth();
+### Protected Routes
 
-// Email login
-await login({
-  email: 'user@example.com',
-  password: 'password123'
-});
+```jsx
+import { useAuth } from '@gsarthak783/accesskit-react';
+import { Navigate } from 'react-router-dom';
 
-// Username login
-await login({
-  username: 'johndoe',
-  password: 'password123'
-});
+function ProtectedRoute({ children }) {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  return isAuthenticated ? children : <Navigate to="/login" />;
+}
+
+// Usage
+<ProtectedRoute>
+  <Dashboard />
+</ProtectedRoute>
 ```
 
-#### Register
-```tsx
-const { register } = useAuth();
+### Role-Based Access
 
-await register({
-  email: 'user@example.com',
-  password: 'password123',
-  firstName: 'John',
-  lastName: 'Doe',
-  username: 'johndoe'  // optional
-});
-```
+```jsx
+function AdminPanel() {
+  const { user, isAuthenticated } = useAuth();
 
-#### Logout
-```tsx
-const { logout } = useAuth();
+  if (!isAuthenticated || user.customFields?.role !== 'admin') {
+    return <div>Access denied</div>;
+  }
 
-await logout();
-```
-
-### Profile Management
-
-#### Update Profile
-```tsx
-const { updateProfile } = useAuth();
-
-await updateProfile({
-  firstName: 'Jane',
-  lastName: 'Smith',
-  bio: 'Software Developer'
-});
-```
-
-#### Password Reset
-```tsx
-const { requestPasswordReset, resetPassword } = useAuth();
-
-// Request reset email
-await requestPasswordReset('user@example.com');
-
-// Reset with token (from email)
-await resetPassword('reset-token', 'newpassword123');
-```
-
-## 🎯 Ready-to-Use Components
-
-### LoginForm Component
-
-```tsx
-import { LoginForm } from '@accesskit/react';
-
-function App() {
-  return (
-    <LoginForm
-      onSuccess={(user) => console.log('Logged in:', user)}
-      onError={(error) => console.error('Login error:', error)}
-      className="custom-login-form"
-      showRegisterLink={true}
-    />
-  );
+  return <div>Admin content</div>;
 }
 ```
 
-### ProtectedRoute Component
+### Form Validation
 
-```tsx
-import { ProtectedRoute } from '@accesskit/react';
+```jsx
+function RegisterForm() {
+  const { register, isLoading } = useAuth();
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    firstName: '',
+    lastName: ''
+  });
+  const [errors, setErrors] = useState({});
 
-function App() {
-  return (
-    <ProtectedRoute 
-      fallback={<LoginPage />}
-      requiredRole="admin" // optional
-    >
-      <Dashboard />
-    </ProtectedRoute>
-  );
-}
-```
-
-### UserProfile Component
-
-```tsx
-import { UserProfile } from '@accesskit/react';
-
-function ProfilePage() {
-  return (
-    <UserProfile
-      editable={true}
-      onUpdate={(user) => console.log('Profile updated:', user)}
-      fields={['firstName', 'lastName', 'email', 'bio']}
-    />
-  );
-}
-```
-
-## 🔧 Advanced Usage
-
-### Custom Auth Context
-
-```tsx
-import { useAuth, AuthContext } from '@accesskit/react';
-
-function CustomAuthProvider({ children }) {
-  const auth = useAuth();
-  
-  // Add custom logic here
-  const customAuth = {
-    ...auth,
-    customMethod: () => {
-      // Your custom authentication logic
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.email.includes('@')) {
+      newErrors.email = 'Invalid email';
     }
+    
+    if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  return (
-    <AuthContext.Provider value={customAuth}>
-      {children}
-    </AuthContext.Provider>
-  );
-}
-```
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
 
-### Error Handling
-
-```tsx
-function MyComponent() {
-  const { login, error } = useAuth();
-
-  const handleLogin = async (credentials) => {
     try {
-      await login(credentials);
-    } catch (err) {
-      // Error is also available in the error state
-      console.error('Login failed:', err.message);
+      await register(formData);
+    } catch (error) {
+      setErrors({ submit: error.message });
     }
   };
 
   return (
-    <div>
-      {error && (
-        <div className="error-banner">
-          {error}
-        </div>
-      )}
-      {/* Your login form */}
-    </div>
+    <form onSubmit={handleSubmit}>
+      <input
+        type="email"
+        value={formData.email}
+        onChange={(e) => setFormData({...formData, email: e.target.value})}
+        placeholder="Email"
+      />
+      {errors.email && <span className="error">{errors.email}</span>}
+      
+      <input
+        type="password"
+        value={formData.password}
+        onChange={(e) => setFormData({...formData, password: e.target.value})}
+        placeholder="Password"
+      />
+      {errors.password && <span className="error">{errors.password}</span>}
+      
+      <button type="submit" disabled={isLoading}>
+        {isLoading ? 'Registering...' : 'Register'}
+      </button>
+      
+      {errors.submit && <div className="error">{errors.submit}</div>}
+    </form>
   );
 }
 ```
 
-### Loading States
+### Direct SDK Access
 
-```tsx
-function MyComponent() {
-  const { loading, login } = useAuth();
+```jsx
+function AdvancedComponent() {
+  const { client } = useAuth();
+
+  const handleAdminAction = async () => {
+    try {
+      // Direct access to the underlying AuthClient
+      const users = await client.getAllUsers({
+        page: 1,
+        limit: 10,
+        status: 'active'
+      });
+      console.log('Users:', users);
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+    }
+  };
 
   return (
-    <div>
-      <button 
-        onClick={() => login(credentials)}
-        disabled={loading}
-      >
-        {loading ? 'Logging in...' : 'Login'}
-      </button>
-    </div>
+    <button onClick={handleAdminAction}>
+      Get All Users (Admin)
+    </button>
   );
 }
 ```
 
 ## 🎨 Styling
 
-All components are unstyled by default, giving you full control over the appearance:
-
-```tsx
-// Custom styled login form
-<LoginForm
-  className="my-login-form"
-  inputClassName="my-input"
-  buttonClassName="my-button"
-  errorClassName="my-error"
-/>
-```
+The components come with minimal styling. You can customize them using CSS classes:
 
 ```css
-.my-login-form {
+/* Custom styles for LoginForm */
+.custom-login-form {
   max-width: 400px;
   margin: 0 auto;
   padding: 2rem;
-  border: 1px solid #ddd;
   border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.my-input {
+.custom-login-form input {
   width: 100%;
   padding: 0.75rem;
   margin-bottom: 1rem;
-  border: 1px solid #ccc;
+  border: 1px solid #ddd;
   border-radius: 4px;
 }
 
-.my-button {
+.custom-login-form button {
   width: 100%;
   padding: 0.75rem;
-  background: #007bff;
+  background-color: #007bff;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
 }
 
-.my-error {
-  color: #dc3545;
-  margin-bottom: 1rem;
+.custom-login-form button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
 }
 ```
 
 ## 🔒 Security Best Practices
 
-### Route Protection
+### Environment Variables
 
-```tsx
-import { ProtectedRoute, useAuth } from '@accesskit/react';
+Never expose API keys in frontend code:
 
-function App() {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        
-        {/* Protected routes */}
-        <Route path="/dashboard" element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        } />
-        
-        {/* Admin only routes */}
-        <Route path="/admin" element={
-          <ProtectedRoute requiredRole="admin">
-            <AdminPanel />
-          </ProtectedRoute>
-        } />
-      </Routes>
-    </Router>
-  );
-}
+```javascript
+// ❌ Don't do this
+const config = {
+  projectId: 'proj_123',
+  apiKey: 'sk_live_abc123' // Never expose secret keys in frontend!
+};
+
+// ✅ Do this instead
+const config = {
+  projectId: process.env.REACT_APP_PROJECT_ID,
+  // Use public keys only in frontend, manage auth server-side
+};
 ```
 
-### Automatic Token Refresh
+### Secure Token Storage
 
-Tokens are automatically refreshed when they expire:
+```jsx
+// For React Native or when you need secure storage
+import * as SecureStore from 'expo-secure-store';
 
-```tsx
-function App() {
-  const { user, refreshToken } = useAuth();
+const secureStorage = {
+  getItem: async (key) => await SecureStore.getItemAsync(key),
+  setItem: async (key, value) => await SecureStore.setItemAsync(key, value),
+  removeItem: async (key) => await SecureStore.deleteItemAsync(key)
+};
 
-  // Tokens are refreshed automatically, but you can also trigger manually
-  const handleManualRefresh = async () => {
-    try {
-      await refreshToken();
-    } catch (error) {
-      // Handle refresh failure (user will be logged out)
-    }
-  };
-
-  return <div>{/* Your app */}</div>;
-}
+<AuthProvider config={config} storage={secureStorage}>
+  <App />
+</AuthProvider>
 ```
 
-## 🚀 Examples
+### Input Validation
 
-### Complete Authentication Flow
+Always validate user inputs:
 
-```tsx
+```jsx
+const validateEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+const validatePassword = (password) => {
+  return password.length >= 8 && 
+         /[A-Z]/.test(password) && 
+         /[a-z]/.test(password) && 
+         /\d/.test(password);
+};
+```
+
+## 🧪 Examples
+
+### Complete Login/Register Flow
+
+```jsx
 import React, { useState } from 'react';
-import { useAuth } from '@accesskit/react';
+import { useAuth, LoginForm } from '@gsarthak783/accesskit-react';
 
-function AuthPage() {
-  const [isLogin, setIsLogin] = useState(true);
-  const { login, register, loading, error } = useAuth();
+function AuthFlow() {
+  const { isAuthenticated, user, logout } = useAuth();
+  const [showLogin, setShowLogin] = useState(true);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    
-    const credentials = {
-      email: formData.get('email'),
-      password: formData.get('password'),
-      ...(isLogin ? {} : {
-        firstName: formData.get('firstName'),
-        lastName: formData.get('lastName')
-      })
-    };
-
-    try {
-      if (isLogin) {
-        await login(credentials);
-      } else {
-        await register(credentials);
-      }
-    } catch (err) {
-      console.error('Auth error:', err);
-    }
-  };
+  if (isAuthenticated) {
+    return (
+      <div>
+        <h1>Welcome, {user.firstName}!</h1>
+        <button onClick={logout}>Logout</button>
+      </div>
+    );
+  }
 
   return (
-    <form onSubmit={handleSubmit}>
-      {error && <div className="error">{error}</div>}
-      
-      {!isLogin && (
-        <>
-          <input name="firstName" placeholder="First Name" required />
-          <input name="lastName" placeholder="Last Name" required />
-        </>
+    <div>
+      <div className="auth-tabs">
+        <button 
+          onClick={() => setShowLogin(true)}
+          className={showLogin ? 'active' : ''}
+        >
+          Login
+        </button>
+        <button 
+          onClick={() => setShowLogin(false)}
+          className={!showLogin ? 'active' : ''}
+        >
+          Register
+        </button>
+      </div>
+
+      {showLogin ? (
+        <LoginForm
+          onSuccess={() => console.log('Logged in!')}
+          showSignupLink={true}
+          onSignupClick={() => setShowLogin(false)}
+        />
+      ) : (
+        <RegisterForm onSuccess={() => setShowLogin(true)} />
       )}
-      
-      <input name="email" type="email" placeholder="Email" required />
-      <input name="password" type="password" placeholder="Password" required />
-      
-      <button type="submit" disabled={loading}>
-        {loading ? 'Processing...' : isLogin ? 'Login' : 'Register'}
-      </button>
-      
-      <button type="button" onClick={() => setIsLogin(!isLogin)}>
-        {isLogin ? 'Need an account? Register' : 'Have an account? Login'}
-      </button>
-    </form>
+    </div>
   );
 }
 ```
 
-## 🤝 Support
+### TypeScript Support
 
-- **GitHub**: [Issues & Feature Requests](https://github.com/gsarthak783/Auth-app/issues)
-- **Documentation**: [API Docs](https://access-kit-server.vercel.app)
-- **Core SDK**: [@accesskit/auth](https://npmjs.com/package/@accesskit/auth)
+```tsx
+import { useAuth } from '@gsarthak783/accesskit-react';
+import type { User } from '@gsarthak783/accesskit-auth';
+
+interface UserProfileProps {
+  onUpdate?: (user: User) => void;
+}
+
+const UserProfile: React.FC<UserProfileProps> = ({ onUpdate }) => {
+  const { user, updateProfile } = useAuth();
+
+  const handleUpdate = async (data: Partial<User>) => {
+    try {
+      const updatedUser = await updateProfile(data);
+      onUpdate?.(updatedUser);
+    } catch (error) {
+      console.error('Update failed:', error);
+    }
+  };
+
+  return (
+    <div>
+      <h2>{user?.firstName} {user?.lastName}</h2>
+      <button onClick={() => handleUpdate({ firstName: 'New Name' })}>
+        Update Profile
+      </button>
+    </div>
+  );
+};
+```
+
+## 📞 Support
+
+- **Live Demo**: [https://access-kit-server.vercel.app](https://access-kit-server.vercel.app)
+- **GitHub Repository**: [https://github.com/gsarthak783/Auth-app](https://github.com/gsarthak783/Auth-app)
+- **Issues**: [https://github.com/gsarthak783/Auth-app/issues](https://github.com/gsarthak783/Auth-app/issues)
+- **npm Package**: [https://npmjs.com/package/@gsarthak783/accesskit-react](https://npmjs.com/package/@gsarthak783/accesskit-react)
+- **Core SDK**: [https://npmjs.com/package/@gsarthak783/accesskit-auth](https://npmjs.com/package/@gsarthak783/accesskit-auth)
 
 ## 📄 License
 
-MIT © AccessKit Team
+MIT License - see [LICENSE](./LICENSE) file for details.
 
 ---
 
-**Made with ❤️ by the AccessKit Team** 
+Built with ❤️ by the AccessKit Team 

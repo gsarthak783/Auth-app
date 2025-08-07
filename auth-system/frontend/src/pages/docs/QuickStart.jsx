@@ -1,347 +1,438 @@
 import React, { useState } from 'react';
-import { Copy, Check, Zap, Shield, Code, Globe, Users, Settings } from 'lucide-react';
-import DocsLayout from '../../components/Layout/DocsLayout';
+import { Copy, Check, Terminal, Code, Download, ExternalLink } from 'lucide-react';
 
 const QuickStart = () => {
-  const [copiedCode, setCopiedCode] = useState('');
+  const [copiedCode, setCopiedCode] = useState(null);
 
-  const copyToClipboard = async (code, id) => {
+  const copyToClipboard = async (text, id) => {
     try {
-      await navigator.clipboard.writeText(code);
+      await navigator.clipboard.writeText(text);
       setCopiedCode(id);
-      setTimeout(() => setCopiedCode(''), 2000);
-    } catch (error) {
-      console.error('Failed to copy:', error);
+      setTimeout(() => setCopiedCode(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
     }
   };
 
-  const CodeBlock = ({ code, language = 'javascript', id }) => (
+  const CodeBlock = ({ code, language, id }) => (
     <div className="relative">
-      <div className="flex items-center justify-between bg-base-300 px-4 py-2 rounded-t-lg">
-        <span className="text-sm font-medium text-base-content">{language}</span>
-        <button
-          onClick={() => copyToClipboard(code, id)}
-          className="flex items-center space-x-1 text-sm text-base-content/70 hover:text-base-content transition-colors"
-        >
-          {copiedCode === id ? (
-            <>
-              <Check className="w-4 h-4" />
-              <span>Copied!</span>
-            </>
-          ) : (
-            <>
-              <Copy className="w-4 h-4" />
-              <span>Copy</span>
-            </>
-          )}
-        </button>
-      </div>
-      <pre className="bg-base-100 p-4 rounded-b-lg overflow-x-auto border border-base-300">
-        <code>{code}</code>
+      <pre className="bg-base-200 p-4 rounded-lg overflow-x-auto">
+        <code className={`language-${language}`}>{code}</code>
       </pre>
+      <button
+        onClick={() => copyToClipboard(code, id)}
+        className="absolute top-2 right-2 btn btn-sm btn-ghost"
+        title="Copy to clipboard"
+      >
+        {copiedCode === id ? <Check size={16} /> : <Copy size={16} />}
+      </button>
     </div>
   );
 
   return (
-    <DocsLayout>
-      <div className="max-w-4xl mx-auto px-6 py-12">
-        {/* Header */}
-        <div className="mb-12">
-          <div className="flex items-center space-x-3 mb-4">
-            <Zap className="w-8 h-8 text-primary" />
-            <h1 className="text-4xl font-bold text-base-content">Quick Start</h1>
-          </div>
-          <p className="text-xl text-base-content/70">
-            Get up and running with AuthSystem in minutes. Add authentication to your app with just a few lines of code.
-          </p>
+    <div className="max-w-4xl mx-auto">
+      {/* Header */}
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold text-base-content mb-4">
+          Quick Start Guide
+        </h1>
+        <p className="text-xl text-base-content/70 mb-6">
+          Get started with AccessKit in minutes. Choose your integration method and start building!
+        </p>
+        <div className="flex flex-wrap justify-center gap-4">
+          <a 
+            href="https://npmjs.com/package/@gsarthak783/accesskit-auth" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="btn btn-outline btn-sm"
+          >
+            <Download size={16} />
+            Core SDK
+            <ExternalLink size={16} />
+          </a>
+          <a 
+            href="https://npmjs.com/package/@gsarthak783/accesskit-react" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="btn btn-outline btn-sm"
+          >
+            <Download size={16} />
+            React SDK
+            <ExternalLink size={16} />
+          </a>
         </div>
+      </div>
 
-        {/* Overview */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold text-base-content mb-6">What is AuthSystem?</h2>
-          <div className="bg-base-200 p-6 rounded-lg mb-6">
-            <p className="text-base-content/80 mb-4">
-              AuthSystem is a complete authentication service that provides user management, secure login/signup, 
-              and project-based user isolation. It's designed to be developer-friendly with SDKs for popular frameworks.
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="flex items-center space-x-2">
-                <Shield className="w-5 h-5 text-primary" />
-                <span className="text-sm">Secure by default</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Code className="w-5 h-5 text-primary" />
-                <span className="text-sm">Easy integration</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Globe className="w-5 h-5 text-primary" />
-                <span className="text-sm">REST API</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Users className="w-5 h-5 text-primary" />
-                <span className="text-sm">User management</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Step 1: Get Credentials */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold text-base-content mb-6">Step 1: Get Your Credentials</h2>
-          <div className="space-y-4">
-            <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
-              <h3 className="font-semibold text-blue-900 mb-2">Create a Project</h3>
-              <ol className="list-decimal list-inside space-y-2 text-blue-800">
-                <li>Login to your AuthSystem dashboard</li>
-                <li>Click "Create New Project"</li>
-                <li>Enter your project name and configure settings</li>
-                <li>Copy your API Key and Project ID</li>
-              </ol>
-            </div>
-            
-            <div className="bg-base-200 p-4 rounded-lg">
-              <h3 className="font-semibold text-base-content mb-2">Your Credentials</h3>
-              <div className="space-y-2 font-mono text-sm">
-                <div>API Key: <code className="bg-base-300 px-2 py-1 rounded">your-project-api-key</code></div>
-                <div>Project ID: <code className="bg-base-300 px-2 py-1 rounded">your-project-id</code></div>
-                <div>Base URL: <code className="bg-base-300 px-2 py-1 rounded">https://your-auth-service.com/api/project-users</code></div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Step 2: Install SDK */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold text-base-content mb-6">Step 2: Install SDK</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="bg-base-200 p-6 rounded-lg">
-              <h3 className="font-semibold text-base-content mb-3">For JavaScript/Node.js</h3>
+      {/* Step 1: Installation */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-base-content mb-6">Step 1: Installation</h2>
+        
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* JavaScript/TypeScript SDK */}
+          <div className="card bg-base-100 shadow-xl">
+            <div className="card-body">
+              <h3 className="card-title">
+                <Code size={20} />
+                JavaScript/TypeScript SDK
+              </h3>
+              <p className="text-base-content/70 mb-4">
+                Universal SDK for any JavaScript/TypeScript project. Works with React, Vue, Angular, Node.js, and more.
+              </p>
               <CodeBlock
-                code="npm install @your-auth/sdk"
+                code="npm install @gsarthak783/accesskit-auth"
                 language="bash"
                 id="install-js"
               />
+              <div className="card-actions justify-end">
+                <div className="badge badge-primary">Universal</div>
+                <div className="badge badge-outline">TypeScript</div>
+              </div>
             </div>
-            
-            <div className="bg-base-200 p-6 rounded-lg">
-              <h3 className="font-semibold text-base-content mb-3">For React Projects</h3>
+          </div>
+
+          {/* React SDK */}
+          <div className="card bg-base-100 shadow-xl">
+            <div className="card-body">
+              <h3 className="card-title">
+                <Terminal size={20} />
+                React SDK
+              </h3>
+              <p className="text-base-content/70 mb-4">
+                React-specific SDK with hooks, context provider, and ready-to-use components.
+              </p>
               <CodeBlock
-                code="npm install @your-auth/react"
+                code="npm install @gsarthak783/accesskit-react"
                 language="bash"
                 id="install-react"
               />
+              <div className="card-actions justify-end">
+                <div className="badge badge-secondary">React</div>
+                <div className="badge badge-outline">Hooks</div>
+              </div>
             </div>
           </div>
-        </section>
+        </div>
 
-        {/* Step 3: Basic Usage */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold text-base-content mb-6">Step 3: Basic Usage</h2>
-          
-          {/* JavaScript Example */}
-          <div className="mb-8">
-            <h3 className="text-xl font-semibold text-base-content mb-4">JavaScript/Node.js</h3>
+        <div className="alert alert-info mt-6">
+          <div>
+            <strong>Note:</strong> The React SDK automatically includes the core SDK as a dependency.
+          </div>
+        </div>
+      </section>
+
+      {/* Step 2: Get API Keys */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-base-content mb-6">Step 2: Get Your API Keys</h2>
+        
+        <div className="steps steps-vertical lg:steps-horizontal">
+          <div className="step step-primary">
+            <div className="step-content">
+              <h3 className="font-semibold">Create Account</h3>
+              <p className="text-sm text-base-content/70">
+                Sign up at <a href="https://access-kit-server.vercel.app" className="link link-primary">access-kit-server.vercel.app</a>
+              </p>
+            </div>
+          </div>
+          <div className="step step-primary">
+            <div className="step-content">
+              <h3 className="font-semibold">Create Project</h3>
+              <p className="text-sm text-base-content/70">
+                Set up a new project in your dashboard
+              </p>
+            </div>
+          </div>
+          <div className="step step-primary">
+            <div className="step-content">
+              <h3 className="font-semibold">Copy Keys</h3>
+              <p className="text-sm text-base-content/70">
+                Get your Project ID and API Key from settings
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Step 3: Quick Integration */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-base-content mb-6">Step 3: Quick Integration</h2>
+
+        <div className="tabs tabs-boxed mb-6">
+          <input type="radio" name="integration_tabs" className="tab" aria-label="JavaScript" defaultChecked />
+          <div className="tab-content bg-base-100 border-base-300 rounded-box p-6">
+            <h3 className="text-xl font-semibold mb-4">JavaScript/TypeScript Integration</h3>
             <CodeBlock
-              code={`import { AuthClient } from '@your-auth/sdk';
+              code={`import { AuthClient } from '@gsarthak783/accesskit-auth';
 
 // Initialize the client
-const authClient = new AuthClient({
-  apiKey: 'your-project-api-key',
-  baseUrl: 'https://your-auth-service.com/api/project-users'
+const auth = new AuthClient({
+  projectId: 'your-project-id',
+  apiKey: 'your-api-key'
 });
 
 // Register a new user
-const user = await authClient.register({
-  email: 'user@example.com',
-  password: 'securePassword123',
-  firstName: 'John',
-  lastName: 'Doe'
-});
+try {
+  const user = await auth.register({
+    email: 'user@example.com',
+    password: 'securepassword',
+    firstName: 'John',
+    lastName: 'Doe'
+  });
+  console.log('User registered:', user);
+} catch (error) {
+  console.error('Registration failed:', error);
+}
 
-console.log('User registered:', user);
+// Login user
+try {
+  const response = await auth.login({
+    email: 'user@example.com',
+    password: 'securepassword'
+  });
+  console.log('Login successful:', response.user);
+} catch (error) {
+  console.error('Login failed:', error);
+}
 
-// Login
-const loginResponse = await authClient.login({
-  email: 'user@example.com',
-  password: 'securePassword123'
-});
-
-console.log('Login successful:', loginResponse.user);
-
-// Get current user profile
-const profile = await authClient.getProfile();
-console.log('Current user:', profile);
-
-// Logout
-await authClient.logout();`}
+// Check if user is authenticated
+if (auth.isAuthenticated()) {
+  const profile = await auth.getProfile();
+  console.log('User profile:', profile);
+}`}
               language="javascript"
-              id="js-example"
+              id="js-integration"
             />
           </div>
 
-          {/* React Example */}
-          <div className="mb-8">
-            <h3 className="text-xl font-semibold text-base-content mb-4">React</h3>
+          <input type="radio" name="integration_tabs" className="tab" aria-label="React" />
+          <div className="tab-content bg-base-100 border-base-300 rounded-box p-6">
+            <h3 className="text-xl font-semibold mb-4">React Integration</h3>
             <CodeBlock
               code={`import React from 'react';
-import { AuthProvider, useAuth } from '@your-auth/react';
+import { AuthProvider, useAuth } from '@gsarthak783/accesskit-react';
 
-// Wrap your app with AuthProvider
+// 1. Wrap your app with AuthProvider
 function App() {
   return (
-    <AuthProvider
-      config={{
-        apiKey: 'your-project-api-key',
-        baseUrl: 'https://your-auth-service.com/api/project-users'
-      }}
-    >
-      <LoginPage />
+    <AuthProvider config={{
+      projectId: 'your-project-id',
+      apiKey: 'your-api-key'
+    }}>
+      <MyComponent />
     </AuthProvider>
   );
 }
 
-// Use authentication in your components
-function LoginPage() {
-  const { user, login, logout, isAuthenticated, isLoading } = useAuth();
+// 2. Use the useAuth hook in components
+function MyComponent() {
+  const { 
+    user, 
+    isAuthenticated, 
+    isLoading, 
+    login, 
+    register, 
+    logout 
+  } = useAuth();
 
-  const handleLogin = async () => {
-    try {
-      await login('user@example.com', 'password123');
-      // User is now logged in!
-    } catch (error) {
-      console.error('Login failed:', error);
-    }
-  };
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
-  if (isLoading) return <div>Loading...</div>;
-
-  if (isAuthenticated) {
+  if (!isAuthenticated) {
     return (
       <div>
-        <h1>Welcome, {user.firstName}!</h1>
-        <button onClick={logout}>Logout</button>
+        <button onClick={() => login('user@example.com', 'password')}>
+          Login
+        </button>
+        <button onClick={() => register({
+          email: 'user@example.com',
+          password: 'password',
+          firstName: 'John',
+          lastName: 'Doe'
+        })}>
+          Register
+        </button>
       </div>
     );
   }
 
   return (
     <div>
-      <h1>Please Login</h1>
-      <button onClick={handleLogin}>Login</button>
+      <h1>Welcome, {user.firstName}!</h1>
+      <button onClick={logout}>Logout</button>
     </div>
   );
 }`}
               language="jsx"
-              id="react-example"
+              id="react-integration"
             />
           </div>
-        </section>
 
-        {/* Step 4: Configuration */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold text-base-content mb-6">Step 4: Configuration</h2>
-          
-          <div className="bg-amber-50 border border-amber-200 p-6 rounded-lg mb-6">
-            <h3 className="font-semibold text-amber-900 mb-3">⚠️ Important Security Notes</h3>
-            <ul className="list-disc list-inside space-y-1 text-amber-800">
-              <li>Never expose your API key in frontend code</li>
-              <li>Use environment variables for sensitive configuration</li>
-              <li>Always use HTTPS in production</li>
-              <li>Configure CORS settings in your project dashboard</li>
-            </ul>
+          <input type="radio" name="integration_tabs" className="tab" aria-label="Node.js" />
+          <div className="tab-content bg-base-100 border-base-300 rounded-box p-6">
+            <h3 className="text-xl font-semibold mb-4">Node.js Backend Integration</h3>
+            <CodeBlock
+              code={`const express = require('express');
+const { AuthClient } = require('@gsarthak783/accesskit-auth');
+
+const app = express();
+const auth = new AuthClient({
+  projectId: process.env.AUTH_PROJECT_ID,
+  apiKey: process.env.AUTH_API_KEY
+});
+
+app.use(express.json());
+
+// Register endpoint
+app.post('/api/register', async (req, res) => {
+  try {
+    const user = await auth.register(req.body);
+    res.json({ success: true, user });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+// Login endpoint
+app.post('/api/login', async (req, res) => {
+  try {
+    const response = await auth.login(req.body);
+    res.json({ success: true, user: response.user, token: response.accessToken });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+// Protected route
+app.get('/api/profile', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    // Set token and get profile
+    auth.setAccessToken(token);
+    const profile = await auth.getProfile();
+    res.json({ success: true, user: profile });
+  } catch (error) {
+    res.status(401).json({ success: false, error: 'Invalid token' });
+  }
+});
+
+app.listen(3000, () => {
+  console.log('Server running on port 3000');
+});`}
+              language="javascript"
+              id="nodejs-integration"
+            />
           </div>
+        </div>
+      </section>
 
-          <h3 className="text-xl font-semibold text-base-content mb-4">Environment Variables</h3>
-          <CodeBlock
-            code={`# .env
-REACT_APP_AUTH_API_KEY=your-project-api-key
-REACT_APP_AUTH_BASE_URL=https://your-auth-service.com/api/project-users
+      {/* Step 4: Configuration */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-base-content mb-6">Step 4: Configuration</h2>
+        
+        <div className="bg-amber-50 border border-amber-200 p-6 rounded-lg mb-6">
+          <h3 className="font-semibold text-amber-900 mb-3">⚠️ Important Security Notes</h3>
+          <ul className="list-disc list-inside space-y-1 text-amber-800">
+            <li>Never expose your API key in frontend code</li>
+            <li>Use environment variables for sensitive configuration</li>
+            <li>Always use HTTPS in production</li>
+            <li>Configure CORS settings in your project dashboard</li>
+          </ul>
+        </div>
+
+        <h3 className="text-xl font-semibold text-base-content mb-4">Environment Variables</h3>
+        <CodeBlock
+          code={`# .env
+REACT_APP_AUTH_PROJECT_ID=your-project-id
 
 # For Node.js backend
-AUTH_API_KEY=your-project-api-key
-AUTH_BASE_URL=https://your-auth-service.com/api/project-users`}
-            language="bash"
-            id="env-vars"
-          />
+AUTH_PROJECT_ID=your-project-id
+AUTH_API_KEY=your-api-key
+AUTH_BASE_URL=https://access-kit-server.vercel.app/api/project-users`}
+          language="bash"
+          id="env-vars"
+        />
 
-          <h3 className="text-xl font-semibold text-base-content mb-4 mt-6">CORS Configuration</h3>
-          <p className="text-base-content/70 mb-4">
-            In your project dashboard, add your domain to the allowed origins:
-          </p>
-          <div className="bg-base-200 p-4 rounded-lg">
-            <div className="space-y-2 font-mono text-sm">
-              <div>• <code>http://localhost:3000</code> (for development)</div>
-              <div>• <code>https://yourapp.com</code> (for production)</div>
-              <div>• <code>https://yourapp.vercel.app</code> (for Vercel deployments)</div>
+        <h3 className="text-xl font-semibold text-base-content mb-4 mt-6">CORS Configuration</h3>
+        <p className="text-base-content/70 mb-4">
+          In your project dashboard, add your domain to the allowed origins:
+        </p>
+        <div className="bg-base-200 p-4 rounded-lg">
+          <div className="space-y-2 font-mono text-sm">
+            <div>• <code>http://localhost:3000</code> (for development)</div>
+            <div>• <code>https://yourapp.com</code> (for production)</div>
+            <div>• <code>https://yourapp.vercel.app</code> (for Vercel deployments)</div>
+          </div>
+        </div>
+      </section>
+
+      {/* Next Steps */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-base-content mb-6">Next Steps</h2>
+        
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="card bg-base-100 shadow-xl">
+            <div className="card-body">
+              <h3 className="card-title text-lg">🔧 API Reference</h3>
+              <p className="text-base-content/70">
+                Explore all available methods and configurations.
+              </p>
+              <div className="card-actions justify-end">
+                <a href="/docs/api-reference" className="btn btn-primary btn-sm">
+                  View Docs
+                </a>
+              </div>
             </div>
           </div>
-        </section>
 
-        {/* Next Steps */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold text-base-content mb-6">🎉 You're All Set!</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-green-50 border border-green-200 p-6 rounded-lg">
-              <h3 className="font-semibold text-green-900 mb-3">✅ What You've Accomplished</h3>
-              <ul className="list-disc list-inside space-y-1 text-green-800">
-                <li>Created your first project</li>
-                <li>Installed the SDK</li>
-                <li>Implemented basic authentication</li>
-                <li>Configured security settings</li>
-              </ul>
-            </div>
-            
-            <div className="bg-blue-50 border border-blue-200 p-6 rounded-lg">
-              <h3 className="font-semibold text-blue-900 mb-3">🚀 Next Steps</h3>
-              <ul className="list-disc list-inside space-y-1 text-blue-800">
-                <li>Explore the <a href="/docs/api" className="underline">API Reference</a></li>
-                <li>Check out <a href="/docs/examples" className="underline">Integration Examples</a></li>
-                <li>Learn about <a href="/docs/features" className="underline">Advanced Features</a></li>
-                <li>Review <a href="/docs/security" className="underline">Security Best Practices</a></li>
-              </ul>
+          <div className="card bg-base-100 shadow-xl">
+            <div className="card-body">
+              <h3 className="card-title text-lg">⚛️ React SDK</h3>
+              <p className="text-base-content/70">
+                Learn about React hooks and components.
+              </p>
+              <div className="card-actions justify-end">
+                <a href="/docs/react-sdk" className="btn btn-primary btn-sm">
+                  React Guide
+                </a>
+              </div>
             </div>
           </div>
-        </section>
 
-        {/* Help Section */}
-        <section className="bg-base-200 p-8 rounded-lg">
-          <h2 className="text-2xl font-semibold text-base-content mb-4">Need Help?</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <h3 className="font-semibold text-base-content mb-2">📚 Documentation</h3>
-              <p className="text-base-content/70 text-sm mb-2">
-                Comprehensive guides and API reference
+          <div className="card bg-base-100 shadow-xl">
+            <div className="card-body">
+              <h3 className="card-title text-lg">📚 Examples</h3>
+              <p className="text-base-content/70">
+                See complete integration examples.
               </p>
-              <a href="/docs/api" className="text-primary hover:underline text-sm">
-                View API Docs →
-              </a>
-            </div>
-            
-            <div>
-              <h3 className="font-semibold text-base-content mb-2">💬 Community</h3>
-              <p className="text-base-content/70 text-sm mb-2">
-                Join our community for support and discussions
-              </p>
-              <a href="https://discord.gg/yourauth" className="text-primary hover:underline text-sm">
-                Join Discord →
-              </a>
-            </div>
-            
-            <div>
-              <h3 className="font-semibold text-base-content mb-2">🐛 Issues</h3>
-              <p className="text-base-content/70 text-sm mb-2">
-                Report bugs or request features
-              </p>
-              <a href="https://github.com/yourusername/auth-system/issues" className="text-primary hover:underline text-sm">
-                GitHub Issues →
-              </a>
+              <div className="card-actions justify-end">
+                <a href="/docs/sdk-documentation" className="btn btn-primary btn-sm">
+                  View Examples
+                </a>
+              </div>
             </div>
           </div>
-        </section>
-      </div>
-    </DocsLayout>
+        </div>
+      </section>
+
+      {/* Help */}
+      <section className="mb-12">
+        <div className="alert alert-info">
+          <div>
+            <h3 className="font-semibold">Need Help?</h3>
+            <p>
+              Check out our <a href="/docs/api-reference" className="link link-primary">full documentation</a> or 
+              visit our <a href="https://github.com/gsarthak783/Auth-app/issues" target="_blank" rel="noopener noreferrer" className="link link-primary">
+                GitHub repository
+              </a> for support.
+            </p>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 };
 

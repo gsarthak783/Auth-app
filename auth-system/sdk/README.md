@@ -1,299 +1,385 @@
-# @accesskit/auth
+# @gsarthak783/accesskit-auth
 
-> 🔐 JavaScript/TypeScript SDK for AccessKit Authentication System
+JavaScript/TypeScript SDK for AccessKit Authentication System - Easy auth integration for any project.
 
-[![npm version](https://badge.fury.io/js/@accesskit%2Fauth.svg)](https://badge.fury.io/js/@accesskit%2Fauth)
-[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue)](https://www.typescriptlang.org/)
+[![npm version](https://badge.fury.io/js/@gsarthak783%2Faccesskit-auth.svg)](https://badge.fury.io/js/@gsarthak783%2Faccesskit-auth)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-Easy authentication integration for any JavaScript/TypeScript project. Works with vanilla JS, React, Vue, Angular, and more!
 
 ## 🚀 Quick Start
 
 ### Installation
 
 ```bash
-npm install @accesskit/auth
-# or
-yarn add @accesskit/auth
-# or
-pnpm add @accesskit/auth
+npm install @gsarthak783/accesskit-auth
 ```
 
 ### Basic Usage
 
-```typescript
-import { AuthClient } from '@accesskit/auth';
+```javascript
+import { AuthClient } from '@gsarthak783/accesskit-auth';
 
 // Initialize the client
 const auth = new AuthClient({
-  apiKey: 'your-project-api-key',
-  projectId: 'your-project-id'
+  projectId: 'your-project-id',
+  apiKey: 'your-api-key',
+  // baseUrl is automatically set to https://access-kit-server.vercel.app/api/project-users
 });
 
 // Register a new user
-try {
-  const result = await auth.register({
-    email: 'user@example.com',
-    password: 'securepassword',
-    firstName: 'John',
-    lastName: 'Doe'
-  });
-  console.log('User registered:', result.user);
-} catch (error) {
-  console.error('Registration failed:', error.message);
-}
+const user = await auth.register({
+  email: 'user@example.com',
+  password: 'securepassword',
+  firstName: 'John',
+  lastName: 'Doe'
+});
 
 // Login
-try {
-  const result = await auth.login({
-    email: 'user@example.com',
-    password: 'securepassword'
-  });
-  console.log('Login successful:', result.user);
-} catch (error) {
-  console.error('Login failed:', error.message);
+const loginResponse = await auth.login({
+  email: 'user@example.com',
+  password: 'securepassword'
+});
+
+// Check if user is authenticated
+if (auth.isAuthenticated()) {
+  const profile = await auth.getProfile();
+  console.log('User profile:', profile);
 }
 ```
 
-## 📖 Documentation
+## 📖 Configuration
 
-### Configuration Options
+### AuthConfig Options
 
 ```typescript
 interface AuthConfig {
-  apiKey: string;           // Your project API key (required)
-  projectId: string;        // Your project ID (required)
-  baseUrl?: string;         // Custom API endpoint (optional)
-  timeout?: number;         // Request timeout in ms (default: 10000)
-  retryAttempts?: number;   // Retry failed requests (default: 3)
+  projectId: string;           // Your project ID from AccessKit dashboard
+  apiKey: string;              // Your project API key
+  baseUrl?: string;            // API base URL (defaults to live server)
+  timeout?: number;            // Request timeout (default: 10000ms)
 }
 ```
 
-### Authentication Methods
+### Get Your API Keys
 
-#### Register
-```typescript
-await auth.register({
-  email: 'user@example.com',
-  password: 'password123',
-  firstName: 'John',
-  lastName: 'Doe',
-  username: 'johndoe',      // optional
-  customFields: {}          // optional custom data
+1. Visit the [AccessKit Dashboard](https://access-kit-server.vercel.app)
+2. Create an account or login
+3. Create a new project
+4. Copy your Project ID and API Key from the project settings
+
+## 🔧 Core Methods
+
+### Authentication
+
+```javascript
+// Register new user
+const user = await auth.register({
+  email: string,
+  password: string,
+  firstName: string,
+  lastName?: string,
+  username?: string,
+  customFields?: object
 });
-```
 
-#### Login
-```typescript
-// Login with email
-await auth.login({
-  email: 'user@example.com',
-  password: 'password123'
+// Login user
+const response = await auth.login({
+  email: string,
+  password: string
 });
 
-// Login with username
-await auth.login({
-  username: 'johndoe',
-  password: 'password123'
-});
-```
-
-#### Logout
-```typescript
+// Logout
 await auth.logout();
+
+// Check authentication status
+const isLoggedIn = auth.isAuthenticated();
 ```
 
 ### User Management
 
-#### Get User Profile
-```typescript
-const user = await auth.getProfile();
-console.log(user.email, user.firstName);
-```
+```javascript
+// Get user profile
+const profile = await auth.getProfile();
 
-#### Update Profile
-```typescript
+// Update profile
 const updatedUser = await auth.updateProfile({
-  firstName: 'Jane',
-  bio: 'Software developer'
+  firstName: 'Updated Name',
+  customFields: { role: 'admin' }
 });
-```
 
-#### Password Reset
-```typescript
 // Request password reset
 await auth.requestPasswordReset('user@example.com');
 
-// Reset with token (from email)
-await auth.resetPassword('reset-token', 'newpassword123');
+// Reset password with token
+await auth.resetPassword('reset-token', 'newpassword');
+
+// Verify email with token
+await auth.verifyEmail('verification-token');
 ```
 
-### Authentication State
+### Token Management
 
-#### Check Authentication
-```typescript
-if (auth.isAuthenticated()) {
-  console.log('User is logged in');
-  const token = auth.getAccessToken();
-}
+```javascript
+// Get current access token
+const token = auth.getAccessToken();
+
+// Refresh access token
+const newToken = await auth.refreshAccessToken();
+
+// Tokens are automatically managed by the SDK
 ```
 
-#### Event Listeners
-```typescript
-// Listen for auth events
-auth.on('login', (data) => {
-  console.log('User logged in:', data.user);
-});
+## 🔐 Admin Functions
 
-auth.on('logout', (data) => {
-  console.log('User logged out');
-});
+### User Administration (Requires API Key)
 
-auth.on('error', (data) => {
-  console.error('Auth error:', data.error);
-});
-
-auth.on('token_refresh', (data) => {
-  console.log('Token refreshed');
-});
-```
-
-### Admin Functions
-
-#### Get All Users (Admin Only)
-```typescript
-const users = await auth.getUsers({
+```javascript
+// Get all users (admin only)
+const users = await auth.getAllUsers({
   page: 1,
-  limit: 20,
-  search: 'john'
-});
-```
-
-#### Update User Status (Admin Only)
-```typescript
-await auth.updateUserStatus('user-id', false); // deactivate user
-```
-
-#### Export/Import Users (Admin Only)
-```typescript
-// Export users
-const exportData = await auth.exportUsers({
-  format: 'json',
-  includeInactive: false
+  limit: 50,
+  search: 'john@example.com',
+  status: 'active'
 });
 
-// Import users
-await auth.importUsers(exportData);
+// Delete user (admin only)
+await auth.deleteUser('user-id');
+
+// Update user status (admin only)
+await auth.updateUserStatus('user-id', 'suspended');
+
+// Get user statistics
+const stats = await auth.getStats();
 ```
 
-## 🔧 Advanced Usage
+## 🎯 Advanced Usage
 
 ### Custom Storage
-By default, tokens are stored in localStorage. You can provide custom storage:
 
-```typescript
-import { TokenStorage } from '@accesskit/auth';
+```javascript
+import { AuthClient, TokenStorage } from '@gsarthak783/accesskit-auth';
 
+// Custom token storage implementation
 class CustomStorage implements TokenStorage {
-  setAccessToken(token: string): void {
-    // Your storage logic
+  getItem(key: string): string | null {
+    return localStorage.getItem(key);
   }
   
-  getAccessToken(): string | null {
-    // Your retrieval logic
+  setItem(key: string, value: string): void {
+    localStorage.setItem(key, value);
   }
   
-  setRefreshToken(token: string): void {
-    // Your storage logic
-  }
-  
-  getRefreshToken(): string | null {
-    // Your retrieval logic
-  }
-  
-  clearTokens(): void {
-    // Your cleanup logic
+  removeItem(key: string): void {
+    localStorage.removeItem(key);
   }
 }
 
 const auth = new AuthClient(config, new CustomStorage());
 ```
 
+### Event Handling
+
+```javascript
+// Listen to authentication events
+auth.on('login', (data) => {
+  console.log('User logged in:', data.user);
+});
+
+auth.on('logout', () => {
+  console.log('User logged out');
+});
+
+auth.on('token_refresh', (data) => {
+  console.log('Token refreshed:', data.accessToken);
+});
+
+auth.on('error', (error) => {
+  console.error('Auth error:', error);
+});
+```
+
 ### Error Handling
-```typescript
+
+```javascript
 try {
-  await auth.login(credentials);
+  await auth.login({ email: 'invalid', password: 'wrong' });
 } catch (error) {
-  if (error.message.includes('Invalid credentials')) {
-    // Handle invalid login
-  } else if (error.message.includes('Account locked')) {
-    // Handle locked account
+  if (error.response?.status === 401) {
+    console.log('Invalid credentials');
+  } else if (error.response?.status === 429) {
+    console.log('Too many attempts, try again later');
   } else {
-    // Handle other errors
+    console.log('Login failed:', error.message);
   }
 }
 ```
 
 ## 🌐 Framework Integration
 
-### React
-For React applications, use our dedicated React SDK:
-```bash
-npm install @accesskit/react
+### Node.js/Express
+
+```javascript
+const express = require('express');
+const { AuthClient } = require('@gsarthak783/accesskit-auth');
+
+const app = express();
+const auth = new AuthClient({ projectId: 'xxx', apiKey: 'xxx' });
+
+app.post('/api/register', async (req, res) => {
+  try {
+    const user = await auth.register(req.body);
+    res.json({ success: true, user });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
 ```
 
-### Vue.js
+### Next.js
+
 ```javascript
-// In your Vue component
-export default {
-  async mounted() {
-    this.auth = new AuthClient({ apiKey: 'your-key', projectId: 'your-id' });
-    
-    if (this.auth.isAuthenticated()) {
-      this.user = await this.auth.getProfile();
+// pages/api/auth/register.js
+import { AuthClient } from '@gsarthak783/accesskit-auth';
+
+const auth = new AuthClient({
+  projectId: process.env.AUTH_PROJECT_ID,
+  apiKey: process.env.AUTH_API_KEY
+});
+
+export default async function handler(req, res) {
+  if (req.method === 'POST') {
+    try {
+      const user = await auth.register(req.body);
+      res.status(200).json({ user });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
     }
   }
 }
 ```
 
-### Angular
+## 📋 API Reference
+
+### AuthClient Class
+
 ```typescript
-// In your Angular service
-import { Injectable } from '@angular/core';
-import { AuthClient } from '@accesskit/auth';
-
-@Injectable({ providedIn: 'root' })
-export class AuthService {
-  private auth = new AuthClient({
-    apiKey: 'your-key',
-    projectId: 'your-id'
-  });
-
-  async login(email: string, password: string) {
-    return this.auth.login({ email, password });
-  }
+class AuthClient {
+  constructor(config: AuthConfig, storage?: TokenStorage)
+  
+  // Authentication
+  register(userData: CreateUserData): Promise<AuthResponse>
+  login(credentials: LoginCredentials): Promise<AuthResponse>
+  logout(): Promise<void>
+  isAuthenticated(): boolean
+  
+  // User Management
+  getProfile(): Promise<User>
+  updateProfile(userData: UpdateUserData): Promise<User>
+  requestPasswordReset(email: string): Promise<void>
+  resetPassword(token: string, password: string): Promise<void>
+  verifyEmail(token: string): Promise<void>
+  
+  // Token Management
+  getAccessToken(): string | null
+  refreshAccessToken(): Promise<string>
+  
+  // Admin Functions
+  getAllUsers(options?: GetUsersOptions): Promise<ApiResponse<User[]>>
+  deleteUser(userId: string): Promise<void>
+  updateUserStatus(userId: string, status: string): Promise<void>
+  getStats(): Promise<ApiResponse<object>>
+  
+  // Events
+  on(event: string, callback: Function): void
+  off(event: string, callback: Function): void
 }
 ```
 
-## 🔑 API Reference
+### Type Definitions
 
-### Live API Endpoint
-- **Base URL**: `https://access-kit-server.vercel.app`
-- **Documentation**: Available in your project dashboard
+```typescript
+interface User {
+  id: string;
+  email: string;
+  username?: string;
+  firstName: string;
+  lastName?: string;
+  isVerified: boolean;
+  status: 'active' | 'suspended' | 'pending';
+  customFields?: object;
+  createdAt: string;
+  updatedAt: string;
+}
 
-### TypeScript Support
-This package is written in TypeScript and includes full type definitions. No additional `@types` packages needed!
+interface CreateUserData {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName?: string;
+  username?: string;
+  customFields?: object;
+}
 
-## 🤝 Support
+interface LoginCredentials {
+  email: string;
+  password: string;
+}
 
-- **GitHub**: [Issues & Feature Requests](https://github.com/gsarthak783/Auth-app/issues)
-- **Documentation**: [API Docs](https://access-kit-server.vercel.app)
+interface AuthResponse {
+  user: User;
+  accessToken: string;
+  refreshToken: string;
+}
+```
+
+## 🛠️ Development
+
+### Environment Variables
+
+```bash
+# For testing
+AUTH_PROJECT_ID=your-test-project-id
+AUTH_API_KEY=your-test-api-key
+AUTH_BASE_URL=https://access-kit-server.vercel.app/api/project-users
+```
+
+### Building from Source
+
+```bash
+git clone https://github.com/gsarthak783/Auth-app.git
+cd Auth-app/auth-system/sdk
+npm install
+npm run build
+```
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+1. **401 Unauthorized**: Check your API key and project ID
+2. **403 Forbidden**: Ensure your project allows user registration
+3. **429 Too Many Requests**: Implement rate limiting in your app
+4. **Network errors**: Verify the base URL and internet connection
+
+### Debug Mode
+
+```javascript
+const auth = new AuthClient({
+  projectId: 'xxx',
+  apiKey: 'xxx',
+  debug: true  // Enable debug logging
+});
+```
+
+## 📞 Support
+
+- **Documentation**: [https://access-kit-server.vercel.app](https://access-kit-server.vercel.app)
+- **GitHub Issues**: [https://github.com/gsarthak783/Auth-app/issues](https://github.com/gsarthak783/Auth-app/issues)
+- **npm Package**: [https://npmjs.com/package/@gsarthak783/accesskit-auth](https://npmjs.com/package/@gsarthak783/accesskit-auth)
 
 ## 📄 License
 
-MIT © AccessKit Team
+MIT License - see [LICENSE](./LICENSE) file for details.
 
 ---
 
-**Made with ❤️ by the AccessKit Team** 
+Built with ❤️ by the AccessKit Team 
