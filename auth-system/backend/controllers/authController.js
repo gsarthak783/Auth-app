@@ -1,11 +1,11 @@
-import { validationResult } from 'express-validator';
-import User from '../models/User.js';
-import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt.js';
-import { sendWelcomeEmail, sendVerificationEmail, sendPasswordResetEmail } from '../utils/email.js';
-import crypto from 'crypto';
+const { validationResult } = require('express-validator');
+const User = require('../models/User.js');
+const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require('../utils/jwt.js');
+const { sendWelcomeEmail, sendVerificationEmail, sendPasswordResetEmail } = require('../utils/email.js');
+const crypto = require('crypto');
 
 // Platform User Registration (no API key required)
-export const signup = async (req, res) => {
+const signup = async (req, res) => {
   try {
     // Validate input
     const errors = validationResult(req);
@@ -114,7 +114,7 @@ export const signup = async (req, res) => {
 };
 
 // Platform User Login (no API key required)
-export const login = async (req, res) => {
+const login = async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -260,7 +260,7 @@ export const login = async (req, res) => {
 };
 
 // Refresh access token
-export const refreshToken = async (req, res) => {
+const refreshToken = async (req, res) => {
   try {
     const { refreshToken } = req.body;
 
@@ -328,7 +328,7 @@ export const refreshToken = async (req, res) => {
 };
 
 // Logout user
-export const logout = async (req, res) => {
+const logout = async (req, res) => {
   try {
     const { refreshToken } = req.body;
     const user = await User.findById(req.user.userId);
@@ -356,7 +356,7 @@ export const logout = async (req, res) => {
 };
 
 // Get user profile
-export const getProfile = async (req, res) => {
+const getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.userId);
     if (!user) {
@@ -413,7 +413,7 @@ export const getProfile = async (req, res) => {
 };
 
 // Update user profile
-export const updateProfile = async (req, res) => {
+const updateProfile = async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -481,7 +481,7 @@ export const updateProfile = async (req, res) => {
 };
 
 // Change password
-export const changePassword = async (req, res) => {
+const changePassword = async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -534,7 +534,7 @@ export const changePassword = async (req, res) => {
 };
 
 // Request password reset
-export const forgotPassword = async (req, res) => {
+const forgotPassword = async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -583,7 +583,7 @@ export const forgotPassword = async (req, res) => {
 };
 
 // Reset password
-export const resetPassword = async (req, res) => {
+const resetPassword = async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -633,7 +633,7 @@ export const resetPassword = async (req, res) => {
 };
 
 // Delete account
-export const deleteAccount = async (req, res) => {
+const deleteAccount = async (req, res) => {
   try {
     const { password } = req.body;
     const user = await User.findById(req.user.userId);
@@ -671,8 +671,8 @@ export const deleteAccount = async (req, res) => {
     await user.save();
 
     // Soft delete all user's projects
-    const Project = (await import('../models/Project.js')).default;
-    const ProjectUser = (await import('../models/ProjectUser.js')).default;
+    const Project = require('../models/Project.js');
+    const ProjectUser = require('../models/ProjectUser.js');
     
     const userProjects = await Project.find({ 
       owner: user._id, 
@@ -708,4 +708,17 @@ export const deleteAccount = async (req, res) => {
       message: 'Internal server error'
     });
   }
+};
+
+module.exports = {
+  signup,
+  login,
+  refreshToken,
+  logout,
+  forgotPassword,
+  resetPassword,
+  changePassword,
+  getProfile,
+  updateProfile,
+  deleteAccount
 };

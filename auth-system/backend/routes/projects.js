@@ -1,6 +1,6 @@
-import express from 'express';
-import rateLimit from 'express-rate-limit';
-import {
+const express = require('express');
+const rateLimit = require('express-rate-limit');
+const {
   createProject,
   getUserProjects,
   getProject,
@@ -13,13 +13,13 @@ import {
   regenerateApiKeys,
   getProjectStats,
   validateProject
-} from '../controllers/projectController.js';
-import {
+} = require('../controllers/projectController.js');
+const {
   authenticate,
   authorize,
   verifyProjectMember,
   verifyProjectAdmin
-} from '../middleware/auth.js';
+} = require('../middleware/auth.js');
 
 const router = express.Router();
 
@@ -64,4 +64,4 @@ router.put('/:projectId/users/:memberId/role', generalLimiter, updateTeamMemberR
 // API key management
 router.post('/:projectId/regenerate-keys', generalLimiter, regenerateApiKeys);
 
-export default router;
+module.exports = router;

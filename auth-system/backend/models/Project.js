@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const projectSchema = new mongoose.Schema({
   // Basic Information
@@ -342,4 +342,4 @@ projectSchema.methods.removeTeamMember = function(userId) {
   return this.save();
 };
 
-export default mongoose.model('Project', projectSchema);
+module.exports = mongoose.model('Project', projectSchema);

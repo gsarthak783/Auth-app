@@ -1,5 +1,5 @@
-import nodemailer from 'nodemailer';
-import dotenv from 'dotenv';
+const nodemailer = require('nodemailer');
+const dotenv = require('dotenv');
 
 dotenv.config();
 
@@ -32,7 +32,7 @@ const createTransporter = () => {
 };
 
 // Send email
-export const sendEmail = async (to, subject, text, html) => {
+const sendEmail = async (to, subject, text, html) => {
   try {
     // Check if email is configured for development
     if (!process.env.EMAIL_HOST || !process.env.EMAIL_USER) {
@@ -73,7 +73,7 @@ export const sendEmail = async (to, subject, text, html) => {
 };
 
 // Send verification email
-export const sendVerificationEmail = async (user, token, projectName = 'Auth System') => {
+const sendVerificationEmail = async (user, token, projectName = 'Auth System') => {
   const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}&email=${user.email}`;
   
   const subject = `Verify your email address - ${projectName}`;
@@ -147,7 +147,7 @@ export const sendVerificationEmail = async (user, token, projectName = 'Auth Sys
 };
 
 // Send password reset email
-export const sendPasswordResetEmail = async (user, token, projectName = 'Auth System') => {
+const sendPasswordResetEmail = async (user, token, projectName = 'Auth System') => {
   const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}&email=${user.email}`;
   
   const subject = `Reset your password - ${projectName}`;
@@ -221,7 +221,7 @@ export const sendPasswordResetEmail = async (user, token, projectName = 'Auth Sy
 };
 
 // Send welcome email
-export const sendWelcomeEmail = async (user, projectName = 'Auth System') => {
+const sendWelcomeEmail = async (user, projectName = 'Auth System') => {
   console.log('🎉 Sending welcome email to:', { 
     email: user?.email, 
     firstName: user?.firstName, 
@@ -297,7 +297,7 @@ export const sendWelcomeEmail = async (user, projectName = 'Auth System') => {
 };
 
 // Send security alert email
-export const sendSecurityAlertEmail = async (user, alertType, details, projectName = 'Auth System') => {
+const sendSecurityAlertEmail = async (user, alertType, details, projectName = 'Auth System') => {
   const subject = `Security Alert - ${projectName}`;
   
   const text = `
@@ -367,4 +367,12 @@ export const sendSecurityAlertEmail = async (user, alertType, details, projectNa
   `;
   
   return await sendEmail(user.email, subject, text, html);
+};
+
+module.exports = {
+  sendEmail,
+  sendVerificationEmail,
+  sendPasswordResetEmail,
+  sendWelcomeEmail,
+  sendSecurityAlertEmail
 };

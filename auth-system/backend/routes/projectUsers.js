@@ -1,7 +1,7 @@
-import express from 'express';
-import rateLimit from 'express-rate-limit';
-import { body } from 'express-validator';
-import {
+const express = require('express');
+const rateLimit = require('express-rate-limit');
+const { body } = require('express-validator');
+const {
   registerProjectUser,
   loginProjectUser,
   getProjectUserProfile,
@@ -13,8 +13,8 @@ import {
   exportUsers,
   importUsers,
   getAllUsers
-} from '../controllers/projectUserController.js';
-import { verifyProjectAccess, authenticateProjectUser } from '../middleware/auth.js';
+} = require('../controllers/projectUserController.js');
+const { verifyProjectAccess, authenticateProjectUser } = require('../middleware/auth.js');
 
 const router = express.Router();
 
@@ -190,4 +190,4 @@ router.get('/users',
   getAllUsers
 );
 
-export default router;
+module.exports = router;

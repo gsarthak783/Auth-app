@@ -1,6 +1,6 @@
-import express from 'express';
-import rateLimit from 'express-rate-limit';
-import {
+const express = require('express');
+const rateLimit = require('express-rate-limit');
+const {
   signup,
   login,
   refreshToken,
@@ -11,13 +11,13 @@ import {
   getProfile,
   updateProfile,
   deleteAccount
-} from '../controllers/authController.js';
-import {
+} = require('../controllers/authController.js');
+const {
   authenticate,
   verifyProjectAccess,
   requireEmailVerification,
   optionalAuth
-} from '../middleware/auth.js';
+} = require('../middleware/auth.js');
 
 const router = express.Router();
 
@@ -61,4 +61,4 @@ router.delete('/account', authLimiter, deleteAccount);
 // Email verification required routes
 router.get('/verified-profile', generalLimiter, requireEmailVerification, getProfile);
 
-export default router;
+module.exports = router;

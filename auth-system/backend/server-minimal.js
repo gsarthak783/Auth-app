@@ -5,11 +5,6 @@ const rateLimit = require('express-rate-limit');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 
-// Import routes
-const authRoutes = require('./routes/auth.js');
-const projectRoutes = require('./routes/projects.js');
-const projectUsersRoutes = require('./routes/projectUsers.js');
-
 // Load environment variables
 dotenv.config();
 
@@ -26,10 +21,6 @@ const connectDB = async () => {
     console.log('✅ MongoDB Connected');
   } catch (error) {
     console.error('❌ MongoDB connection error:', error.message);
-    // Don't exit in production/serverless
-    if (process.env.NODE_ENV !== 'production') {
-      process.exit(1);
-    }
   }
 };
 
@@ -43,9 +34,7 @@ app.use(helmet({
 }));
 
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? [process.env.FRONTEND_URL, /\.vercel\.app$/, /\.onrender\.com$/]
-    : ['http://localhost:3000', 'http://localhost:5173'],
+  origin: true,
   credentials: true
 }));
 
@@ -54,8 +43,8 @@ app.use(express.urlencoded({ extended: true }));
 
 // Basic rate limiting
 app.use(rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1000, // requests per window
+  windowMs: 15 * 60 * 1000,
+  max: 1000,
   standardHeaders: true,
   legacyHeaders: false
 }));
@@ -70,23 +59,25 @@ app.get('/health', (req, res) => {
   });
 });
 
-// API routes
-app.use('/api/auth', authRoutes);
-app.use('/api/projects', projectRoutes);
-app.use('/api/project-users', projectUsersRoutes);
-
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({
     success: true,
-    message: '🚀 AuthSystem API',
+    message: '🚀 AuthSystem API - Minimal Version',
     version: '1.0.0',
+    status: 'Working on Render/Vercel',
     endpoints: {
-      health: '/health',
-      auth: '/api/auth',
-      projects: '/api/projects',
-      projectUsers: '/api/project-users'
+      health: '/health'
     }
+  });
+});
+
+// Test API endpoint
+app.get('/api/test', (req, res) => {
+  res.json({
+    success: true,
+    message: 'API is working!',
+    timestamp: new Date().toISOString()
   });
 });
 
@@ -108,10 +99,8 @@ app.use((error, req, res, next) => {
 });
 
 // Start server
-if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-  });
-}
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
 
-module.exports = app;
+module.exports = app; 

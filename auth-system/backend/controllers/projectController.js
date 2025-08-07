@@ -1,16 +1,16 @@
-import { body, validationResult } from 'express-validator';
-import Project from '../models/Project.js';
-import User from '../models/User.js';
-import { generateApiKey, generateApiSecret } from '../utils/jwt.js';
+const { body, validationResult } = require('express-validator');
+const Project = require('../models/Project.js');
+const User = require('../models/User.js');
+const { generateApiKey, generateApiSecret } = require('../utils/jwt.js');
 
 // Validation rules
-export const validateProject = [
+const validateProject = [
   body('name').isLength({ min: 1, max: 100 }).trim().withMessage('Project name is required (1-100 characters)'),
   body('description').optional().isLength({ max: 500 }).trim()
 ];
 
 // Create new project
-export const createProject = async (req, res) => {
+const createProject = async (req, res) => {
   try {
     // Validate input
     const errors = validationResult(req);
@@ -115,7 +115,7 @@ export const createProject = async (req, res) => {
 };
 
 // Get user's projects
-export const getUserProjects = async (req, res) => {
+const getUserProjects = async (req, res) => {
   try {
     const userId = req.user.userId;
     const { page = 1, limit = 10 } = req.query;
@@ -165,7 +165,7 @@ export const getUserProjects = async (req, res) => {
 };
 
 // Get project details
-export const getProject = async (req, res) => {
+const getProject = async (req, res) => {
   try {
     const { projectId } = req.params;
     const userId = req.user.userId;
@@ -241,7 +241,7 @@ export const getProject = async (req, res) => {
 };
 
 // Update project
-export const updateProject = async (req, res) => {
+const updateProject = async (req, res) => {
   try {
     // Validate input
     const errors = validationResult(req);
@@ -324,7 +324,7 @@ export const updateProject = async (req, res) => {
 };
 
 // Delete project
-export const deleteProject = async (req, res) => {
+const deleteProject = async (req, res) => {
   try {
     const { projectId } = req.params;
     const userId = req.user.userId;
@@ -379,7 +379,7 @@ export const deleteProject = async (req, res) => {
 };
 
 // Get project users
-export const getProjectUsers = async (req, res) => {
+const getProjectUsers = async (req, res) => {
   try {
     const { projectId } = req.params;
     const userId = req.user.userId;
@@ -477,7 +477,7 @@ export const getProjectUsers = async (req, res) => {
 };
 
 // Add team member
-export const addTeamMember = async (req, res) => {
+const addTeamMember = async (req, res) => {
   try {
     const { projectId } = req.params;
     const { userIdOrEmail, role = 'member', permissions = [] } = req.body;
@@ -562,7 +562,7 @@ export const addTeamMember = async (req, res) => {
 };
 
 // Remove team member
-export const removeTeamMember = async (req, res) => {
+const removeTeamMember = async (req, res) => {
   try {
     const { projectId, memberId } = req.params;
     const userId = req.user.userId;
@@ -615,7 +615,7 @@ export const removeTeamMember = async (req, res) => {
 };
 
 // Update team member role
-export const updateTeamMemberRole = async (req, res) => {
+const updateTeamMemberRole = async (req, res) => {
   try {
     const { projectId, memberId } = req.params;
     const { role, permissions = [] } = req.body;
@@ -675,7 +675,7 @@ export const updateTeamMemberRole = async (req, res) => {
 };
 
 // Regenerate API keys
-export const regenerateApiKeys = async (req, res) => {
+const regenerateApiKeys = async (req, res) => {
   try {
     const { projectId } = req.params;
     const userId = req.user.userId;
@@ -720,7 +720,7 @@ export const regenerateApiKeys = async (req, res) => {
 };
 
 // Get project stats
-export const getProjectStats = async (req, res) => {
+const getProjectStats = async (req, res) => {
   try {
     const { projectId } = req.params;
     const userId = req.user.userId;
@@ -785,4 +785,19 @@ export const getProjectStats = async (req, res) => {
       message: 'Internal server error'
     });
   }
+};
+
+module.exports = {
+  validateProject,
+  createProject,
+  getUserProjects,
+  getProject,
+  updateProject,
+  deleteProject,
+  getProjectUsers,
+  addTeamMember,
+  removeTeamMember,
+  updateTeamMemberRole,
+  regenerateApiKeys,
+  getProjectStats
 };

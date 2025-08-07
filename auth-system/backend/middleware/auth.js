@@ -1,10 +1,10 @@
-import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
-import Project from '../models/Project.js';
-import ProjectUser from '../models/ProjectUser.js';
+const jwt = require('jsonwebtoken');
+const User = require('../models/User.js');
+const Project = require('../models/Project.js');
+const ProjectUser = require('../models/ProjectUser.js');
 
 // Authenticate platform users (for platform access)
-export const authenticate = async (req, res, next) => {
+const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
@@ -59,7 +59,7 @@ export const authenticate = async (req, res, next) => {
 };
 
 // Authenticate project users (for project-specific endpoints)
-export const authenticateProjectUser = async (req, res, next) => {
+const authenticateProjectUser = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
@@ -115,7 +115,7 @@ export const authenticateProjectUser = async (req, res, next) => {
 };
 
 // Verify project access via API key (for project user registration/login)
-export const verifyProjectAccess = async (req, res, next) => {
+const verifyProjectAccess = async (req, res, next) => {
   try {
     const apiKey = req.headers['x-api-key'] || req.body.apiKey || req.query.apiKey;
 
@@ -167,7 +167,7 @@ export const verifyProjectAccess = async (req, res, next) => {
 };
 
 // Verify project member access (platform user must be member/admin of project)
-export const verifyProjectMember = async (req, res, next) => {
+const verifyProjectMember = async (req, res, next) => {
   try {
     const { projectId } = req.params;
     const userId = req.user.userId;
@@ -212,7 +212,7 @@ export const verifyProjectMember = async (req, res, next) => {
 };
 
 // Verify project admin access (platform user must be admin/owner of project)
-export const verifyProjectAdmin = async (req, res, next) => {
+const verifyProjectAdmin = async (req, res, next) => {
   try {
     const { projectId } = req.params;
     const userId = req.user.userId;
@@ -257,7 +257,7 @@ export const verifyProjectAdmin = async (req, res, next) => {
 };
 
 // Role-based authorization for platform users
-export const authorize = (...roles) => {
+const authorize = (...roles) => {
   return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({
@@ -278,7 +278,7 @@ export const authorize = (...roles) => {
 };
 
 // Check if email verification is required (for project users)
-export const requireEmailVerification = async (req, res, next) => {
+const requireEmailVerification = async (req, res, next) => {
   try {
     if (!req.projectUser) {
       return res.status(401).json({
@@ -309,7 +309,7 @@ export const requireEmailVerification = async (req, res, next) => {
 };
 
 // Optional authentication (doesn't fail if no token provided)
-export const optionalAuth = async (req, res, next) => {
+const optionalAuth = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
@@ -356,7 +356,7 @@ export const optionalAuth = async (req, res, next) => {
 };
 
 // Rate limiting for sensitive operations
-export const sensitiveOperationLimit = (windowMs = 60000, max = 5) => {
+const sensitiveOperationLimit = (windowMs = 60000, max = 5) => {
   return (req, res, next) => {
     // This would typically use Redis or a similar store in production
     // For now, we'll use a simple in-memory store
@@ -365,4 +365,16 @@ export const sensitiveOperationLimit = (windowMs = 60000, max = 5) => {
     // In production, implement proper rate limiting with Redis
     next();
   };
+};
+
+module.exports = {
+  authenticate,
+  authenticateProjectUser,
+  verifyProjectAccess,
+  verifyProjectMember,
+  verifyProjectAdmin,
+  authorize,
+  requireEmailVerification,
+  optionalAuth,
+  sensitiveOperationLimit
 };

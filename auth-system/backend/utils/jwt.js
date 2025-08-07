@@ -1,8 +1,8 @@
-import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 
 // Generate access token
-export const generateAccessToken = (payload) => {
+const generateAccessToken = (payload) => {
   return jwt.sign(payload, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE || '15m',
     issuer: 'auth-system',
@@ -11,7 +11,7 @@ export const generateAccessToken = (payload) => {
 };
 
 // Generate refresh token
-export const generateRefreshToken = (payload) => {
+const generateRefreshToken = (payload) => {
   return jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
     expiresIn: process.env.JWT_REFRESH_EXPIRE || '7d',
     issuer: 'auth-system',
@@ -20,7 +20,7 @@ export const generateRefreshToken = (payload) => {
 };
 
 // Verify access token
-export const verifyAccessToken = (token) => {
+const verifyAccessToken = (token) => {
   try {
     return jwt.verify(token, process.env.JWT_SECRET, {
       issuer: 'auth-system',
@@ -32,7 +32,7 @@ export const verifyAccessToken = (token) => {
 };
 
 // Verify refresh token
-export const verifyRefreshToken = (token) => {
+const verifyRefreshToken = (token) => {
   try {
     return jwt.verify(token, process.env.JWT_REFRESH_SECRET, {
       issuer: 'auth-system',
@@ -44,37 +44,37 @@ export const verifyRefreshToken = (token) => {
 };
 
 // Generate API key
-export const generateApiKey = () => {
+const generateApiKey = () => {
   return 'ak_' + crypto.randomBytes(32).toString('hex');
 };
 
 // Generate API secret
-export const generateApiSecret = () => {
+const generateApiSecret = () => {
   return 'as_' + crypto.randomBytes(32).toString('hex');
 };
 
 // Generate random token
-export const generateRandomToken = (length = 32) => {
+const generateRandomToken = (length = 32) => {
   return crypto.randomBytes(length).toString('hex');
 };
 
 // Generate verification token
-export const generateVerificationToken = () => {
+const generateVerificationToken = () => {
   return crypto.randomBytes(32).toString('hex');
 };
 
 // Generate password reset token
-export const generatePasswordResetToken = () => {
+const generatePasswordResetToken = () => {
   return crypto.randomBytes(32).toString('hex');
 };
 
 // Hash token for database storage
-export const hashToken = (token) => {
+const hashToken = (token) => {
   return crypto.createHash('sha256').update(token).digest('hex');
 };
 
 // Get token expiration time
-export const getTokenExpiration = (type = 'access') => {
+const getTokenExpiration = (type = 'access') => {
   const now = new Date();
   
   switch (type) {
@@ -92,7 +92,7 @@ export const getTokenExpiration = (type = 'access') => {
 };
 
 // Extract token from request headers
-export const extractTokenFromHeader = (authHeader) => {
+const extractTokenFromHeader = (authHeader) => {
   if (!authHeader) {
     return null;
   }
@@ -106,7 +106,7 @@ export const extractTokenFromHeader = (authHeader) => {
 };
 
 // Generate token pair
-export const generateTokenPair = (payload) => {
+const generateTokenPair = (payload) => {
   const accessToken = generateAccessToken(payload);
   const refreshToken = generateRefreshToken(payload);
   
@@ -116,4 +116,20 @@ export const generateTokenPair = (payload) => {
     expiresIn: process.env.JWT_EXPIRE || '15m',
     tokenType: 'Bearer'
   };
+};
+
+module.exports = {
+  generateAccessToken,
+  generateRefreshToken,
+  verifyAccessToken,
+  verifyRefreshToken,
+  generateApiKey,
+  generateApiSecret,
+  generateRandomToken,
+  generateVerificationToken,
+  generatePasswordResetToken,
+  hashToken,
+  getTokenExpiration,
+  extractTokenFromHeader,
+  generateTokenPair
 };

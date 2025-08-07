@@ -1,16 +1,16 @@
-import { validationResult } from 'express-validator';
-import ProjectUser from '../models/ProjectUser.js';
-import Project from '../models/Project.js';
-import { generateAccessToken, generateRefreshToken } from '../utils/jwt.js';
-import { sendWelcomeEmail, sendVerificationEmail, sendPasswordResetEmail } from '../utils/email.js';
-import crypto from 'crypto';
+const { validationResult } = require('express-validator');
+const ProjectUser = require('../models/ProjectUser.js');
+const Project = require('../models/Project.js');
+const { generateAccessToken, generateRefreshToken } = require('../utils/jwt.js');
+const { sendWelcomeEmail, sendVerificationEmail, sendPasswordResetEmail } = require('../utils/email.js');
+const crypto = require('crypto');
 // CSV imports temporarily disabled for deployment stability
 // import { Parser } from 'json2csv';
 // import csv from 'csv-parser';
 // import { Readable } from 'stream';
 
 // Register a new user for a specific project
-export const registerProjectUser = async (req, res) => {
+const registerProjectUser = async (req, res) => {
   try {
     // Validate input
     const errors = validationResult(req);
@@ -168,7 +168,7 @@ export const registerProjectUser = async (req, res) => {
 };
 
 // Login project user
-export const loginProjectUser = async (req, res) => {
+const loginProjectUser = async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -309,7 +309,7 @@ export const loginProjectUser = async (req, res) => {
 };
 
 // Get project user profile
-export const getProjectUserProfile = async (req, res) => {
+const getProjectUserProfile = async (req, res) => {
   try {
     const projectUser = await ProjectUser.findById(req.projectUser.userId);
     if (!projectUser) {
@@ -354,7 +354,7 @@ export const getProjectUserProfile = async (req, res) => {
 };
 
 // Update project user profile
-export const updateProjectUserProfile = async (req, res) => {
+const updateProjectUserProfile = async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -422,7 +422,7 @@ export const updateProjectUserProfile = async (req, res) => {
 };
 
 // Get all users for a project (admin only)
-export const getProjectUsers = async (req, res) => {
+const getProjectUsers = async (req, res) => {
   try {
     const { projectId } = req;
     const { page = 1, limit = 20, search, status, sort = '-createdAt' } = req.query;
@@ -482,7 +482,7 @@ export const getProjectUsers = async (req, res) => {
 };
 
 // Get project user statistics
-export const getProjectUserStats = async (req, res) => {
+const getProjectUserStats = async (req, res) => {
   try {
     const { projectId } = req;
 
@@ -512,7 +512,7 @@ export const getProjectUserStats = async (req, res) => {
 };
 
 // Delete project user (admin only)
-export const deleteProjectUser = async (req, res) => {
+const deleteProjectUser = async (req, res) => {
   try {
     const { userId } = req.params;
     const { projectId } = req;
@@ -550,7 +550,7 @@ export const deleteProjectUser = async (req, res) => {
 };
 
 // Update project user status (admin only)
-export const updateProjectUserStatus = async (req, res) => {
+const updateProjectUserStatus = async (req, res) => {
   try {
     const { userId } = req.params;
     const { projectId } = req;
@@ -598,7 +598,7 @@ export const updateProjectUserStatus = async (req, res) => {
 
 // Export users endpoint temporarily disabled for deployment stability
 // TODO: Re-enable after fixing CSV dependencies
-export const exportUsers = async (req, res) => {
+const exportUsers = async (req, res) => {
   res.status(501).json({
     success: false,
     message: 'Export feature temporarily unavailable'
@@ -695,7 +695,7 @@ export const exportUsers = async (req, res) => {
 
 // Import users endpoint temporarily disabled for deployment stability  
 // TODO: Re-enable after fixing CSV dependencies
-export const importUsers = async (req, res) => {
+const importUsers = async (req, res) => {
   res.status(501).json({
     success: false,
     message: 'Import feature temporarily unavailable'
@@ -809,7 +809,7 @@ export const importUsers = async (req, res) => {
 };
 
 // Add get all users endpoint (admin functionality)
-export const getAllUsers = async (req, res) => {
+const getAllUsers = async (req, res) => {
   try {
     const projectId = req.project.id;
     const { page = 1, limit = 50, search, status } = req.query;
@@ -861,7 +861,7 @@ export const getAllUsers = async (req, res) => {
 };
 
 // Add delete user endpoint
-export const deleteUser = async (req, res) => {
+const deleteUser = async (req, res) => {
   try {
     const projectId = req.project.id;
     const { userId } = req.params;
@@ -899,7 +899,7 @@ export const deleteUser = async (req, res) => {
 };
 
 // Add update user status endpoint
-export const updateUserStatus = async (req, res) => {
+const updateUserStatus = async (req, res) => {
   try {
     const projectId = req.project.id;
     const { userId } = req.params;
@@ -935,4 +935,20 @@ export const updateUserStatus = async (req, res) => {
       message: 'Failed to update user status'
     });
   }
+};
+
+module.exports = {
+  registerProjectUser,
+  loginProjectUser,
+  getProjectUserProfile,
+  updateProjectUserProfile,
+  getProjectUsers,
+  getProjectUserStats,
+  deleteProjectUser,
+  updateProjectUserStatus,
+  exportUsers,
+  importUsers,
+  getAllUsers,
+  deleteUser,
+  updateUserStatus
 };

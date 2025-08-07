@@ -1,5 +1,5 @@
-import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 const projectUserSchema = new mongoose.Schema({
   // Basic Information
@@ -348,4 +348,4 @@ projectUserSchema.statics.getProjectStats = function(projectId) {
 
 const ProjectUser = mongoose.model('ProjectUser', projectUserSchema);
 
-export default ProjectUser;
+module.exports = ProjectUser;
