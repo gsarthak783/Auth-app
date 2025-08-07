@@ -2,21 +2,5 @@ services:
   - type: web
     name: auth-system-backend
     env: node
-    plan: free
     buildCommand: npm install
-    startCommand: node server.js
-    healthCheckPath: /health
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: PORT
-        value: 10000
-    # Environment variables to be set in Render dashboard:
-    # MONGODB_URI
-    # JWT_SECRET  
-    # JWT_REFRESH_SECRET
-    # EMAIL_HOST (optional)
-    # EMAIL_PORT (optional)
-    # EMAIL_USER (optional)
-    # EMAIL_PASS (optional)
-    # FRONTEND_URL 
+    startCommand: npm start 
