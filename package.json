@@ -1,0 +1,57 @@
+{
+  "name": "accesskit-monorepo",
+  "version": "1.0.0",
+  "description": "AccessKit Authentication System - Complete auth solution with API, SDKs, and frontend",
+  "private": true,
+  "workspaces": [
+    "auth-system/backend",
+    "auth-system/frontend", 
+    "auth-system/sdk",
+    "auth-system/sdk-react"
+  ],
+  "scripts": {
+    "install:all": "npm install && npm run install:sdk && npm run install:react",
+    "install:sdk": "cd auth-system/sdk && npm install",
+    "install:react": "cd auth-system/sdk-react && npm install",
+    "build:sdk": "cd auth-system/sdk && npm run build",
+    "build:react": "cd auth-system/sdk-react && npm run build",
+    "build:all": "npm run build:sdk && npm run build:react",
+    "publish:packages": "powershell -ExecutionPolicy Bypass -File publish-packages.ps1",
+    "dev:backend": "cd auth-system/backend && npm run dev",
+    "dev:frontend": "cd auth-system/frontend && npm run dev",
+    "test:sdk": "cd auth-system/sdk && npm test",
+    "test:react": "cd auth-system/sdk-react && npm test",
+    "lint:sdk": "cd auth-system/sdk && npm run lint",
+    "lint:react": "cd auth-system/sdk-react && npm run lint",
+    "clean": "rm -rf auth-system/*/dist auth-system/*/node_modules node_modules"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gsarthak783/Auth-app.git"
+  },
+  "keywords": [
+    "authentication",
+    "auth",
+    "accesskit",
+    "sdk",
+    "react",
+    "javascript",
+    "typescript",
+    "api",
+    "monorepo"
+  ],
+  "author": "AccessKit Team",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gsarthak783/Auth-app/issues"
+  },
+  "homepage": "https://access-kit-server.vercel.app",
+  "devDependencies": {
+    "lerna": "^8.0.2",
+    "npm-run-all": "^4.1.5"
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=7.0.0"
+  }
+} 

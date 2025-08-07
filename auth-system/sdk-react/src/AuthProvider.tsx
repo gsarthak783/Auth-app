@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { AuthClient, User, AuthConfig, TokenStorage } from '@your-auth/sdk';
+import { AuthClient, User, AuthConfig, TokenStorage } from '@gsarthak783/accesskit-auth';
 
 interface AuthContextType {
   user: User | null;

@@ -29,7 +29,7 @@ export class AuthClient {
 
   constructor(config: AuthConfig, storage?: TokenStorage) {
     this.config = {
-      baseUrl: 'http://localhost:5000/api/project-users',
+      baseUrl: 'https://access-kit-server.vercel.app/api/project-users',
       projectId: '',
       timeout: 10000,
       retryAttempts: 3,
