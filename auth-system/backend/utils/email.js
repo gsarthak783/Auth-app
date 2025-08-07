@@ -1,7 +1,8 @@
 const nodemailer = require('nodemailer');
-const dotenv = require('dotenv');
+const { getEnvironmentConfig } = require('../config/environment');
 
-dotenv.config();
+// Get environment config
+const envConfig = getEnvironmentConfig();
 
 // Create transporter
 const createTransporter = () => {
@@ -74,9 +75,9 @@ const sendEmail = async (to, subject, text, html) => {
 
 // Send verification email
 const sendVerificationEmail = async (user, token, projectName = 'Auth System') => {
-  const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}&email=${user.email}`;
+  const verificationUrl = `${envConfig.frontendUrl}/auth/verify-email?token=${token}&email=${user.email}`;
   
-  const subject = `Verify your email address - ${projectName}`;
+  const subject = `Verify your email - ${projectName}`;
   
   const text = `
     Hello ${user.firstName || user.username},
@@ -148,7 +149,9 @@ const sendVerificationEmail = async (user, token, projectName = 'Auth System') =
 
 // Send password reset email
 const sendPasswordResetEmail = async (user, token, projectName = 'Auth System') => {
-  const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}&email=${user.email}`;
+  // Use frontend URL from environment config (handles both local and production)
+  const frontendUrl = envConfig.frontendUrl;
+  const resetUrl = `${frontendUrl}/auth/reset-password?token=${token}&email=${user.email}`;
   
   const subject = `Reset your password - ${projectName}`;
   

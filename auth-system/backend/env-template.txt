@@ -19,6 +19,7 @@ EMAIL_USER=mailforge.emailer@gmail.com
 EMAIL_PASS=pqdy zksx llcr svru
 
 # Frontend URL for CORS
+# This is used for local development. In production, the app automatically uses https://access-kit.vercel.app
 FRONTEND_URL=http://localhost:5173
 
 # Encryption key for sensitive data

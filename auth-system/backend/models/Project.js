@@ -252,11 +252,11 @@ const projectSchema = new mongoose.Schema({
 });
 
 // Indexes
-projectSchema.index({ apiKey: 1 });
+// Note: apiKey already has unique index from schema definition
 projectSchema.index({ owner: 1 });
-projectSchema.index({ 'team.user': 1 });
 projectSchema.index({ createdAt: -1 });
 projectSchema.index({ isActive: 1 });
+projectSchema.index({ deletedAt: 1 });
 
 // Virtual for active team members count
 projectSchema.virtual('teamCount').get(function() {

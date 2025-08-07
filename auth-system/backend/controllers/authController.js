@@ -587,7 +587,7 @@ const forgotPassword = async (req, res) => {
 
     // Send reset email (non-blocking)
     try {
-      await sendPasswordResetEmail(user.email, resetToken);
+      await sendPasswordResetEmail(user, resetToken);
     } catch (emailError) {
       console.error('Failed to send password reset email, but continuing:', emailError.message);
     }
@@ -615,7 +615,7 @@ const resetPassword = async (req, res) => {
       });
     }
 
-    const { token, newPassword } = req.body;
+    const { token, password } = req.body;
 
     const user = await User.findOne({
       passwordResetToken: token,
@@ -630,7 +630,7 @@ const resetPassword = async (req, res) => {
     }
 
     // Update password and clear reset token
-    user.password = newPassword;
+    user.password = password;
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
     

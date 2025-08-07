@@ -1,6 +1,6 @@
 {
   "name": "@gsarthak783/accesskit-react",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "React SDK for AccessKit Authentication System - Ready-to-use hooks and components for React applications",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",

@@ -1,5 +1,6 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
+const { body } = require('express-validator');
 const {
   signup,
   login,
@@ -45,7 +46,14 @@ router.post('/signup', authLimiter, signup);
 router.post('/login', authLimiter, login);
 router.post('/refresh-token', generalLimiter, refreshToken);
 router.post('/forgot-password', authLimiter, forgotPassword);
-router.post('/reset-password', authLimiter, resetPassword);
+router.post('/reset-password', 
+  authLimiter,
+  [
+    body('token').notEmpty().withMessage('Reset token is required'),
+    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
+  ],
+  resetPassword
+);
 
 // Protected routes (require authentication)
 router.use(authenticate); // All routes below require authentication

@@ -9,29 +9,17 @@ const dotenv = require('dotenv');
 const authRoutes = require('./routes/auth.js');
 const projectRoutes = require('./routes/projects.js');
 const projectUsersRoutes = require('./routes/projectUsers.js');
+const connectDB = require('./config/database');
+const { getEnvironmentConfig } = require('./config/environment');
 
 // Load environment variables
 dotenv.config();
 
+// Get environment config
+const envConfig = getEnvironmentConfig();
+
 const app = express();
 const PORT = process.env.PORT || 5000;
-
-// Database connection
-const connectDB = async () => {
-  try {
-    await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log('✅ MongoDB Connected');
-  } catch (error) {
-    console.error('❌ MongoDB connection error:', error.message);
-    // Don't exit in production/serverless
-    if (process.env.NODE_ENV !== 'production') {
-      process.exit(1);
-    }
-  }
-};
 
 // Connect to database
 connectDB();
