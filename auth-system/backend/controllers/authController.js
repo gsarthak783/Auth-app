@@ -343,10 +343,16 @@ const refreshToken = async (req, res) => {
 // Logout user
 const logout = async (req, res) => {
   try {
-    const { refreshToken } = req.body;
+    const refreshTokenFromHeader = req.headers['x-refresh-token'] || req.headers['x-refreshtoken'];
+    const { refreshToken: refreshTokenFromBody } = req.body || {};
+    const refreshToken = refreshTokenFromBody || refreshTokenFromHeader;
     const user = await User.findById(req.user.userId);
 
-    if (refreshToken && user) {
+    if (!refreshToken) {
+      return res.status(400).json({ success: false, message: 'refreshToken is required' });
+    }
+
+    if (user) {
       // Remove specific refresh token
       user.refreshTokens = user.refreshTokens.filter(
         token => token.token !== refreshToken

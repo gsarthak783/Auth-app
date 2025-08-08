@@ -271,7 +271,8 @@ Authorization: Bearer {access_token}  // only for protected endpoints`}
               <CodeBlock
                 code={`X-API-Key: your-project-api-key
 X-Project-ID: your-project-id
-Authorization: Bearer {access_token} // optional for logout`}
+Authorization: Bearer {access_token} // optional for logout
+X-Refresh-Token: {refresh_token} // optional header alternative to body`}
                  language="text"
                  id="logout-headers"
               />
