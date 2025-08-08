@@ -15,7 +15,8 @@ const {
   getAllUsers,
   requestPasswordReset,
   resetPassword,
-  logoutProjectUser
+  logoutProjectUser,
+  refreshProjectUserToken
 } = require('../controllers/projectUserController.js');
 const { verifyProjectAccess, verifyProjectAccessStrict, authenticateProjectUser } = require('../middleware/auth.js');
 
@@ -113,14 +114,16 @@ router.post('/reset-password',
   resetPassword
 );
 
-/**
- * @route   POST /api/project-users/logout
- * @desc    Logout project user (invalidate refresh token)
- * @access  Public (requires valid project API key)
- */
+// Refresh project user access token (requires project context)
+router.post('/refresh',
+  authRateLimit,
+  verifyProjectAccess,
+  refreshProjectUserToken
+);
+
+// Logout project user (header-only refresh token)
 router.post('/logout',
   verifyProjectAccessStrict,
-  body('refreshToken').notEmpty(),
   logoutProjectUser
 );
 

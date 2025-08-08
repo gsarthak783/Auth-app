@@ -1,7 +1,7 @@
 const { validationResult } = require('express-validator');
 const ProjectUser = require('../models/ProjectUser.js');
 const Project = require('../models/Project.js');
-const { generateAccessToken, generateRefreshToken } = require('../utils/jwt.js');
+const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require('../utils/jwt.js');
 const { sendWelcomeEmail, sendVerificationEmail, sendPasswordResetEmail } = require('../utils/email.js');
 const crypto = require('crypto');
 // CSV imports temporarily disabled for deployment stability
@@ -1053,6 +1053,48 @@ const logoutProjectUser = async (req, res) => {
   }
 };
 
+// Refresh access token for project user
+const refreshProjectUserToken = async (req, res) => {
+  try {
+    const { projectId } = req;
+    const refreshToken = req.headers['x-refresh-token'] || req.headers['x-refreshtoken'];
+
+    if (!refreshToken) {
+      return res.status(400).json({ success: false, message: 'refreshToken is required in X-Refresh-Token header' });
+    }
+
+    let decoded;
+    try {
+      decoded = verifyRefreshToken(refreshToken);
+    } catch (err) {
+      return res.status(401).json({ success: false, message: 'Invalid or expired refresh token' });
+    }
+
+    if (decoded.type !== 'project_user' || decoded.projectId !== String(projectId)) {
+      return res.status(401).json({ success: false, message: 'Invalid refresh token context' });
+    }
+
+    const projectUser = await ProjectUser.findOne({ _id: decoded.userId, projectId, deletedAt: null });
+    if (!projectUser) {
+      return res.status(401).json({ success: false, message: 'User not found' });
+    }
+
+    const session = projectUser.sessions.find(s => s.token === refreshToken && s.isActive && (!s.expiresAt || s.expiresAt > new Date()));
+    if (!session) {
+      return res.status(401).json({ success: false, message: 'Invalid or expired refresh token' });
+    }
+
+    const accessToken = generateAccessToken({ userId: projectUser._id, projectId, type: 'project_user' });
+    projectUser.lastActiveAt = new Date();
+    await projectUser.save();
+
+    return res.json({ success: true, data: { accessToken } });
+  } catch (error) {
+    console.error('Refresh project user token error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
 module.exports = {
   registerProjectUser,
   loginProjectUser,
@@ -1069,5 +1111,6 @@ module.exports = {
   updateUserStatus,
   requestPasswordReset,
   resetPassword,
-  logoutProjectUser
+  logoutProjectUser,
+  refreshProjectUserToken
 };

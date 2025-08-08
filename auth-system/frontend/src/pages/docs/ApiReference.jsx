@@ -248,6 +248,51 @@ Authorization: Bearer {access_token}  // only for protected endpoints`}
           </div>
         </div>
 
+        {/* Refresh Access Token (Project User) */}
+        <div className="card bg-base-100 shadow-xl mb-6">
+          <div className="card-body">
+            <h3 className="card-title">
+              <span className="badge badge-info">POST</span>
+              Refresh Access Token (Project User)
+            </h3>
+            <p className="text-base-content/70 mb-4">Exchange refresh token for a new access token</p>
+
+            <div className="mb-4">
+              <h4 className="font-semibold mb-2">Endpoint:</h4>
+              <CodeBlock
+                code="POST /api/project-users/refresh"
+                language="text"
+                id="refresh-endpoint"
+              />
+            </div>
+
+            <div className="mb-4">
+              <h4 className="font-semibold mb-2">Headers:</h4>
+              <CodeBlock
+                code={`X-API-Key: your-project-api-key  // or X-Project-ID
+X-Project-ID: your-project-id
+X-Refresh-Token: {refresh_token}`}
+                language="text"
+                id="refresh-headers"
+              />
+            </div>
+
+            <div className="mb-4">
+              <h4 className="font-semibold mb-2">Response:</h4>
+              <CodeBlock
+                code={`{
+  "success": true,
+  "data": {
+    "accessToken": "jwt_access_token"
+  }
+}`}
+                language="json"
+                id="refresh-response"
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Logout */}
         <div className="card bg-base-100 shadow-xl mb-6">
           <div className="card-body">
@@ -260,7 +305,7 @@ Authorization: Bearer {access_token}  // only for protected endpoints`}
             <div className="mb-4">
               <h4 className="font-semibold mb-2">Endpoint:</h4>
               <CodeBlock
-                code="POST /api/project-users/logout"
+                code="POST /api/auth/logout"
                 language="text"
                 id="logout-endpoint"
               />
@@ -269,12 +314,10 @@ Authorization: Bearer {access_token}  // only for protected endpoints`}
             <div className="mb-4">
               <h4 className="font-semibold mb-2">Headers:</h4>
               <CodeBlock
-                code={`X-API-Key: your-project-api-key
-X-Project-ID: your-project-id
-Authorization: Bearer {access_token} // optional for logout
-X-Refresh-Token: {refresh_token} // optional header alternative to body`}
-                 language="text"
-                 id="logout-headers"
+                code={`Authorization: Bearer {access_token} // required
+X-Refresh-Token: {refresh_token} // REQUIRED`}
+                language="text"
+                id="logout-headers"
               />
             </div>
           </div>
