@@ -387,6 +387,42 @@ export const projectUsersAPI = {
     } catch (error) {
       handleApiError(error);
     }
+  },
+
+  // Request password reset email
+  requestPasswordReset: async (apiKey, email) => {
+    try {
+      const response = await api.post('/project-users/request-password-reset', { email }, {
+        headers: { 'x-api-key': apiKey }
+      });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
+  },
+
+  // Reset password with token
+  resetPassword: async (apiKey, token, password) => {
+    try {
+      const response = await api.post('/project-users/reset-password', { token, password }, {
+        headers: { 'x-api-key': apiKey }
+      });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
+  },
+
+  // Logout project user (invalidate refresh token)
+  logout: async (apiKey, refreshToken) => {
+    try {
+      const response = await api.post('/project-users/logout', { refreshToken }, {
+        headers: { 'x-api-key': apiKey }
+      });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
   }
 };
 

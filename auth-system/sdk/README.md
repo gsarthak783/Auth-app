@@ -61,7 +61,7 @@ interface AuthConfig {
 
 ### Get Your API Keys
 
-1. Visit the [AccessKit Dashboard](https://access-kit-server.vercel.app)
+1. Visit the [AccessKit Dashboard](https://access-kit.vercel.app/)
 2. Create an account or login
 3. Create a new project
 4. Copy your Project ID and API Key from the project settings
@@ -342,14 +342,6 @@ AUTH_API_KEY=your-test-api-key
 AUTH_BASE_URL=https://access-kit-server.vercel.app/api/project-users
 ```
 
-### Building from Source
-
-```bash
-git clone https://github.com/gsarthak783/Auth-app.git
-cd Auth-app/auth-system/sdk
-npm install
-npm run build
-```
 
 ## 🐛 Troubleshooting
 
@@ -372,8 +364,7 @@ const auth = new AuthClient({
 
 ## 📞 Support
 
-- **Documentation**: [https://access-kit-server.vercel.app](https://access-kit-server.vercel.app)
-- **GitHub Issues**: [https://github.com/gsarthak783/Auth-app/issues](https://github.com/gsarthak783/Auth-app/issues)
+- **Documentation**: [https://access-kit.vercel.app/](https://access-kit.vercel.app/)
 - **npm Package**: [https://npmjs.com/package/@gsarthak783/accesskit-auth](https://npmjs.com/package/@gsarthak783/accesskit-auth)
 
 ## 📄 License

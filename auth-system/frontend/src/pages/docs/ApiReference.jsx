@@ -99,7 +99,7 @@ const ApiReference = () => {
           <CodeBlock
             code={`Content-Type: application/json
 X-API-Key: your-project-api-key
-X-Project-ID: your-project-id`}
+Authorization: Bearer {access_token}  // only for protected endpoints`}
             language="text"
             id="headers-copy"
           />
@@ -268,11 +268,10 @@ X-Project-ID: your-project-id`}
             <div className="mb-4">
               <h4 className="font-semibold mb-2">Headers:</h4>
               <CodeBlock
-                code={`Authorization: Bearer {access_token}
-X-API-Key: your-project-api-key
-X-Project-ID: your-project-id`}
-                language="text"
-                id="logout-headers"
+                code={`X-API-Key: your-project-api-key
+Authorization: Bearer {access_token} // optional for logout`}
+                 language="text"
+                 id="logout-headers"
               />
             </div>
           </div>
@@ -304,11 +303,10 @@ X-Project-ID: your-project-id`}
             <div className="mb-4">
               <h4 className="font-semibold mb-2">Headers:</h4>
               <CodeBlock
-                code={`Authorization: Bearer {access_token}
-X-API-Key: your-project-api-key
-X-Project-ID: your-project-id`}
-                language="text"
-                id="profile-headers"
+                code={`X-API-Key: your-project-api-key
+Authorization: Bearer {access_token}`}
+                 language="text"
+                 id="profile-headers"
               />
             </div>
           </div>
@@ -894,7 +892,6 @@ function MyComponent() {
 curl -X POST https://access-kit-server.vercel.app/api/project-users/register \\
   -H "Content-Type: application/json" \\
   -H "X-API-Key: your-api-key" \\
-  -H "X-Project-ID: your-project-id" \\
   -d '{
     "email": "test@example.com",
     "password": "testpass123",
@@ -906,7 +903,6 @@ curl -X POST https://access-kit-server.vercel.app/api/project-users/register \\
 curl -X POST https://access-kit-server.vercel.app/api/project-users/login \\
   -H "Content-Type: application/json" \\
   -H "X-API-Key: your-api-key" \\
-  -H "X-Project-ID: your-project-id" \\
   -d '{
     "email": "test@example.com",
     "password": "testpass123"

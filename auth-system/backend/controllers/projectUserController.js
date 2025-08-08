@@ -948,6 +948,108 @@ const updateUserStatus = async (req, res) => {
   }
 };
 
+// Add: Request password reset for project user
+const requestPasswordReset = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const { projectId } = req;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required' });
+    }
+
+    const project = await Project.findById(projectId);
+    if (!project) {
+      return res.status(404).json({ success: false, message: 'Project not found' });
+    }
+
+    const user = await ProjectUser.findByEmail(projectId, email);
+    if (!user) {
+      // Do not reveal if user exists
+      return res.json({ success: true, message: 'If an account with that email exists, a reset link has been sent.' });
+    }
+
+    user.passwordResetToken = crypto.randomBytes(32).toString('hex');
+    user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    await user.save();
+
+    try {
+      await sendPasswordResetEmail(user, user.passwordResetToken, project.name);
+    } catch (emailError) {
+      // Log but do not fail the request
+      console.error('Failed to send password reset email:', emailError.message);
+    }
+
+    res.json({
+      success: true,
+      message: 'If an account with that email exists, a reset link has been sent.'
+    });
+  } catch (error) {
+    console.error('Request password reset error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+// Add: Reset password using token for project user
+const resetPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+    const { projectId } = req;
+
+    if (!token || !password) {
+      return res.status(400).json({ success: false, message: 'Token and new password are required' });
+    }
+
+    const user = await ProjectUser.findOne({
+      projectId,
+      passwordResetToken: token,
+      passwordResetExpires: { $gt: new Date() },
+      deletedAt: null
+    });
+
+    if (!user) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired reset token' });
+    }
+
+    user.password = password; // pre-save hook will hash
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save();
+
+    res.json({ success: true, message: 'Password has been reset successfully' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+// Add: Logout project user by invalidating refresh token
+const logoutProjectUser = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    const { projectId } = req;
+
+    if (!refreshToken) {
+      return res.status(400).json({ success: false, message: 'refreshToken is required' });
+    }
+
+    const result = await ProjectUser.updateOne(
+      { projectId, 'sessions.token': refreshToken },
+      { $set: { 'sessions.$.isActive': false, 'sessions.$.expiresAt': new Date() } }
+    );
+
+    if (result.modifiedCount === 0) {
+      // Token not found; respond success to avoid token fishing
+      return res.json({ success: true, message: 'Logged out' });
+    }
+
+    res.json({ success: true, message: 'Logged out' });
+  } catch (error) {
+    console.error('Logout project user error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
 module.exports = {
   registerProjectUser,
   loginProjectUser,
@@ -961,5 +1063,8 @@ module.exports = {
   importUsers,
   getAllUsers,
   deleteUser,
-  updateUserStatus
+  updateUserStatus,
+  requestPasswordReset,
+  resetPassword,
+  logoutProjectUser
 };

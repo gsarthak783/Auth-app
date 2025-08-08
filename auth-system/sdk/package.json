@@ -1,6 +1,6 @@
 {
   "name": "@gsarthak783/accesskit-auth",
-  "version": "1.0.1",
+  "version": "1.0.4",
   "description": "JavaScript/TypeScript SDK for AccessKit Authentication System - Easy auth integration for any project",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
@@ -44,15 +44,7 @@
   ],
   "author": "AccessKit Team",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/gsarthak783/Auth-app",
-    "directory": "auth-system/sdk"
-  },
-  "homepage": "https://access-kit-server.vercel.app",
-  "bugs": {
-    "url": "https://github.com/gsarthak783/Auth-app/issues"
-  },
+  "homepage": "https://access-kit.vercel.app/",
   "engines": {
     "node": ">=14.0.0"
   },

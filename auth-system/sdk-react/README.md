@@ -80,7 +80,7 @@ function MyComponent() {
 
 ## 🎯 Get Your API Keys
 
-1. Visit the [AccessKit Dashboard](https://access-kit-server.vercel.app)
+1. Visit the [AccessKit Dashboard](https://access-kit.vercel.app/)
 2. Create an account or login
 3. Create a new project
 4. Copy your Project ID and API Key from the project settings
@@ -556,9 +556,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUpdate }) => {
 
 ## 📞 Support
 
-- **Live Demo**: [https://access-kit-server.vercel.app](https://access-kit-server.vercel.app)
-- **GitHub Repository**: [https://github.com/gsarthak783/Auth-app](https://github.com/gsarthak783/Auth-app)
-- **Issues**: [https://github.com/gsarthak783/Auth-app/issues](https://github.com/gsarthak783/Auth-app/issues)
+- **Live Demo**: [https://access-kit.vercel.app/](https://access-kit.vercel.app/)
 - **npm Package**: [https://npmjs.com/package/@gsarthak783/accesskit-react](https://npmjs.com/package/@gsarthak783/accesskit-react)
 - **Core SDK**: [https://npmjs.com/package/@gsarthak783/accesskit-auth](https://npmjs.com/package/@gsarthak783/accesskit-auth)
 

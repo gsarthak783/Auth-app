@@ -46,22 +46,51 @@ const ProjectUsers = () => {
     }
   }, [projectId]);
 
+  // On project change, clear local lists and reload when apiKey arrives
   useEffect(() => {
-    loadUsers();
-  }, [currentPage, searchTerm, statusFilter]);
+    setUsers([]);
+    setStats(null);
+    setCurrentPage(1);
+  }, [projectId]);
+
+  // Ensure users reload when filters/page change AND when currentProject becomes available
+  useEffect(() => {
+    if (currentProject?.apiKey) {
+      loadUsers();
+    }
+  }, [currentProject?.apiKey, currentPage, searchTerm, statusFilter]);
+
+  // Also refresh stats when API key becomes available
+  useEffect(() => {
+    if (currentProject?.apiKey) {
+      loadStats();
+    }
+  }, [currentProject?.apiKey]);
+
+  // Force reload when route projectId changes even if currentProject apiKey matches previous
+  useEffect(() => {
+    if (currentProject?.id === projectId && currentProject?.apiKey) {
+      loadStats();
+      loadUsers();
+    }
+  }, [projectId, currentProject?.id]);
 
   const loadProjectData = async () => {
     try {
-      await getProject(projectId);
-      await loadStats();
+      const proj = await getProject(projectId);
+      await Promise.all([
+        loadStats(proj?.apiKey),
+        loadUsers(proj?.apiKey)
+      ]);
     } catch (error) {
       console.error('Failed to load project:', error);
       navigate('/projects');
     }
   };
 
-  const loadUsers = async () => {
-    if (!currentProject?.apiKey) return;
+  const loadUsers = async (apiKeyOverride) => {
+    const apiKey = apiKeyOverride || currentProject?.apiKey;
+    if (!apiKey) return;
 
     try {
       setIsLoading(true);
@@ -72,7 +101,7 @@ const ProjectUsers = () => {
         status: statusFilter !== 'all' ? statusFilter : undefined
       };
 
-      const response = await projectUsersAPI.getProjectUsers(currentProject.apiKey, params);
+      const response = await projectUsersAPI.getProjectUsers(apiKey, params);
       setUsers(response.data.users);
       setTotalPages(response.data.pagination.pages);
     } catch (error) {
@@ -83,11 +112,12 @@ const ProjectUsers = () => {
     }
   };
 
-  const loadStats = async () => {
-    if (!currentProject?.apiKey) return;
+  const loadStats = async (apiKeyOverride) => {
+    const apiKey = apiKeyOverride || currentProject?.apiKey;
+    if (!apiKey) return;
 
     try {
-      const response = await projectUsersAPI.getProjectUserStats(currentProject.apiKey);
+      const response = await projectUsersAPI.getProjectUserStats(apiKey);
       setStats(response.data.stats);
     } catch (error) {
       console.error('Failed to load stats:', error);
@@ -124,7 +154,7 @@ const ProjectUsers = () => {
     try {
       await projectUsersAPI.updateProjectUserStatus(currentProject.apiKey, userId, statusData);
       toast.success('User status updated successfully');
-      loadUsers();
+      await Promise.all([loadUsers(), loadStats()]);
     } catch (error) {
       toast.error('Failed to update user status');
     }
@@ -135,7 +165,7 @@ const ProjectUsers = () => {
       try {
         await projectUsersAPI.deleteProjectUser(currentProject.apiKey, userId);
         toast.success('User deleted successfully');
-        loadUsers();
+        await Promise.all([loadUsers(), loadStats()]);
       } catch (error) {
         toast.error('Failed to delete user');
       }
@@ -172,7 +202,7 @@ const ProjectUsers = () => {
       await Promise.all(promises);
       toast.success(`Successfully ${action}d ${selectedUsers.length} users`);
       setSelectedUsers([]);
-      loadUsers();
+      await Promise.all([loadUsers(), loadStats()]);
     } catch (error) {
       toast.error(`Failed to ${action} users`);
     }
@@ -416,7 +446,7 @@ const ProjectUsers = () => {
           ) : (
             <>
               <div className="overflow-x-auto">
-                <table className="table w-full">
+                <table className="table w-full text-sm">
                   <thead>
                     <tr>
                       <th>
@@ -427,7 +457,9 @@ const ProjectUsers = () => {
                           onChange={(e) => handleSelectAll(e.target.checked)}
                         />
                       </th>
-                      <th>User</th>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Username</th>
                       <th>Status</th>
                       <th>Registration</th>
                       <th>Last Login</th>
@@ -446,26 +478,17 @@ const ProjectUsers = () => {
                           />
                         </td>
                         <td>
-                          <div className="flex items-center gap-3">
-                            <div className="avatar placeholder">
-                              <div className="bg-neutral-focus text-neutral-content rounded-full w-8 h-8">
-                                <span className="text-xs">
-                                  {user.firstName?.[0] || user.email[0].toUpperCase()}
-                                </span>
-                              </div>
-                            </div>
-                            <div>
-                              <div className="font-semibold">
-                                {user.firstName && user.lastName 
-                                  ? `${user.firstName} ${user.lastName}` 
-                                  : user.username || 'No name'}
-                              </div>
-                              <div className="text-sm text-base-content/60">{user.email}</div>
-                              {user.username && (
-                                <div className="text-xs text-base-content/40">@{user.username}</div>
-                              )}
-                            </div>
+                          <div className="font-semibold">
+                            {user.firstName && user.lastName
+                              ? `${user.firstName} ${user.lastName}`
+                              : user.firstName || user.lastName || 'No name'}
                           </div>
+                        </td>
+                        <td>
+                          <div className="text-sm text-base-content/80">{user.email}</div>
+                        </td>
+                        <td>
+                          <div className="text-sm text-base-content/70">{user.username ? `@${user.username}` : '-'}</div>
                         </td>
                         <td>
                           <div className="flex flex-col gap-1">
@@ -491,73 +514,35 @@ const ProjectUsers = () => {
                           </div>
                         </td>
                         <td>
-                          <div className="dropdown dropdown-end">
-                            <label tabIndex={0} className="btn btn-ghost btn-sm">
-                              <MoreVertical className="w-4 h-4" />
-                            </label>
-                            <ul tabIndex={0} className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-48 z-10">
-                              <li>
-                                <a onClick={() => handleUpdateUserStatus(user._id, { 
-                                  isActive: !user.isActive 
-                                })}>
-                                  {user.isActive ? (
-                                    <>
-                                      <ShieldOff className="w-4 h-4" />
-                                      Deactivate
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Shield className="w-4 h-4" />
-                                      Activate
-                                    </>
-                                  )}
-                                </a>
-                              </li>
-                              <li>
-                                <a onClick={() => handleUpdateUserStatus(user._id, { 
-                                  isVerified: !user.isVerified 
-                                })}>
-                                  {user.isVerified ? (
-                                    <>
-                                      <XCircle className="w-4 h-4" />
-                                      Unverify
-                                    </>
-                                  ) : (
-                                    <>
-                                      <CheckCircle className="w-4 h-4" />
-                                      Verify
-                                    </>
-                                  )}
-                                </a>
-                              </li>
-                              <li>
-                                <a onClick={() => handleUpdateUserStatus(user._id, { 
-                                  isSuspended: !user.isSuspended 
-                                })}>
-                                  {user.isSuspended ? (
-                                    <>
-                                      <CheckCircle className="w-4 h-4" />
-                                      Unsuspend
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Ban className="w-4 h-4" />
-                                      Suspend
-                                    </>
-                                  )}
-                                </a>
-                              </li>
-                              <li className="divider"></li>
-                              <li>
-                                <a 
-                                  onClick={() => handleDeleteUser(user._id)}
-                                  className="text-error"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                  Delete User
-                                </a>
-                              </li>
-                            </ul>
+                          <div className="flex items-center gap-2">
+                            <button
+                              title={user.isActive ? 'Deactivate' : 'Activate'}
+                              className={`btn btn-ghost btn-xs ${user.isActive ? 'text-warning' : 'text-success'}`}
+                              onClick={() => handleUpdateUserStatus(user._id, { isActive: !user.isActive })}
+                            >
+                              {user.isActive ? <ShieldOff className="w-4 h-4" /> : <Shield className="w-4 h-4" />}
+                            </button>
+                            <button
+                              title={user.isVerified ? 'Unverify' : 'Verify'}
+                              className={`btn btn-ghost btn-xs ${user.isVerified ? 'text-warning' : 'text-info'}`}
+                              onClick={() => handleUpdateUserStatus(user._id, { isVerified: !user.isVerified })}
+                            >
+                              {user.isVerified ? <XCircle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
+                            </button>
+                            <button
+                              title={user.isSuspended ? 'Unsuspend' : 'Suspend'}
+                              className={`btn btn-ghost btn-xs ${user.isSuspended ? 'text-success' : 'text-error'}`}
+                              onClick={() => handleUpdateUserStatus(user._id, { isSuspended: !user.isSuspended })}
+                            >
+                              {user.isSuspended ? <CheckCircle className="w-4 h-4" /> : <Ban className="w-4 h-4" />}
+                            </button>
+                            <button
+                              title="Delete User"
+                              className="btn btn-ghost btn-xs text-error"
+                              onClick={() => handleDeleteUser(user._id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -603,6 +588,7 @@ const ProjectUsers = () => {
           )}
         </div>
       </div>
+      {/* No floating menu; actions are inline icons now */}
     </div>
   );
 };

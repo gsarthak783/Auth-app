@@ -70,4 +70,4 @@ Write-Host "   • @gsarthak783/accesskit-react - React hooks and components" -F
 Write-Host "View on npm:" -ForegroundColor Cyan
 Write-Host "   • https://npmjs.com/package/@gsarthak783/accesskit-auth" -ForegroundColor Blue
 Write-Host "   • https://npmjs.com/package/@gsarthak783/accesskit-react" -ForegroundColor Blue
-Write-Host "Documentation: https://access-kit-server.vercel.app" -ForegroundColor Cyan 
+Write-Host "Documentation: https://access-kit.vercel.app/" -ForegroundColor Cyan 

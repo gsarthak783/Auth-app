@@ -51,6 +51,37 @@ const ProjectDashboard = () => {
     }
   }, [projectId]);
 
+  // Clear previous stats immediately when switching projects to avoid stale display
+  useEffect(() => {
+    setStats(null);
+    setStatsLoading(true);
+  }, [projectId]);
+
+  // Also reload stats when currentProject changes (e.g., quick switches without full remount)
+  useEffect(() => {
+    if (currentProject?.id === projectId && selectedTab === 'overview') {
+      loadStats();
+    }
+  }, [currentProject?.id]);
+
+  // Refresh stats whenever user returns to Overview tab
+  useEffect(() => {
+    if (selectedTab === 'overview' && projectId) {
+      loadStats();
+    }
+  }, [selectedTab]);
+
+  // Refresh stats when window regains focus
+  useEffect(() => {
+    const onFocus = () => {
+      if (selectedTab === 'overview' && projectId) {
+        loadStats();
+      }
+    };
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [selectedTab, projectId]);
+
   const loadProjectData = async () => {
     try {
       await getProject(projectId);
@@ -410,6 +441,35 @@ function MyComponent() {
       {/* Integration Tab */}
       {selectedTab === 'integration' && (
         <div className="space-y-6">
+          {/* Project ID Section */}
+          <div className="card bg-base-100 shadow-lg">
+            <div className="card-body">
+              <h3 className="card-title flex items-center gap-2">
+                <Key className="w-5 h-5" />
+                Project ID
+              </h3>
+              <div className="form-control mt-2">
+                <label className="label">
+                  <span className="label-text">Use this ID in your SDK config</span>
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={currentProject.id || currentProject._id}
+                    readOnly
+                    className="input input-bordered flex-1 font-mono text-sm"
+                  />
+                  <button
+                    onClick={() => copyToClipboard(currentProject.id || currentProject._id, 'Project ID')}
+                    className="btn btn-outline btn-sm"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* API Keys Section */}
           <div className="card bg-base-100 shadow-lg">
             <div className="card-body">

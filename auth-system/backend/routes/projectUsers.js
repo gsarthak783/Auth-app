@@ -12,7 +12,10 @@ const {
   updateProjectUserStatus,
   exportUsers,
   importUsers,
-  getAllUsers
+  getAllUsers,
+  requestPasswordReset,
+  resetPassword,
+  logoutProjectUser
 } = require('../controllers/projectUserController.js');
 const { verifyProjectAccess, authenticateProjectUser } = require('../middleware/auth.js');
 
@@ -83,6 +86,42 @@ router.post('/login',
   verifyProjectAccess,
   validateProjectUserLogin,
   loginProjectUser
+);
+
+/**
+ * @route   POST /api/project-users/request-password-reset
+ * @desc    Send password reset email
+ * @access  Public (requires valid project API key)
+ */
+router.post('/request-password-reset',
+  authRateLimit,
+  verifyProjectAccess,
+  body('email').isEmail().normalizeEmail(),
+  requestPasswordReset
+);
+
+/**
+ * @route   POST /api/project-users/reset-password
+ * @desc    Reset password with token
+ * @access  Public (requires valid project API key)
+ */
+router.post('/reset-password',
+  authRateLimit,
+  verifyProjectAccess,
+  body('token').notEmpty(),
+  body('password').isLength({ min: 6 }),
+  resetPassword
+);
+
+/**
+ * @route   POST /api/project-users/logout
+ * @desc    Logout project user (invalidate refresh token)
+ * @access  Public (requires valid project API key)
+ */
+router.post('/logout',
+  verifyProjectAccess,
+  body('refreshToken').notEmpty(),
+  logoutProjectUser
 );
 
 // Protected routes (require project user authentication)
