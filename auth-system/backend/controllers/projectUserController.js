@@ -976,7 +976,7 @@ const requestPasswordReset = async (req, res) => {
 
     try {
       if (process.env.SEND_PROJECT_USER_EMAILS !== 'false') {
-        await sendPasswordResetEmail(user, user.passwordResetToken, project.name, project.apiKey);
+        await sendPasswordResetEmail(user, user.passwordResetToken, project.name, project._id || project.id);
       }
     } catch (emailError) {
       // Log but do not fail the request
