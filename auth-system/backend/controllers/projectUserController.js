@@ -91,17 +91,18 @@ const registerProjectUser = async (req, res) => {
 
     await projectUser.save();
 
-    // Send verification email if required (non-blocking)
+    // Send verification/welcome email (non-blocking)
     try {
-      if (project.settings.requireEmailVerification) {
-        await sendVerificationEmail(
-          projectUser.email,
-          projectUser.emailVerificationToken,
-          project.name
-        );
-      } else {
-        // Send welcome email
-        await sendWelcomeEmail(projectUser, project.name);
+      if (process.env.SEND_PROJECT_USER_EMAILS !== 'false') {
+        if (project.settings.requireEmailVerification) {
+          await sendVerificationEmail(
+            projectUser.email,
+            projectUser.emailVerificationToken,
+            project.name
+          );
+        } else {
+          await sendWelcomeEmail(projectUser, project.name);
+        }
       }
     } catch (emailError) {
       console.error('Failed to send email during project user registration:', emailError.message);
@@ -974,7 +975,9 @@ const requestPasswordReset = async (req, res) => {
     await user.save();
 
     try {
-      await sendPasswordResetEmail(user, user.passwordResetToken, project.name, project.apiKey);
+      if (process.env.SEND_PROJECT_USER_EMAILS !== 'false') {
+        await sendPasswordResetEmail(user, user.passwordResetToken, project.name, project.apiKey);
+      }
     } catch (emailError) {
       // Log but do not fail the request
       console.error('Failed to send password reset email:', emailError.message);

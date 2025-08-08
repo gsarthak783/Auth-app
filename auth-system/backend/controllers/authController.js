@@ -54,9 +54,11 @@ const signup = async (req, res) => {
 
     await user.save();
 
-    // Send welcome email (non-blocking)
+    // Send welcome email (non-blocking) — disabled by default to avoid test mails
     try {
-      await sendWelcomeEmail(user, 'AuthSystem Platform');
+      if (process.env.SEND_PLATFORM_WELCOME === 'true') {
+        await sendWelcomeEmail(user, 'AuthSystem Platform');
+      }
     } catch (emailError) {
       console.error('Failed to send welcome email, but continuing with signup:', emailError.message);
     }
