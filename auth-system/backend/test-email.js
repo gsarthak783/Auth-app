@@ -61,4 +61,4 @@ EMAIL_PASS=your-16-character-app-password
 EMAIL_FROM="AuthSystem <your-email@gmail.com>"
 `);
 
-testEmailConfig().catch(console.error); 
+// testEmailConfig().catch(console.error); 
