@@ -4,7 +4,7 @@ import Cookies from 'js-cookie';
 
 // Create axios instance
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://access-kit-server.vercel.app/api' : 'http://localhost:5000/api'),
+  baseURL:  'https://access-kit-server.vercel.app/api' ,
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
