@@ -283,7 +283,8 @@ X-Refresh-Token: {refresh_token}`}
                 code={`{
   "success": true,
   "data": {
-    "accessToken": "jwt_access_token"
+    "accessToken": "jwt_access_token",
+    "refreshToken": "jwt_refresh_token"
   }
 }`}
                 language="json"
@@ -305,7 +306,7 @@ X-Refresh-Token: {refresh_token}`}
             <div className="mb-4">
               <h4 className="font-semibold mb-2">Endpoint:</h4>
               <CodeBlock
-                code="POST /api/auth/logout"
+                code="POST /api/project-users/logout"
                 language="text"
                 id="logout-endpoint"
               />
@@ -314,7 +315,8 @@ X-Refresh-Token: {refresh_token}`}
             <div className="mb-4">
               <h4 className="font-semibold mb-2">Headers:</h4>
               <CodeBlock
-                code={`Authorization: Bearer {access_token} // required
+                code={`X-API-Key: your-project-api-key // required
+X-Project-ID: your-project-id // required
 X-Refresh-Token: {refresh_token} // REQUIRED`}
                 language="text"
                 id="logout-headers"
