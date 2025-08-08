@@ -17,13 +17,12 @@
 @layer components {
   /* Smooth transitions for all interactive elements */
   .btn, .card, .dropdown, .menu li > *:not(ul) {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s, color 0.2s;
   }
   
-  /* Enhanced button hover effects */
+  /* Enhanced button hover effects (non-shifting) */
   .btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 6px 16px -6px rgba(0, 0, 0, 0.12);
   }
   
   /* Card hover effects */
@@ -46,17 +45,15 @@
     background-clip: text;
   }
   
-  /* Modern input focus states */
+  /* Modern input focus states (non-shifting) */
   .input:focus, .textarea:focus, .select:focus {
-    transform: translateY(-1px);
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 0 0 2px hsl(var(--p) / 0.2);
   }
   
-  /* Sidebar navigation enhancements */
+  /* Sidebar navigation enhancements (non-shifting) */
   .menu li > *:not(ul):hover {
-    background-color: hsl(var(--p) / 0.1);
+    background-color: hsl(var(--p) / 0.08);
     color: hsl(var(--p));
-    transform: translateX(4px);
   }
   
   /* Loading skeleton animation */

@@ -117,6 +117,8 @@ const Layout = ({ children }) => {
         </div>
       </div>
 
+      {/* Right column (header + content + footer) */}
+      <div className="flex-1 flex flex-col min-h-screen">
       {/* Top Navigation */}
       <header className="navbar bg-gradient-to-r from-base-100 to-base-200 shadow-lg border-b border-base-300/50 sticky top-0 z-50 backdrop-blur-md">
         <div className="navbar-start">
@@ -215,7 +217,7 @@ const Layout = ({ children }) => {
       </header>
 
       {/* Page content */}
-      <main className="flex-1 bg-base-100">
+      <main className="flex-1 bg-base-100 px-4 sm:px-6 lg:px-8 py-6">
         {children}
       </main>
 
@@ -373,6 +375,7 @@ const Layout = ({ children }) => {
           </div>
         </div>
       </footer>
+      </div>
     </div>
   );
 };

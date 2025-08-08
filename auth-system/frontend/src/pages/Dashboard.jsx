@@ -167,7 +167,7 @@ const Dashboard = () => {
           /* Projects Grid */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {userProjects?.slice(0, 6).map((project) => (
-              <div key={project._id} className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow">
+              <div key={project.id || project._id} className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow">
                 <div className="card-body">
                   <div className="flex items-start justify-between mb-3">
                     <div>
@@ -184,13 +184,13 @@ const Dashboard = () => {
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div className="text-center">
                       <div className="text-lg font-semibold text-primary">
-                        {project.statistics?.totalUsers || 0}
+                        {(project.stats?.totalUsers ?? project.statistics?.totalUsers) || 0}
                       </div>
                       <div className="text-xs text-base-content/60">Users</div>
                     </div>
                     <div className="text-center">
                       <div className="text-lg font-semibold text-secondary">
-                        {project.statistics?.totalLogins || 0}
+                        {(project.stats?.totalLogins ?? project.statistics?.totalLogins) || 0}
                       </div>
                       <div className="text-xs text-base-content/60">Logins</div>
                     </div>
@@ -210,26 +210,26 @@ const Dashboard = () => {
                   <div className="card-actions justify-between">
                     <div className="btn-group btn-group-horizontal">
                       <Link
-                        to={`/project/${project._id}`}
+                        to={`/project/${project.id || project._id}`}
                         className="btn btn-sm btn-outline"
                       >
                         <BarChart3 className="w-4 h-4" />
                       </Link>
                       <Link
-                        to={`/project/${project._id}/users`}
+                        to={`/project/${project.id || project._id}/users`}
                         className="btn btn-sm btn-outline"
                       >
                         <Users className="w-4 h-4" />
                       </Link>
                       <Link
-                        to={`/project/${project._id}/settings`}
+                        to={`/project/${project.id || project._id}/settings`}
                         className="btn btn-sm btn-outline"
                       >
                         <Settings className="w-4 h-4" />
                       </Link>
                     </div>
                     <Link
-                      to={`/project/${project._id}`}
+                      to={`/project/${project.id || project._id}`}
                       className="btn btn-sm btn-primary"
                     >
                       Open

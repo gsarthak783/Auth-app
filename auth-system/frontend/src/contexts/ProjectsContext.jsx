@@ -3,6 +3,9 @@ import { projectsAPI, utils } from '../utils/api';
 import { useAuth } from './AuthContext';
 import toast from 'react-hot-toast';
 
+// Helper to safely get a project id from different shapes
+const getProjectId = (project) => (project?.id || project?._id || '');
+
 // Initial state
 const initialState = {
   projects: [],
@@ -31,45 +34,58 @@ const projectsReducer = (state, action) => {
         ...state,
         isLoading: action.payload,
       };
-    case ActionTypes.SET_PROJECTS:
+    case ActionTypes.SET_PROJECTS: {
+      const normalized = (action.payload || []).map((p) => ({ ...p, id: getProjectId(p) }));
       return {
         ...state,
-        projects: action.payload,
+        projects: normalized,
         isLoading: false,
         error: null,
       };
-    case ActionTypes.SET_CURRENT_PROJECT:
+    }
+    case ActionTypes.SET_CURRENT_PROJECT: {
+      const current = action.payload ? { ...action.payload, id: getProjectId(action.payload) } : null;
       return {
         ...state,
-        currentProject: action.payload,
+        currentProject: current,
         error: null,
       };
-    case ActionTypes.ADD_PROJECT:
+    }
+    case ActionTypes.ADD_PROJECT: {
+      const toAdd = { ...action.payload, id: getProjectId(action.payload) };
       return {
         ...state,
-        projects: [...state.projects, action.payload],
+        projects: [...state.projects, toAdd],
         error: null,
       };
-    case ActionTypes.UPDATE_PROJECT:
+    }
+    case ActionTypes.UPDATE_PROJECT: {
+      const updated = { ...action.payload, id: getProjectId(action.payload) };
+      const updatedId = getProjectId(updated);
       return {
         ...state,
-        projects: state.projects.map(project =>
-          project._id === action.payload._id ? action.payload : project
+        projects: state.projects.map((project) =>
+          getProjectId(project) === updatedId ? { ...project, ...updated } : project
         ),
-        currentProject: state.currentProject?._id === action.payload._id 
-          ? action.payload 
-          : state.currentProject,
+        currentProject:
+          state.currentProject && getProjectId(state.currentProject) === updatedId
+            ? { ...state.currentProject, ...updated }
+            : state.currentProject,
         error: null,
       };
-    case ActionTypes.REMOVE_PROJECT:
+    }
+    case ActionTypes.REMOVE_PROJECT: {
+      const removeId = action.payload; // can be id or _id string
       return {
         ...state,
-        projects: state.projects.filter(project => project._id !== action.payload),
-        currentProject: state.currentProject?._id === action.payload 
-          ? null 
-          : state.currentProject,
+        projects: state.projects.filter((project) => getProjectId(project) !== removeId),
+        currentProject:
+          state.currentProject && getProjectId(state.currentProject) === removeId
+            ? null
+            : state.currentProject,
         error: null,
       };
+    }
     case ActionTypes.SET_ERROR:
       return {
         ...state,
@@ -110,6 +126,7 @@ export const ProjectsProvider = ({ children }) => {
     try {
       dispatch({ type: ActionTypes.SET_LOADING, payload: true });
       const response = await projectsAPI.getProjects();
+      // Ensure normalized ids
       dispatch({ type: ActionTypes.SET_PROJECTS, payload: response.projects || [] });
     } catch (error) {
       const errorMessage = utils.getErrorMessage(error);
@@ -207,7 +224,8 @@ export const ProjectsProvider = ({ children }) => {
   const regenerateApiKeys = async (projectId) => {
     try {
       const response = await projectsAPI.regenerateApiKeys(projectId);
-      dispatch({ type: ActionTypes.UPDATE_PROJECT, payload: response.project });
+      // Update the project in state with new apiKey
+      dispatch({ type: ActionTypes.UPDATE_PROJECT, payload: { id: projectId, apiKey: response.apiKey } });
       toast.success('API keys regenerated successfully');
       return response.project;
     } catch (error) {
@@ -218,12 +236,11 @@ export const ProjectsProvider = ({ children }) => {
   };
 
   // Add team member
-  const addTeamMember = async (projectId, memberData) => {
+  const addTeamMember = async (projectId, userIdOrEmail, role = 'member', permissions = []) => {
     try {
-      const response = await projectsAPI.addTeamMember(projectId, memberData);
-      dispatch({ type: ActionTypes.UPDATE_PROJECT, payload: response.project });
+      const response = await projectsAPI.addTeamMember(projectId, { userIdOrEmail, role, permissions });
       toast.success(response.message || 'Team member added successfully');
-      return response.project;
+      return response.user;
     } catch (error) {
       const errorMessage = utils.getErrorMessage(error);
       toast.error(errorMessage);
@@ -235,9 +252,8 @@ export const ProjectsProvider = ({ children }) => {
   const removeTeamMember = async (projectId, memberId) => {
     try {
       const response = await projectsAPI.removeTeamMember(projectId, memberId);
-      dispatch({ type: ActionTypes.UPDATE_PROJECT, payload: response.project });
       toast.success(response.message || 'Team member removed successfully');
-      return response.project;
+      return true;
     } catch (error) {
       const errorMessage = utils.getErrorMessage(error);
       toast.error(errorMessage);
@@ -246,12 +262,11 @@ export const ProjectsProvider = ({ children }) => {
   };
 
   // Update team member role
-  const updateTeamMemberRole = async (projectId, memberId, role) => {
+  const updateTeamMemberRole = async (projectId, memberId, role, permissions = []) => {
     try {
-      const response = await projectsAPI.updateTeamMemberRole(projectId, memberId, role);
-      dispatch({ type: ActionTypes.UPDATE_PROJECT, payload: response.project });
+      const response = await projectsAPI.updateTeamMemberRole(projectId, memberId, { role, permissions });
       toast.success(response.message || 'Team member role updated successfully');
-      return response.project;
+      return true;
     } catch (error) {
       const errorMessage = utils.getErrorMessage(error);
       toast.error(errorMessage);
@@ -259,60 +274,13 @@ export const ProjectsProvider = ({ children }) => {
     }
   };
 
-  // Set current project (for UI state)
-  const setCurrentProject = (project) => {
-    dispatch({ type: ActionTypes.SET_CURRENT_PROJECT, payload: project });
-  };
-
-  // Clear current project
-  const clearCurrentProject = () => {
-    dispatch({ type: ActionTypes.SET_CURRENT_PROJECT, payload: null });
-  };
-
-  // Get project by ID from state
-  const getProjectById = (projectId) => {
-    return state.projects.find(project => project._id === projectId) || null;
-  };
-
-  // Check if user owns project
-  const isProjectOwner = (project, userId) => {
-    return project?.owner === userId || project?.owner?._id === userId;
-  };
-
-  // Check if user is admin of project
-  const isProjectAdmin = (project, userId) => {
-    if (isProjectOwner(project, userId)) return true;
-    return project?.team?.some(member => 
-      (member.userId === userId || member.userId?._id === userId) && member.role === 'admin'
-    );
-  };
-
-  // Check if user is member of project
-  const isProjectMember = (project, userId) => {
-    if (isProjectOwner(project, userId)) return true;
-    return project?.team?.some(member => 
-      member.userId === userId || member.userId?._id === userId
-    );
-  };
-
-  // Get user role in project
-  const getUserRoleInProject = (project, userId) => {
-    if (isProjectOwner(project, userId)) return 'owner';
-    const member = project?.team?.find(member => 
-      member.userId === userId || member.userId?._id === userId
-    );
-    return member?.role || null;
-  };
-
   // Context value
   const value = {
-    // State
     projects: state.projects,
     currentProject: state.currentProject,
     isLoading: state.isLoading,
     error: state.error,
 
-    // Actions
     loadProjects,
     createProject,
     getProject,
@@ -320,25 +288,9 @@ export const ProjectsProvider = ({ children }) => {
     deleteProject,
     getProjectStats,
     regenerateApiKeys,
-
-    // Team management
     addTeamMember,
     removeTeamMember,
     updateTeamMemberRole,
-
-    // UI helpers
-    setCurrentProject,
-    clearCurrentProject,
-    getProjectById,
-
-    // Permission helpers
-    isProjectOwner,
-    isProjectAdmin,
-    isProjectMember,
-    getUserRoleInProject,
-
-    // Error handling
-    clearError: () => dispatch({ type: ActionTypes.CLEAR_ERROR }),
   };
 
   return (

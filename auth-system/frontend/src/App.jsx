@@ -51,10 +51,24 @@ function App() {
                 duration: 4000,
                 className: 'text-sm',
                 style: {
-                  background: 'var(--fallback-b1,oklch(var(--b1)/var(--tw-bg-opacity)))',
-                  color: 'var(--fallback-bc,oklch(var(--bc)/var(--tw-text-opacity)))',
-                  border: '1px solid var(--fallback-b3,oklch(var(--b3)/var(--tw-border-opacity)))',
+                  background: 'oklch(var(--b1))',
+                  color: 'oklch(var(--bc))',
+                  border: '1px solid oklch(var(--b3))',
+                  boxShadow: '0 10px 25px -5px rgba(0,0,0,0.25)',
+                  backdropFilter: 'none'
                 },
+                success: {
+                  iconTheme: {
+                    primary: '#22c55e',
+                    secondary: '#ffffff'
+                  }
+                },
+                error: {
+                  iconTheme: {
+                    primary: '#ef4444',
+                    secondary: '#ffffff'
+                  }
+                }
               }}
             />
 

@@ -116,117 +116,100 @@ const ProjectDashboard = () => {
   }
 
   const codeExamples = {
-    javascript: `// Install the AuthSystem SDK
-npm install @authsystem/client
+    javascript: `// Install the SDK
+npm install @gsarthak783/accesskit-auth
 
 // Initialize the client
-import AuthSystem from '@authsystem/client';
+import { AuthClient } from '@gsarthak783/accesskit-auth';
 
-const auth = new AuthSystem({
+const auth = new AuthClient({
+  projectId: '${projectId}',
   apiKey: '${currentProject.apiKey}',
-  baseURL: '${window.location.origin}/api'
+  // For local dev, point to your running API
+  baseUrl: '${window.location.origin}/api/project-users'
 });
 
 // Register a new user
-const registerUser = async (userData) => {
-  try {
-    const response = await auth.register({
-      email: userData.email,
-      password: userData.password,
-      firstName: userData.firstName,
-      lastName: userData.lastName
-    });
-    console.log('User registered:', response.user);
-    return response;
-  } catch (error) {
-    console.error('Registration failed:', error);
-  }
-};
+try {
+  const user = await auth.register({
+    email: 'user@example.com',
+    password: 'securepassword',
+    firstName: 'John',
+    lastName: 'Doe'
+  });
+  console.log('User registered:', user);
+} catch (error) {
+  console.error('Registration failed:', error);
+}
 
 // Login user
-const loginUser = async (credentials) => {
-  try {
-    const response = await auth.login({
-      email: credentials.email,
-      password: credentials.password
-    });
-    console.log('User logged in:', response.user);
-    return response;
-  } catch (error) {
-    console.error('Login failed:', error);
-  }
-};`,
+try {
+  const response = await auth.login({
+    email: 'user@example.com',
+    password: 'securepassword'
+  });
+  console.log('Login successful:', response.user);
+} catch (error) {
+  console.error('Login failed:', error);
+}`,
 
     curl: `# Register a new user
-curl -X POST "${window.location.origin}/api/project-users/register" \\
-  -H "Content-Type: application/json" \\
-  -H "x-api-key: ${currentProject.apiKey}" \\
-  -d '{
-    "email": "user@example.com",
-    "password": "securepassword",
-    "firstName": "John",
-    "lastName": "Doe"
-  }'
+ curl -X POST "${window.location.origin}/api/project-users/register" \
+   -H "Content-Type: application/json" \
+   -H "x-api-key: ${currentProject.apiKey}" \
+   -d '{
+     "email": "user@example.com",
+     "password": "securepassword",
+     "firstName": "John",
+     "lastName": "Doe"
+   }'
+ 
+ # Login user
+ curl -X POST "${window.location.origin}/api/project-users/login" \
+   -H "Content-Type: application/json" \
+   -H "x-api-key: ${currentProject.apiKey}" \
+   -d '{
+     "email": "user@example.com",
+     "password": "securepassword"
+   }'`,
 
-# Login user
-curl -X POST "${window.location.origin}/api/project-users/login" \\
-  -H "Content-Type: application/json" \\
-  -H "x-api-key: ${currentProject.apiKey}" \\
-  -d '{
-    "email": "user@example.com",
-    "password": "securepassword"
-  }'`,
+    react: `// React SDK (recommended for React apps)
+import React from 'react';
+import { AuthProvider, useAuth } from '@gsarthak783/accesskit-react';
 
-    react: `// React Hook for AuthSystem
-import { useState, useEffect, createContext, useContext } from 'react';
+function App() {
+  return (
+    <AuthProvider config={{
+      projectId: '${projectId}',
+      apiKey: '${currentProject.apiKey}',
+      baseUrl: '${window.location.origin}/api/project-users'
+    }}>
+      <MyComponent />
+    </AuthProvider>
+  );
+}
 
-const AuthContext = createContext();
+function MyComponent() {
+  const { user, login, register, logout, isAuthenticated, isLoading } = useAuth();
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  if (isLoading) return <div>Loading...</div>;
 
-  const API_BASE = '${window.location.origin}/api/project-users';
-  const API_KEY = '${currentProject.apiKey}';
-
-  const register = async (userData) => {
-    const response = await fetch(\`\${API_BASE}/register\`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': API_KEY
-      },
-      body: JSON.stringify(userData)
-    });
-    
-    if (!response.ok) throw new Error('Registration failed');
-    return response.json();
-  };
-
-  const login = async (credentials) => {
-    const response = await fetch(\`\${API_BASE}/login\`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': API_KEY
-      },
-      body: JSON.stringify(credentials)
-    });
-    
-    if (!response.ok) throw new Error('Login failed');
-    const data = await response.json();
-    setUser(data.data.user);
-    return data;
-  };
+  if (!isAuthenticated) {
+    return (
+      <div>
+        <button onClick={() => login('user@example.com', 'securepassword')}>Login</button>
+        <button onClick={() => register({ email: 'user@example.com', password: 'securepassword', firstName: 'John', lastName: 'Doe' })}>Register</button>
+      </div>
+    );
+  }
 
   return (
-    <AuthContext.Provider value={{ user, register, login, loading }}>
-      {children}
-    </AuthContext.Provider>
+    <div>
+      <h1>Welcome, {user.firstName}!</h1>
+      <button onClick={logout}>Logout</button>
+    </div>
   );
-};
-
-export const useAuth = () => useContext(AuthContext);`
+}`
   };
 
   return (
@@ -596,7 +579,7 @@ export const useAuth = () => useContext(AuthContext);`
             <div>
               <h3 className="font-semibold">Quick Start Guide</h3>
               <p className="text-sm">
-                Get started with integrating AuthSystem into your application in minutes.
+                Get started with integrating AccessKit into your application in minutes.
               </p>
             </div>
           </div>

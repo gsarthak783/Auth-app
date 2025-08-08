@@ -57,6 +57,14 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // If the request targets project-users endpoints (x-api-key based),
+    // do not attempt platform token refresh or force logout.
+    const reqUrl = originalRequest?.url || '';
+    const isProjectUsersEndpoint = reqUrl.startsWith('/project-users');
+    if (isProjectUsersEndpoint) {
+      return Promise.reject(error);
+    }
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
