@@ -1079,16 +1079,22 @@ const refreshProjectUserToken = async (req, res) => {
       return res.status(401).json({ success: false, message: 'User not found' });
     }
 
-    const session = projectUser.sessions.find(s => s.token === refreshToken && s.isActive && (!s.expiresAt || s.expiresAt > new Date()));
-    if (!session) {
+    const sessionIndex = projectUser.sessions.findIndex(s => s.token === refreshToken && s.isActive && (!s.expiresAt || s.expiresAt > new Date()));
+    if (sessionIndex === -1) {
       return res.status(401).json({ success: false, message: 'Invalid or expired refresh token' });
     }
 
+    // Issue new tokens
     const accessToken = generateAccessToken({ userId: projectUser._id, projectId, type: 'project_user' });
+    const newRefreshToken = generateRefreshToken({ userId: projectUser._id, projectId, type: 'project_user' });
+
+    // Rotate session token
+    projectUser.sessions[sessionIndex].token = newRefreshToken;
+    projectUser.sessions[sessionIndex].expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     projectUser.lastActiveAt = new Date();
     await projectUser.save();
 
-    return res.json({ success: true, data: { accessToken } });
+    return res.json({ success: true, data: { accessToken, refreshToken: newRefreshToken } });
   } catch (error) {
     console.error('Refresh project user token error:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
