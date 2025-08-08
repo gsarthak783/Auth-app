@@ -99,6 +99,7 @@ const ApiReference = () => {
           <CodeBlock
             code={`Content-Type: application/json
 X-API-Key: your-project-api-key
+X-Project-ID: your-project-id
 Authorization: Bearer {access_token}  // only for protected endpoints`}
             language="text"
             id="headers-copy"
@@ -269,6 +270,7 @@ Authorization: Bearer {access_token}  // only for protected endpoints`}
               <h4 className="font-semibold mb-2">Headers:</h4>
               <CodeBlock
                 code={`X-API-Key: your-project-api-key
+X-Project-ID: your-project-id
 Authorization: Bearer {access_token} // optional for logout`}
                  language="text"
                  id="logout-headers"
@@ -304,6 +306,7 @@ Authorization: Bearer {access_token} // optional for logout`}
               <h4 className="font-semibold mb-2">Headers:</h4>
               <CodeBlock
                 code={`X-API-Key: your-project-api-key
+X-Project-ID: your-project-id
 Authorization: Bearer {access_token}`}
                  language="text"
                  id="profile-headers"
@@ -367,6 +370,16 @@ Authorization: Bearer {access_token}`}
             </div>
 
             <div className="mb-4">
+              <h4 className="font-semibold mb-2">Headers:</h4>
+              <CodeBlock
+                code={`X-API-Key: your-project-api-key  // OR provide X-Project-ID if API key cannot be sent
+X-Project-ID: your-project-id`}
+                language="text"
+                id="reset-request-headers"
+              />
+            </div>
+
+            <div className="mb-4">
               <h4 className="font-semibold mb-2">Request Body:</h4>
               <CodeBlock
                 code={`{
@@ -394,6 +407,15 @@ Authorization: Bearer {access_token}`}
                 code="POST /api/project-users/reset-password"
                 language="text"
                 id="reset-password-endpoint"
+              />
+            </div>
+
+            <div className="mb-4">
+              <h4 className="font-semibold mb-2">Headers:</h4>
+              <CodeBlock
+                code={`X-Project-ID: your-project-id`}
+                language="text"
+                id="reset-password-headers"
               />
             </div>
 
@@ -889,9 +911,10 @@ function MyComponent() {
             <h3 className="card-title">Using cURL</h3>
             <CodeBlock
               code={`# Register a user
-curl -X POST https://access-kit-server.vercel.app/api/project-users/register \\
-  -H "Content-Type: application/json" \\
-  -H "X-API-Key: your-api-key" \\
+curl -X POST https://access-kit-server.vercel.app/api/project-users/register \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-api-key" \
+  -H "X-Project-ID: your-project-id" \
   -d '{
     "email": "test@example.com",
     "password": "testpass123",
@@ -900,12 +923,30 @@ curl -X POST https://access-kit-server.vercel.app/api/project-users/register \\
   }'
 
 # Login user
-curl -X POST https://access-kit-server.vercel.app/api/project-users/login \\
-  -H "Content-Type: application/json" \\
-  -H "X-API-Key: your-api-key" \\
+curl -X POST https://access-kit-server.vercel.app/api/project-users/login \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-api-key" \
+  -H "X-Project-ID: your-project-id" \
   -d '{
     "email": "test@example.com",
     "password": "testpass123"
+  }'
+
+# Request password reset (either API key or Project ID)
+curl -X POST https://access-kit-server.vercel.app/api/project-users/request-password-reset \
+  -H "Content-Type: application/json" \
+  -H "X-Project-ID: your-project-id" \
+  -d '{
+    "email": "test@example.com"
+  }'
+
+# Reset password (project ID only)
+curl -X POST https://access-kit-server.vercel.app/api/project-users/reset-password \
+  -H "Content-Type: application/json" \
+  -H "X-Project-ID: your-project-id" \
+  -d '{
+    "token": "reset_token_from_email",
+    "password": "newpassword123"
   }'`}
               language="bash"
               id="curl-examples"

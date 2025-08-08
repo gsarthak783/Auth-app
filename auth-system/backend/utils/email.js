@@ -148,10 +148,11 @@ const sendVerificationEmail = async (user, token, projectName = 'Auth System') =
 };
 
 // Send password reset email
-const sendPasswordResetEmail = async (user, token, projectName = 'Auth System') => {
+const sendPasswordResetEmail = async (user, token, projectName = 'Auth System', apiKey) => {
   // Use frontend URL from environment config (handles both local and production)
   const frontendUrl = envConfig.frontendUrl;
-  const resetUrl = `${frontendUrl}/auth/reset-password?token=${token}&email=${user.email}`;
+  const apiKeyParam = apiKey ? `&apiKey=${encodeURIComponent(apiKey)}` : '';
+  const resetUrl = `${frontendUrl}/auth/reset-password?token=${token}&email=${encodeURIComponent(user.email)}${apiKeyParam}`;
   
   const subject = `Reset your password - ${projectName}`;
   

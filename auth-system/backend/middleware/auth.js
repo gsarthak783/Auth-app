@@ -118,39 +118,39 @@ const authenticateProjectUser = async (req, res, next) => {
 const verifyProjectAccess = async (req, res, next) => {
   try {
     const apiKey = req.headers['x-api-key'] || req.body.apiKey || req.query.apiKey;
+    const projectIdHeader = req.headers['x-project-id'];
 
-    if (!apiKey) {
+    if (!apiKey && !projectIdHeader) {
       return res.status(401).json({
         success: false,
-        message: 'Project API key is required'
+        message: 'Project API key or Project ID is required'
       });
     }
 
-    const project = await Project.findOne({ 
-      apiKey, 
-      isActive: true,
-      deletedAt: null 
-    });
-
-    if (!project) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid or inactive project API key'
-      });
+    let project = null;
+    if (apiKey) {
+      project = await Project.findOne({ apiKey, isActive: true, deletedAt: null });
+      if (!project) {
+        return res.status(401).json({ success: false, message: 'Invalid or inactive project API key' });
+      }
+      if (projectIdHeader && project._id.toString() !== projectIdHeader) {
+        return res.status(400).json({ success: false, message: 'X-API-Key and X-Project-ID do not match' });
+      }
+    } else if (projectIdHeader) {
+      project = await Project.findOne({ _id: projectIdHeader, isActive: true, deletedAt: null });
+      if (!project) {
+        return res.status(404).json({ success: false, message: 'Project not found' });
+      }
     }
 
-    // Check if request origin is allowed
+    // Origin check as before
     const origin = req.headers.origin || req.headers.referer;
     if (origin && project.allowedOrigins.length > 0) {
       const isOriginAllowed = project.allowedOrigins.some(allowedOrigin => 
         origin.includes(allowedOrigin) || allowedOrigin === '*'
       );
-      
       if (!isOriginAllowed) {
-        return res.status(403).json({
-          success: false,
-          message: 'Origin not allowed for this project'
-        });
+        return res.status(403).json({ success: false, message: 'Origin not allowed for this project' });
       }
     }
 
@@ -159,10 +159,43 @@ const verifyProjectAccess = async (req, res, next) => {
     next();
   } catch (error) {
     console.error('Project verification error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error'
-    });
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+// Strict variant: require BOTH headers and validate match
+const verifyProjectAccessStrict = async (req, res, next) => {
+  try {
+    const apiKey = req.headers['x-api-key'];
+    const projectIdHeader = req.headers['x-project-id'];
+    if (!apiKey || !projectIdHeader) {
+      return res.status(401).json({ success: false, message: 'X-API-Key and X-Project-ID headers are required' });
+    }
+    const project = await Project.findOne({ apiKey, isActive: true, deletedAt: null });
+    if (!project) {
+      return res.status(401).json({ success: false, message: 'Invalid or inactive project API key' });
+    }
+    if (project._id.toString() !== projectIdHeader) {
+      return res.status(400).json({ success: false, message: 'X-API-Key and X-Project-ID do not match' });
+    }
+
+    // Origin check
+    const origin = req.headers.origin || req.headers.referer;
+    if (origin && project.allowedOrigins.length > 0) {
+      const isOriginAllowed = project.allowedOrigins.some(allowedOrigin => 
+        origin.includes(allowedOrigin) || allowedOrigin === '*'
+      );
+      if (!isOriginAllowed) {
+        return res.status(403).json({ success: false, message: 'Origin not allowed for this project' });
+      }
+    }
+
+    req.project = project;
+    req.projectId = project._id;
+    next();
+  } catch (error) {
+    console.error('Project verification (strict) error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 
@@ -371,6 +404,7 @@ module.exports = {
   authenticate,
   authenticateProjectUser,
   verifyProjectAccess,
+  verifyProjectAccessStrict,
   verifyProjectMember,
   verifyProjectAdmin,
   authorize,

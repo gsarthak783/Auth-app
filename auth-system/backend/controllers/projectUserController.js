@@ -974,7 +974,7 @@ const requestPasswordReset = async (req, res) => {
     await user.save();
 
     try {
-      await sendPasswordResetEmail(user, user.passwordResetToken, project.name);
+      await sendPasswordResetEmail(user, user.passwordResetToken, project.name, project.apiKey);
     } catch (emailError) {
       // Log but do not fail the request
       console.error('Failed to send password reset email:', emailError.message);

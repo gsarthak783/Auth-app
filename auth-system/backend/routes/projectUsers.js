@@ -17,7 +17,7 @@ const {
   resetPassword,
   logoutProjectUser
 } = require('../controllers/projectUserController.js');
-const { verifyProjectAccess, authenticateProjectUser } = require('../middleware/auth.js');
+const { verifyProjectAccess, verifyProjectAccessStrict, authenticateProjectUser } = require('../middleware/auth.js');
 
 const router = express.Router();
 
@@ -95,7 +95,7 @@ router.post('/login',
  */
 router.post('/request-password-reset',
   authRateLimit,
-  verifyProjectAccess,
+  verifyProjectAccess, // allow X-API-Key or X-Project-ID
   body('email').isEmail().normalizeEmail(),
   requestPasswordReset
 );
@@ -107,7 +107,7 @@ router.post('/request-password-reset',
  */
 router.post('/reset-password',
   authRateLimit,
-  verifyProjectAccess,
+  verifyProjectAccess, // allow X-API-Key or X-Project-ID (projectId-only allowed)
   body('token').notEmpty(),
   body('password').isLength({ min: 6 }),
   resetPassword
@@ -119,7 +119,7 @@ router.post('/reset-password',
  * @access  Public (requires valid project API key)
  */
 router.post('/logout',
-  verifyProjectAccess,
+  verifyProjectAccessStrict,
   body('refreshToken').notEmpty(),
   logoutProjectUser
 );

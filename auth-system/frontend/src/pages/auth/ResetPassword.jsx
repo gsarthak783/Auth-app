@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Eye, EyeOff, CheckCircle, AlertCircle, Lock } from 'lucide-react';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import api, { projectUsersAPI } from '../../utils/api';
 
 const ResetPassword = () => {
   const { resetPassword } = useAuth();
@@ -19,14 +20,17 @@ const ResetPassword = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [errors, setErrors] = useState({});
   const [token, setToken] = useState('');
+  const [apiKey, setApiKey] = useState('');
 
   useEffect(() => {
     const resetToken = searchParams.get('token');
+    const key = searchParams.get('apiKey') || '';
     if (!resetToken) {
       navigate('/auth/forgot-password');
       return;
     }
     setToken(resetToken);
+    setApiKey(key);
   }, [searchParams, navigate]);
 
   const handleChange = (e) => {
@@ -35,53 +39,33 @@ const ResetPassword = () => {
       ...prev,
       [name]: value
     }));
-    
-    // Clear errors when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
   };
 
   const validateForm = () => {
     const newErrors = {};
-    
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    }
-    
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-    }
-    
+    if (!formData.password) newErrors.password = 'Password is required';
+    else if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
+    if (!formData.confirmPassword) newErrors.confirmPassword = 'Please confirm your password';
+    else if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     try {
       setIsLoading(true);
-      await resetPassword({
-        token,
-        password: formData.password
-      });
+      if (apiKey) {
+        await projectUsersAPI.resetPassword(apiKey, token, formData.password);
+      } else {
+        await resetPassword({ token, password: formData.password });
+      }
       setIsSuccess(true);
     } catch (error) {
-      setErrors({
-        general: 'Failed to reset password. The link may be expired or invalid.'
-      });
+      setErrors({ general: 'Failed to reset password. The link may be expired or invalid.' });
     } finally {
       setIsLoading(false);
     }
