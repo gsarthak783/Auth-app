@@ -1029,11 +1029,11 @@ const resetPassword = async (req, res) => {
 // Add: Logout project user by invalidating refresh token
 const logoutProjectUser = async (req, res) => {
   try {
-    const { refreshToken } = req.body;
+    const refreshToken = req.headers['x-refresh-token'] || req.headers['x-refreshtoken'];
     const { projectId } = req;
 
     if (!refreshToken) {
-      return res.status(400).json({ success: false, message: 'refreshToken is required' });
+      return res.status(400).json({ success: false, message: 'refreshToken is required in X-Refresh-Token header' });
     }
 
     const result = await ProjectUser.updateOne(
