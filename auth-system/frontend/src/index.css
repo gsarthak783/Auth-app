@@ -3,153 +3,162 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  @apply bg-base-200;
-}
-
-::-webkit-scrollbar-thumb {
-  @apply bg-base-300 rounded-full;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-neutral;
-}
-
-/* Custom focus styles */
-.focus-visible {
-  @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-base-100;
-}
-
-/* Animation utilities */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateY(10px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes slideInFromRight {
-  from {
-    transform: translateX(20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.2s ease-out;
-}
-
-.animate-slide-in {
-  animation: slideIn 0.3s ease-out;
-}
-
-.animate-slide-in-right {
-  animation: slideInFromRight 0.3s ease-out;
-}
-
-/* Loading spinner */
-.loading-spinner {
-  @apply animate-spin rounded-full border-2 border-gray-300 border-t-primary;
-}
-
-/* Card hover effects */
-.card-hover {
-  @apply transition-all duration-200 hover:shadow-lg hover:scale-105;
-}
-
-/* Button loading state */
-.btn-loading {
-  @apply relative;
-}
-
-.btn-loading::after {
-  content: '';
-  @apply absolute inset-0 flex items-center justify-center;
-  @apply w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin;
-  margin: auto;
-}
-
-.btn-loading .btn-text {
-  @apply opacity-0;
-}
-
-/* Form input focus */
-.input-focus {
-  @apply transition-all duration-200 focus:scale-105 focus:shadow-md;
-}
-
-/* Gradient backgrounds */
-.gradient-primary {
-  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
-}
-
-.gradient-success {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-}
-
-.gradient-warning {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-}
-
-.gradient-error {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-}
-
-/* Glass morphism effects */
-.glass {
-  backdrop-filter: blur(16px);
-  background-color: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.glass-dark {
-  backdrop-filter: blur(16px);
-  background-color: rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Custom components */
-.navbar-blur {
-  backdrop-filter: blur(16px);
-  background-color: rgba(255, 255, 255, 0.8);
-  @apply border-b border-base-300;
-}
-
-.sidebar-blur {
-  backdrop-filter: blur(16px);
-  background-color: rgba(255, 255, 255, 0.9);
-  @apply border-r border-base-300;
-}
-
-/* Mobile responsiveness */
-@media (max-width: 768px) {
-  .mobile-padding {
-    @apply px-4;
+/* Modern CSS Enhancements */
+@layer base {
+  html {
+    scroll-behavior: smooth;
   }
   
-  .mobile-text {
-    @apply text-sm;
+  body {
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+}
+
+@layer components {
+  /* Smooth transitions for all interactive elements */
+  .btn, .card, .dropdown, .menu li > *:not(ul) {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* Enhanced button hover effects */
+  .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Card hover effects */
+  .card:hover {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  }
+  
+  /* Glassmorphism effect */
+  .glass-effect {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Gradient text utilities */
+  .gradient-text {
+    background: linear-gradient(135deg, hsl(var(--p)) 0%, hsl(var(--s)) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* Modern input focus states */
+  .input:focus, .textarea:focus, .select:focus {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 0 0 2px hsl(var(--p) / 0.2);
+  }
+  
+  /* Sidebar navigation enhancements */
+  .menu li > *:not(ul):hover {
+    background-color: hsl(var(--p) / 0.1);
+    color: hsl(var(--p));
+    transform: translateX(4px);
+  }
+  
+  /* Loading skeleton animation */
+  .skeleton {
+    background: linear-gradient(90deg, 
+      hsl(var(--b2)) 25%, 
+      hsl(var(--b3)) 50%, 
+      hsl(var(--b2)) 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+  }
+  
+  @keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  
+  /* Enhanced navbar styling */
+  .navbar {
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid hsl(var(--bc) / 0.1);
+  }
+  
+  /* Modern dropdown styling */
+  .dropdown-content {
+    backdrop-filter: blur(20px);
+    border: 1px solid hsl(var(--bc) / 0.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  }
+  
+  /* Hero section enhancements */
+  .hero-gradient {
+    background: linear-gradient(135deg, 
+      hsl(var(--p) / 0.05) 0%, 
+      hsl(var(--s) / 0.05) 100%);
+  }
+  
+  /* Modern scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--b2));
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--bc) / 0.3);
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--bc) / 0.5);
+  }
+}
+
+@layer utilities {
+  /* Animation utilities */
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out;
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes slideUp {
+    from { 
+      opacity: 0; 
+      transform: translateY(20px); 
+    }
+    to { 
+      opacity: 1; 
+      transform: translateY(0); 
+    }
+  }
+  
+  @keyframes scaleIn {
+    from { 
+      opacity: 0; 
+      transform: scale(0.95); 
+    }
+    to { 
+      opacity: 1; 
+      transform: scale(1); 
+    }
+  }
+}
+
+/* Dark mode optimizations */
+@media (prefers-color-scheme: dark) {
+  .glass-effect {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 }

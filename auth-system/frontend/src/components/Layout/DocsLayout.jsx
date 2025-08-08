@@ -102,13 +102,13 @@ const DocsLayout = ({ children }) => {
         </div>
 
         {/* Back to Dashboard */}
-        <div className="px-6 py-4 border-b border-base-300">
-          <Link
-            to="/dashboard"
-            className="flex items-center text-sm text-base-content/70 hover:text-base-content transition-colors"
+        <div className="p-4 border-b border-base-300">
+          <Link 
+            to="/dashboard" 
+            className="flex items-center text-base-content/70 hover:text-primary transition-colors group"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
+            <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+            <span className="font-medium">Back to Dashboard</span>
           </Link>
         </div>
 
@@ -149,17 +149,27 @@ const DocsLayout = ({ children }) => {
       {/* Main content */}
       <div className="flex-1 flex flex-col">
         {/* Top navigation */}
-        <div className="navbar bg-base-100 border-b border-base-300 lg:hidden sticky top-0 z-30">
+        <div className="navbar bg-gradient-to-r from-base-100 to-base-200 shadow-lg border-b border-base-300/50 lg:hidden sticky top-0 z-30 backdrop-blur-md">
           <div className="flex-none">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="btn btn-square btn-ghost"
+              className="btn btn-square btn-ghost hover:bg-primary/10"
             >
               <Menu className="w-6 h-6" />
             </button>
           </div>
           <div className="flex-1">
-            <span className="text-xl font-bold">Documentation</span>
+            <div className="flex items-center">
+              <Shield className="w-6 h-6 text-primary mr-2" />
+              <span className="text-lg font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                Documentation
+              </span>
+            </div>
+          </div>
+          <div className="flex-none">
+            <Link to="/dashboard" className="btn btn-sm btn-ghost">
+              <ArrowLeft className="w-4 h-4" />
+            </Link>
           </div>
         </div>
 

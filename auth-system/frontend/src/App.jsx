@@ -35,6 +35,8 @@ import ProjectGuide from './pages/projects/ProjectGuide';
 import QuickStart from './pages/docs/QuickStart';
 import ApiReference from './pages/docs/ApiReference';
 import SdkDocumentation from './pages/docs/SdkDocumentation';
+import ReactSdk from './pages/docs/ReactSdk';
+import DocsLayout from './components/Layout/DocsLayout';
 
 function App() {
   return (
@@ -131,25 +133,25 @@ function App() {
               } />
 
               {/* Documentation Routes */}
-              <Route path="/docs" element={<QuickStart />} />
-              <Route path="/docs/quickstart" element={<QuickStart />} />
-              <Route path="/docs/installation" element={<QuickStart />} />
-              <Route path="/docs/authentication" element={<QuickStart />} />
-              <Route path="/docs/api" element={<ApiReference />} />
-              <Route path="/docs/api/auth" element={<ApiReference />} />
-              <Route path="/docs/api/users" element={<ApiReference />} />
-              <Route path="/docs/api/projects" element={<ApiReference />} />
-              <Route path="/docs/sdk" element={<SdkDocumentation />} />
-              <Route path="/docs/react" element={<SdkDocumentation />} />
-              <Route path="/docs/nodejs" element={<SdkDocumentation />} />
-              <Route path="/docs/examples" element={<SdkDocumentation />} />
-              <Route path="/docs/best-practices" element={<SdkDocumentation />} />
-              <Route path="/docs/security" element={<SdkDocumentation />} />
-              <Route path="/docs/deployment" element={<SdkDocumentation />} />
-              <Route path="/docs/features/*" element={<SdkDocumentation />} />
-              <Route path="/docs/guides" element={<SdkDocumentation />} />
-              <Route path="/docs/troubleshooting" element={<SdkDocumentation />} />
-              <Route path="/docs/mobile" element={<SdkDocumentation />} />
+              <Route path="/docs" element={<DocsLayout><QuickStart /></DocsLayout>} />
+              <Route path="/docs/quickstart" element={<DocsLayout><QuickStart /></DocsLayout>} />
+              <Route path="/docs/installation" element={<DocsLayout><QuickStart /></DocsLayout>} />
+              <Route path="/docs/authentication" element={<DocsLayout><QuickStart /></DocsLayout>} />
+              <Route path="/docs/api" element={<DocsLayout><ApiReference /></DocsLayout>} />
+              <Route path="/docs/api/auth" element={<DocsLayout><ApiReference /></DocsLayout>} />
+              <Route path="/docs/api/users" element={<DocsLayout><ApiReference /></DocsLayout>} />
+              <Route path="/docs/api/projects" element={<DocsLayout><ApiReference /></DocsLayout>} />
+              <Route path="/docs/sdk" element={<DocsLayout><SdkDocumentation /></DocsLayout>} />
+              <Route path="/docs/react" element={<DocsLayout><ReactSdk /></DocsLayout>} />
+              <Route path="/docs/nodejs" element={<DocsLayout><SdkDocumentation /></DocsLayout>} />
+              <Route path="/docs/examples" element={<DocsLayout><SdkDocumentation /></DocsLayout>} />
+              <Route path="/docs/best-practices" element={<DocsLayout><SdkDocumentation /></DocsLayout>} />
+              <Route path="/docs/security" element={<DocsLayout><SdkDocumentation /></DocsLayout>} />
+              <Route path="/docs/deployment" element={<DocsLayout><SdkDocumentation /></DocsLayout>} />
+              <Route path="/docs/features/*" element={<DocsLayout><SdkDocumentation /></DocsLayout>} />
+              <Route path="/docs/guides" element={<DocsLayout><SdkDocumentation /></DocsLayout>} />
+              <Route path="/docs/troubleshooting" element={<DocsLayout><SdkDocumentation /></DocsLayout>} />
+              <Route path="/docs/mobile" element={<DocsLayout><SdkDocumentation /></DocsLayout>} />
 
               {/* Catch all route */}
               <Route path="*" element={<Navigate to="/" replace />} />
