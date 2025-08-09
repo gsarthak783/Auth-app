@@ -68,7 +68,7 @@ router.put('/:projectId/users/:memberId/role', generalLimiter, updateTeamMemberR
 router.post('/:projectId/regenerate-keys', generalLimiter, regenerateApiKeys);
 
 // Email template routes
-router.get('/:projectId/email-templates', authenticatePlatformUser, getEmailTemplates);
-router.put('/:projectId/email-templates', authenticatePlatformUser, updateEmailTemplates);
+router.get('/:projectId/email-templates', authenticate, getEmailTemplates);
+router.put('/:projectId/email-templates', authenticate, updateEmailTemplates);
 
 module.exports = router;
