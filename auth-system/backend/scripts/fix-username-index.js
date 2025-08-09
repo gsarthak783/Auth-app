@@ -4,7 +4,8 @@
  */
 
 const mongoose = require('mongoose');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 async function fixUsernameIndex() {
   try {
@@ -16,7 +17,7 @@ async function fixUsernameIndex() {
     console.log('✅ Connected to MongoDB');
 
     const db = mongoose.connection.db;
-    const collection = db.collection('projectusers');
+    const collection = db.collection('projectUsers'); // Fixed: capital U in projectUsers
 
     // List current indexes
     console.log('\n📋 Current indexes:');
