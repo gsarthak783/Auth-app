@@ -141,7 +141,8 @@ export const platformAuthAPI = {
   // Logout
   logout: async (refreshToken) => {
     try {
-      const response = await api.post('/auth/logout', { refreshToken });
+      const data = refreshToken ? { refreshToken } : {};
+      const response = await api.post('/auth/logout', data);
       return response.data;
     } catch (error) {
       handleApiError(error);
