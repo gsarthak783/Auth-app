@@ -16,39 +16,39 @@ const QuickStart = () => {
 
   const CodeBlock = ({ code, language, id }) => (
     <div className="relative">
-      <pre className="bg-base-200 p-4 rounded-lg overflow-x-auto">
-        <code className={`language-${language}`}>{code}</code>
+      <pre className="bg-base-200 p-3 sm:p-4 rounded-lg overflow-x-auto">
+        <code className={`language-${language} text-xs sm:text-sm`}>{code}</code>
       </pre>
       <button
         onClick={() => copyToClipboard(code, id)}
-        className="absolute top-2 right-2 btn btn-sm btn-ghost"
+        className="absolute top-2 right-2 btn btn-xs sm:btn-sm btn-ghost"
         title="Copy to clipboard"
       >
-        {copiedCode === id ? <Check size={16} /> : <Copy size={16} />}
+        {copiedCode === id ? <Check size={14} className="sm:w-4 sm:h-4" /> : <Copy size={14} className="sm:w-4 sm:h-4" />}
       </button>
     </div>
   );
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
       {/* Header */}
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold text-base-content mb-4">
+      <div className="text-center mb-8 sm:mb-12">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-base-content mb-4">
           Quick Start Guide
         </h1>
-        <p className="text-xl text-base-content/70 mb-6">
+        <p className="text-lg sm:text-xl text-base-content/70 mb-6 px-2">
           Get started with AccessKit in minutes. Choose your integration method and start building!
         </p>
-        <div className="flex flex-wrap justify-center gap-4">
+        <div className="flex flex-wrap justify-center gap-2 sm:gap-4">
           <a 
             href="https://npmjs.com/package/@gsarthak783/accesskit-auth" 
             target="_blank" 
             rel="noopener noreferrer"
             className="btn btn-outline btn-sm"
           >
-            <Download size={16} />
-            Core SDK
-            <ExternalLink size={16} />
+            <Download size={16} className="mr-1" />
+            <span className="hidden sm:inline">Core SDK</span>
+            <span className="sm:hidden">SDK</span>
           </a>
           <a 
             href="https://npmjs.com/package/@gsarthak783/accesskit-react" 
@@ -56,9 +56,9 @@ const QuickStart = () => {
             rel="noopener noreferrer"
             className="btn btn-outline btn-sm"
           >
-            <Download size={16} />
-            React SDK
-            <ExternalLink size={16} />
+            <Download size={16} className="mr-1" />
+            <span className="hidden sm:inline">React SDK</span>
+            <span className="sm:hidden">React</span>
           </a>
         </div>
       </div>

@@ -16,24 +16,24 @@ const ReactSdk = () => {
 
   const CodeBlock = ({ code, language, id }) => (
     <div className="relative">
-      <pre className="bg-base-200 p-4 rounded-lg overflow-x-auto">
-        <code className={`language-${language}`}>{code}</code>
+      <pre className="bg-base-200 p-3 sm:p-4 rounded-lg overflow-x-auto">
+        <code className={`language-${language} text-xs sm:text-sm`}>{code}</code>
       </pre>
       <button
         onClick={() => copyToClipboard(code, id)}
-        className="absolute top-2 right-2 btn btn-sm btn-ghost"
+        className="absolute top-2 right-2 btn btn-xs sm:btn-sm btn-ghost"
         title="Copy to clipboard"
       >
-        {copiedCode === id ? <Check size={16} /> : <Copy size={16} />}
+        {copiedCode === id ? <Check size={14} className="sm:w-4 sm:h-4" /> : <Copy size={14} className="sm:w-4 sm:h-4" />}
       </button>
     </div>
   );
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
       {/* Header */}
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold text-base-content mb-4">
+      <div className="text-center mb-8 sm:mb-12">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-base-content mb-4">
           React SDK
         </h1>
         <p className="text-xl text-base-content/70 mb-6">
@@ -727,7 +727,7 @@ function LoginPage() {
                 <tbody>
                   <tr>
                     <td><code>onSuccess</code></td>
-                    <td><code>() => void</code></td>
+                    <td><code>() =&gt; void</code></td>
                     <td>-</td>
                     <td>Called on successful login</td>
                   </tr>
