@@ -229,6 +229,8 @@ const projectUserSchema = new mongoose.Schema({
 
 // Compound indexes for performance
 projectUserSchema.index({ projectId: 1, email: 1 }, { unique: true });
+// Sparse index: Only enforces uniqueness for documents that have a username field
+// This allows multiple users without usernames while keeping usernames unique when provided
 projectUserSchema.index({ projectId: 1, username: 1 }, { unique: true, sparse: true });
 projectUserSchema.index({ projectId: 1, isActive: 1 });
 projectUserSchema.index({ projectId: 1, createdAt: -1 });
