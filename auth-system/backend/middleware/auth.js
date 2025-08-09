@@ -117,6 +117,32 @@ const authenticateProjectUser = async (req, res, next) => {
 // Verify project access via API key (for project user registration/login)
 const verifyProjectAccess = async (req, res, next) => {
   try {
+    // Check if request has a valid platform user Bearer token
+    const authHeader = req.headers.authorization;
+    const bearerToken = authHeader && authHeader.startsWith('Bearer ') && authHeader.split(' ')[1];
+    
+    let isPlatformUser = false;
+    if (bearerToken) {
+      try {
+        const decoded = jwt.verify(bearerToken, process.env.JWT_SECRET);
+        if (decoded.type === 'platform_user') {
+          const user = await User.findById(decoded.userId);
+          if (user && user.isActive && !user.deletedAt) {
+            req.user = {
+              userId: user._id,
+              email: user.email,
+              username: user.username,
+              role: user.role,
+              type: 'platform_user'
+            };
+            isPlatformUser = true;
+          }
+        }
+      } catch (error) {
+        // Token invalid, continue with API key verification
+      }
+    }
+
     const apiKey = req.headers['x-api-key'] || req.body.apiKey || req.query.apiKey;
     const projectIdHeader = req.headers['x-project-id'];
 
@@ -143,19 +169,36 @@ const verifyProjectAccess = async (req, res, next) => {
       }
     }
 
-    // Origin check as before
-    const origin = req.headers.origin || req.headers.referer;
-    if (origin && project.allowedOrigins.length > 0) {
-      const isOriginAllowed = project.allowedOrigins.some(allowedOrigin => 
-        origin.includes(allowedOrigin) || allowedOrigin === '*'
-      );
-      if (!isOriginAllowed) {
-        return res.status(403).json({ success: false, message: 'Origin not allowed for this project' });
+    // Skip origin check for authenticated platform users (project owners/admins)
+    if (!isPlatformUser) {
+      // Origin check for SDK/external access
+      const origin = req.headers.origin || req.headers.referer;
+      if (origin && project.allowedOrigins.length > 0) {
+        const isOriginAllowed = project.allowedOrigins.some(allowedOrigin => 
+          origin.includes(allowedOrigin) || allowedOrigin === '*'
+        );
+        if (!isOriginAllowed) {
+          return res.status(403).json({ success: false, message: 'Origin not allowed for this project' });
+        }
       }
     }
 
     req.project = project;
     req.projectId = project._id;
+    
+    // Verify platform user has access to this project
+    if (isPlatformUser && project) {
+      const hasAccess = project.owner.toString() === req.user.userId.toString() ||
+                       project.team.some(member => member.user.toString() === req.user.userId.toString());
+      
+      if (!hasAccess) {
+        return res.status(403).json({ 
+          success: false, 
+          message: 'You do not have access to this project' 
+        });
+      }
+    }
+    
     next();
   } catch (error) {
     console.error('Project verification error:', error);
@@ -166,6 +209,32 @@ const verifyProjectAccess = async (req, res, next) => {
 // Strict variant: require BOTH headers and validate match
 const verifyProjectAccessStrict = async (req, res, next) => {
   try {
+    // Check if request has a valid platform user Bearer token
+    const authHeader = req.headers.authorization;
+    const bearerToken = authHeader && authHeader.startsWith('Bearer ') && authHeader.split(' ')[1];
+    
+    let isPlatformUser = false;
+    if (bearerToken) {
+      try {
+        const decoded = jwt.verify(bearerToken, process.env.JWT_SECRET);
+        if (decoded.type === 'platform_user') {
+          const user = await User.findById(decoded.userId);
+          if (user && user.isActive && !user.deletedAt) {
+            req.user = {
+              userId: user._id,
+              email: user.email,
+              username: user.username,
+              role: user.role,
+              type: 'platform_user'
+            };
+            isPlatformUser = true;
+          }
+        }
+      } catch (error) {
+        // Token invalid, continue with API key verification
+      }
+    }
+
     const apiKey = req.headers['x-api-key'];
     const projectIdHeader = req.headers['x-project-id'];
     if (!apiKey || !projectIdHeader) {
@@ -179,19 +248,36 @@ const verifyProjectAccessStrict = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'X-API-Key and X-Project-ID do not match' });
     }
 
-    // Origin check
-    const origin = req.headers.origin || req.headers.referer;
-    if (origin && project.allowedOrigins.length > 0) {
-      const isOriginAllowed = project.allowedOrigins.some(allowedOrigin => 
-        origin.includes(allowedOrigin) || allowedOrigin === '*'
-      );
-      if (!isOriginAllowed) {
-        return res.status(403).json({ success: false, message: 'Origin not allowed for this project' });
+    // Skip origin check for authenticated platform users (project owners/admins)
+    if (!isPlatformUser) {
+      // Origin check
+      const origin = req.headers.origin || req.headers.referer;
+      if (origin && project.allowedOrigins.length > 0) {
+        const isOriginAllowed = project.allowedOrigins.some(allowedOrigin => 
+          origin.includes(allowedOrigin) || allowedOrigin === '*'
+        );
+        if (!isOriginAllowed) {
+          return res.status(403).json({ success: false, message: 'Origin not allowed for this project' });
+        }
       }
     }
 
     req.project = project;
     req.projectId = project._id;
+    
+    // Verify platform user has access to this project
+    if (isPlatformUser && project) {
+      const hasAccess = project.owner.toString() === req.user.userId.toString() ||
+                       project.team.some(member => member.user.toString() === req.user.userId.toString());
+      
+      if (!hasAccess) {
+        return res.status(403).json({ 
+          success: false, 
+          message: 'You do not have access to this project' 
+        });
+      }
+    }
+    
     next();
   } catch (error) {
     console.error('Project verification (strict) error:', error);
