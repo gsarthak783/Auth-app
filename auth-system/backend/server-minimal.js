@@ -11,6 +11,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Trust proxy for accurate IP detection (needed for Vercel/Render deployments)
+app.set('trust proxy', true);
+
 // Database connection
 const connectDB = async () => {
   try {

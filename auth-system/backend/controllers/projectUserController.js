@@ -70,9 +70,8 @@ const registerProjectUser = async (req, res) => {
     }
 
     // Create new project user
-    const projectUser = new ProjectUser({
+    const projectUserData = {
       email,
-      username,
       password,
       firstName,
       lastName,
@@ -81,7 +80,14 @@ const registerProjectUser = async (req, res) => {
       isVerified: !project.settings.requireEmailVerification,
       signupIP: req.ip,
       signupUserAgent: req.get('User-Agent')
-    });
+    };
+
+    // Only add username if provided
+    if (username) {
+      projectUserData.username = username;
+    }
+
+    const projectUser = new ProjectUser(projectUserData);
 
     // Generate email verification token if required
     if (project.settings.requireEmailVerification) {
