@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Toaster } from 'react-hot-toast';
 
 // Contexts
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ProjectsProvider } from './contexts/ProjectsContext';
 
 // Components
@@ -11,6 +11,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
 import Layout from './components/Layout/Layout';
 import AuthLayout from './components/Layout/AuthLayout';
+import LoadingSpinner from './components/LoadingSpinner';
 
 // Pages
 import Landing from './pages/Landing';
@@ -37,6 +38,24 @@ import ApiReference from './pages/docs/ApiReference';
 import SdkDocumentation from './pages/docs/SdkDocumentation';
 import ReactSdk from './pages/docs/ReactSdk';
 import DocsLayout from './components/Layout/DocsLayout';
+
+// Root route component
+const RootRoute = () => {
+  const { isAuthenticated, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-base-100">
+        <div className="text-center">
+          <LoadingSpinner size="xl" />
+          <p className="mt-4 text-base-content/60">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  return isAuthenticated ? <Navigate to="/dashboard" replace /> : <Landing />;
+};
 
 function App() {
   return (
@@ -73,12 +92,8 @@ function App() {
             />
 
             <Routes>
-              {/* Public Routes - redirect to dashboard if authenticated */}
-              <Route path="/" element={
-                <PublicRoute>
-                  <Landing />
-                </PublicRoute>
-              } />
+              {/* Root Route - Redirects based on auth status */}
+              <Route path="/" element={<RootRoute />} />
               
               {/* Auth Routes - redirect to dashboard if authenticated */}
               <Route path="/auth/*" element={

@@ -66,11 +66,11 @@ const Projects = () => {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6 overflow-x-hidden">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-base-content">Projects</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-base-content">Projects</h1>
           <p className="text-base-content/60 mt-1">
             Manage your authentication projects and their users
           </p>
@@ -78,18 +78,19 @@ const Projects = () => {
         <div className="flex gap-2">
           <button
             onClick={loadProjects}
-            className="btn btn-ghost gap-2"
+            className="btn btn-ghost btn-sm sm:btn-md gap-2"
             disabled={isLoading}
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
+            <span className="hidden sm:inline">Refresh</span>
           </button>
           <Link
             to="/projects/create"
-            className="btn btn-primary gap-2"
+            className="btn btn-primary btn-sm sm:btn-md gap-2"
           >
             <Plus className="w-4 h-4" />
-            New Project
+            <span className="hidden sm:inline">New Project</span>
+            <span className="sm:hidden">New</span>
           </Link>
         </div>
       </div>

@@ -57,35 +57,36 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto overflow-x-hidden">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
           <div>
-            <h1 className="text-3xl font-bold text-base-content">
+            <h1 className="text-2xl sm:text-3xl font-bold text-base-content">
               Welcome back, {user?.firstName}! 👋
             </h1>
             <p className="text-base-content/60 mt-1">
               Manage your authentication projects and monitor your users
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <div className={`badge ${getSubscriptionBadge(user?.subscription?.plan)} badge-lg`}>
               {user?.subscription?.plan?.toUpperCase() || 'FREE'}
             </div>
             <button
               onClick={handleCreateProject}
               disabled={!canCreateProject()}
-              className="btn btn-primary gap-2"
+              className="btn btn-primary btn-sm sm:btn-md gap-2"
             >
               <Plus className="w-4 h-4" />
-              New Project
+              <span className="hidden sm:inline">New Project</span>
+              <span className="sm:hidden">New</span>
             </button>
           </div>
         </div>
 
         {/* Account Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <div className="stat bg-base-100 rounded-lg shadow">
             <div className="stat-figure text-primary">
               <Globe className="w-8 h-8" />
@@ -169,14 +170,14 @@ const Dashboard = () => {
             {userProjects?.slice(0, 6).map((project) => (
               <div key={project.id || project._id} className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow">
                 <div className="card-body">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h3 className="card-title text-lg">{project.name}</h3>
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="card-title text-lg truncate">{project.name}</h3>
                       <p className="text-sm text-base-content/60 line-clamp-2">
                         {project.description || 'No description provided'}
                       </p>
                     </div>
-                    <div className={`badge ${getProjectStatusColor(project.isActive)} badge-sm`}>
+                    <div className={`badge ${getProjectStatusColor(project.isActive)} badge-sm flex-shrink-0`}>
                       {project.isActive ? 'Active' : 'Inactive'}
                     </div>
                   </div>
@@ -256,7 +257,7 @@ const Dashboard = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="card bg-base-100 shadow-lg">
           <div className="card-body">
             <h3 className="card-title text-lg mb-4">Quick Actions</h3>

@@ -14,7 +14,8 @@ import {
   ExternalLink,
   Smartphone,
   Database,
-  Settings
+  Settings,
+  Book
 } from 'lucide-react';
 
 const Landing = () => {
@@ -88,8 +89,8 @@ const Landing = () => {
       <div className="navbar bg-base-100/80 backdrop-blur-md sticky top-0 z-50 border-b border-base-300/50">
         <div className="navbar-start">
           <div className="flex items-center">
-            <Shield className="w-8 h-8 text-primary mr-3" />
-            <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-primary mr-2 sm:mr-3" />
+            <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               AccessKit
             </span>
           </div>
@@ -103,9 +104,10 @@ const Landing = () => {
           </ul>
         </div>
         <div className="navbar-end">
-          <Link to="/auth/login" className="btn btn-ghost mr-2">Sign In</Link>
-          <Link to="/auth/signup" className="btn btn-primary">
-            Get Started
+          <Link to="/auth/login" className="btn btn-ghost btn-sm mr-1 sm:mr-2">Sign In</Link>
+          <Link to="/auth/signup" className="btn btn-primary btn-sm">
+            <span className="hidden sm:inline">Get Started</span>
+            <span className="sm:hidden">Start</span>
             <ArrowRight className="w-4 h-4 ml-1" />
           </Link>
         </div>
@@ -113,22 +115,22 @@ const Landing = () => {
 
       {/* Hero Section */}
       <section className="hero min-h-[80vh] bg-gradient-to-br from-primary/5 to-secondary/5">
-        <div className="hero-content text-center max-w-6xl">
+        <div className="hero-content text-center max-w-6xl px-4">
           <div>
             <div className="flex justify-center mb-6">
               <div className="p-4 bg-primary/10 rounded-full">
-                <Shield className="w-16 h-16 text-primary" />
+                <Shield className="w-12 h-12 sm:w-16 sm:h-16 text-primary" />
               </div>
             </div>
-            <h1 className="text-5xl md:text-7xl font-bold mb-6">
+            <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold mb-6">
               Authentication{' '}
               <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 Made Simple
               </span>
             </h1>
-            <p className="text-xl md:text-2xl text-base-content/70 mb-8 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-lg sm:text-xl md:text-2xl text-base-content/70 mb-8 max-w-3xl mx-auto leading-relaxed px-4">
               Build secure, scalable applications with our powerful authentication platform. 
-              Deploy in minutes, scale to millions of users.
+              Start protecting your users in minutes, not days.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <Link to="/auth/signup" className="btn btn-primary btn-lg">
@@ -142,13 +144,13 @@ const Landing = () => {
             </div>
             
             {/* Code Preview */}
-            <div className="bg-base-200 rounded-2xl p-6 max-w-2xl mx-auto shadow-2xl">
-              <div className="text-sm text-left">
+            <div className="bg-base-200 rounded-2xl p-4 sm:p-6 max-w-2xl mx-auto shadow-2xl overflow-hidden">
+              <div className="text-xs sm:text-sm text-left">
                 <div className="text-base-content/60 mb-2">// Get started in 3 lines of code</div>
-                <div className="mockup-code">
-                  <pre data-prefix="$"><code>npm install @gsarthak783/accesskit-auth</code></pre>
-                  <pre data-prefix=">" className="text-warning"><code>Installing...</code></pre>
-                  <pre data-prefix=">" className="text-success"><code>Ready to authenticate!</code></pre>
+                <div className="mockup-code bg-black overflow-x-auto">
+                  <pre data-prefix="$" className="text-xs sm:text-sm text-gray-300"><code>npm install @gsarthak783/accesskit-auth</code></pre>
+                  <pre data-prefix=">" className="text-warning text-xs sm:text-sm"><code>Installing...</code></pre>
+                  <pre data-prefix=">" className="text-success text-xs sm:text-sm"><code>Ready to authenticate!</code></pre>
                 </div>
               </div>
             </div>
@@ -171,14 +173,17 @@ const Landing = () => {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-20 bg-base-200">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">
-              Why Choose <span className="text-primary">AccessKit</span>?
+      <section id="features" className="py-16 md:py-20 px-4">
+        <div className="container mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6">
+              Everything You Need for{' '}
+              <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                Modern Authentication
+              </span>
             </h2>
-            <p className="text-xl text-base-content/70 max-w-3xl mx-auto">
-              Everything you need to build secure, modern authentication into your applications
+            <p className="text-lg sm:text-xl text-base-content/70 max-w-3xl mx-auto px-4">
+              Built by developers, for developers. Get enterprise-grade security without the complexity.
             </p>
           </div>
           
@@ -201,10 +206,10 @@ const Landing = () => {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-20 bg-base-100">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+      <section className="py-16 md:py-20 bg-base-100 px-4">
+        <div className="container mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6">
               Get Started in <span className="text-primary">Minutes</span>
             </h2>
           </div>
@@ -230,10 +235,10 @@ const Landing = () => {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-20 bg-base-200">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+      <section className="py-16 md:py-20 bg-base-200 px-4">
+        <div className="container mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6">
               Trusted by <span className="text-primary">Developers</span>
             </h2>
           </div>
@@ -263,13 +268,13 @@ const Landing = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-primary to-secondary">
-        <div className="container mx-auto px-6 text-center">
+      <section className="py-16 md:py-20 bg-gradient-to-r from-primary to-secondary px-4">
+        <div className="container mx-auto text-center">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6">
               Ready to Get Started?
             </h2>
-            <p className="text-xl text-white/90 mb-8">
+            <p className="text-lg sm:text-xl text-white/90 mb-8 px-4">
               Join thousands of developers building secure applications with AccessKit
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -277,40 +282,37 @@ const Landing = () => {
                 Start Free Trial
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Link>
-              <a 
-                href="https://github.com/gsarthak783/Auth-app" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="btn btn-lg btn-outline border-white text-white hover:bg-white hover:text-primary"
-              >
-                <Github className="w-5 h-5 mr-2" />
-                View on GitHub
-              </a>
+              <Link to="/docs" className="btn btn-lg btn-outline btn-ghost text-white border-white hover:bg-white hover:text-primary">
+                View Documentation
+                <Book className="w-5 h-5 ml-2" />
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="footer footer-center p-10 bg-base-200 text-base-content">
-        <div>
-          <div className="flex items-center">
-            <Shield className="w-8 h-8 text-primary mr-3" />
-            <span className="text-xl font-bold">AccessKit</span>
+      <footer className="footer footer-center p-6 sm:p-10 bg-base-200 text-base-content">
+        <div className="w-full max-w-7xl mx-auto px-4">
+          <div className="flex flex-col items-center gap-4">
+            <div className="flex items-center">
+              <Shield className="w-8 h-8 text-primary mr-3" />
+              <span className="text-xl font-bold">AccessKit</span>
+            </div>
+            <p className="max-w-md text-center text-sm sm:text-base">
+              Modern authentication platform for developers who want to build secure applications fast.
+            </p>
           </div>
-          <p className="max-w-md">
-            Modern authentication platform for developers who want to build secure applications fast.
-          </p>
-        </div>
-        <div>
-          <div className="grid grid-flow-col gap-4">
-            <Link to="/docs" className="link link-hover">Documentation</Link>
-            <a href="https://github.com/gsarthak783/Auth-app" className="link link-hover">GitHub</a>
-            <Link to="/auth/signup" className="link link-hover">Get Started</Link>
+          <div className="my-6">
+            <div className="flex flex-wrap justify-center gap-4">
+              <Link to="/docs" className="link link-hover text-sm sm:text-base">Documentation</Link>
+              <a href="https://github.com/gsarthak783/Auth-app" className="link link-hover text-sm sm:text-base">GitHub</a>
+              <Link to="/auth/signup" className="link link-hover text-sm sm:text-base">Get Started</Link>
+            </div>
           </div>
-        </div>
-        <div>
-          <p>Copyright © 2025 AccessKit. Built with ❤️ for developers.</p>
+          <div>
+            <p className="text-sm sm:text-base text-center">Copyright © 2025 AccessKit. Built with ❤️ for developers.</p>
+          </div>
         </div>
       </footer>
     </div>

@@ -40,6 +40,14 @@ const ProjectUsers = () => {
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [showBulkActions, setShowBulkActions] = useState(false);
 
+  const USERS_PER_PAGE = 50;
+
+  // Calculate paginated users
+  const paginatedUsers = users.slice(
+    (currentPage - 1) * USERS_PER_PAGE,
+    currentPage * USERS_PER_PAGE
+  );
+
   useEffect(() => {
     if (projectId) {
       loadProjectData();
@@ -51,6 +59,7 @@ const ProjectUsers = () => {
     setUsers([]);
     setStats(null);
     setCurrentPage(1);
+    setSelectedUsers([]);
   }, [projectId]);
 
   // Ensure users reload when filters/page change AND when currentProject becomes available
@@ -96,14 +105,17 @@ const ProjectUsers = () => {
       setIsLoading(true);
       const params = {
         page: currentPage,
-        limit: 20,
+        limit: USERS_PER_PAGE,
         search: searchTerm,
         status: statusFilter !== 'all' ? statusFilter : undefined
       };
 
       const response = await projectUsersAPI.getProjectUsers(apiKey, params);
       setUsers(response.data.users);
-      setTotalPages(response.data.pagination.pages);
+      
+      // Calculate total pages based on total count
+      const totalCount = response.data.pagination?.total || response.data.users.length;
+      setTotalPages(Math.ceil(totalCount / USERS_PER_PAGE));
     } catch (error) {
       console.error('Failed to load users:', error);
       toast.error('Failed to load users');
@@ -126,12 +138,12 @@ const ProjectUsers = () => {
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
-    setCurrentPage(1);
+    setCurrentPage(1); // Reset to first page on search
   };
 
   const handleStatusFilter = (status) => {
     setStatusFilter(status);
-    setCurrentPage(1);
+    setCurrentPage(1); // Reset to first page on filter change
   };
 
   const handleUserSelection = (userId, isSelected) => {
@@ -142,11 +154,13 @@ const ProjectUsers = () => {
     }
   };
 
-  const handleSelectAll = (isSelected) => {
-    if (isSelected) {
-      setSelectedUsers(users.map(user => user._id));
+  const handleSelectAll = (checked) => {
+    if (checked) {
+      const pageUserIds = paginatedUsers.map(user => user._id);
+      setSelectedUsers(prev => [...new Set([...prev, ...pageUserIds])]);
     } else {
-      setSelectedUsers([]);
+      const pageUserIds = paginatedUsers.map(user => user._id);
+      setSelectedUsers(prev => prev.filter(id => !pageUserIds.includes(id)));
     }
   };
 
@@ -269,36 +283,37 @@ const ProjectUsers = () => {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto overflow-x-hidden">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
         <button
           onClick={() => navigate(`/project/${projectId}`)}
           className="btn btn-ghost btn-sm"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4 mr-1" />
+          Back
         </button>
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold text-base-content">User Management</h1>
-          <p className="text-base-content/60 mt-1">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold truncate">User Management</h1>
+          <p className="text-base-content/60 mt-1 break-words">
             Manage users for {currentProject.name}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <button
             onClick={() => loadUsers()}
             className="btn btn-outline btn-sm"
           >
-            <RefreshCw className="w-4 h-4" />
-            Refresh
+            <RefreshCw className="w-4 h-4 mr-1" />
+            <span className="hidden sm:inline">Refresh</span>
           </button>
           <button
             onClick={exportUsers}
             className="btn btn-outline btn-sm"
             disabled={users.length === 0}
           >
-            <Download className="w-4 h-4" />
-            Export
+            <Download className="w-4 h-4 mr-1" />
+            <span className="hidden sm:inline">Export</span>
           </button>
         </div>
       </div>
@@ -385,11 +400,11 @@ const ProjectUsers = () => {
 
           {/* Bulk Actions */}
           {selectedUsers.length > 0 && (
-            <div className="flex items-center gap-2 mt-4 p-3 bg-base-200 rounded-lg">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mt-4 p-3 bg-base-200 rounded-lg">
               <span className="text-sm font-medium">
                 {selectedUsers.length} users selected
               </span>
-              <div className="flex gap-1">
+              <div className="flex flex-wrap gap-1">
                 <button
                   onClick={() => handleBulkAction('activate')}
                   className="btn btn-success btn-xs"
@@ -427,14 +442,14 @@ const ProjectUsers = () => {
       </div>
 
       {/* Users Table */}
-      <div className="card bg-base-100 shadow-lg">
-        <div className="card-body">
+      <div className="card bg-base-100 shadow-lg overflow-hidden">
+        <div className="card-body p-0">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <LoadingSpinner size="lg" />
             </div>
           ) : users.length === 0 ? (
-            <div className="text-center py-12">
+            <div className="text-center py-12 px-4">
               <User className="w-16 h-16 mx-auto text-base-content/40 mb-4" />
               <h3 className="text-xl font-semibold mb-2">No users found</h3>
               <p className="text-base-content/60">
@@ -445,29 +460,29 @@ const ProjectUsers = () => {
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto w-full">
                 <table className="table w-full text-sm">
-                  <thead>
+                  <thead className="sticky top-0 bg-base-100 z-10">
                     <tr>
-                      <th>
+                      <th className="w-12">
                         <input
                           type="checkbox"
                           className="checkbox checkbox-sm"
-                          checked={selectedUsers.length === users.length && users.length > 0}
+                          checked={paginatedUsers.length > 0 && paginatedUsers.every(user => selectedUsers.includes(user._id))}
                           onChange={(e) => handleSelectAll(e.target.checked)}
                         />
                       </th>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>Username</th>
-                      <th>Status</th>
-                      <th>Registration</th>
-                      <th>Last Login</th>
-                      <th>Actions</th>
+                      <th className="min-w-[150px]">Name</th>
+                      <th className="min-w-[200px]">Email</th>
+                      <th className="min-w-[120px]">Username</th>
+                      <th className="min-w-[100px]">Status</th>
+                      <th className="min-w-[120px]">Registration</th>
+                      <th className="min-w-[120px]">Last Login</th>
+                      <th className="min-w-[150px]">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {users.map((user) => (
+                    {paginatedUsers.map((user) => (
                       <tr key={user._id} className="hover">
                         <td>
                           <input
@@ -551,39 +566,71 @@ const ProjectUsers = () => {
                 </table>
               </div>
 
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex justify-center mt-6">
-                  <div className="btn-group">
+              {/* Pagination and Info */}
+              <div className="flex flex-col sm:flex-row items-center justify-between p-4 border-t">
+                <div className="text-sm text-base-content/70 mb-2 sm:mb-0">
+                  Showing {((currentPage - 1) * USERS_PER_PAGE) + 1} to {Math.min(currentPage * USERS_PER_PAGE, users.length)} of {users.length} users
+                  {selectedUsers.length > 0 && ` (${selectedUsers.length} selected)`}
+                </div>
+                {totalPages > 1 && (
+                  <div className="join">
                     <button
-                      className="btn btn-sm"
+                      className="join-item btn btn-sm"
                       disabled={currentPage === 1}
-                      onClick={() => setCurrentPage(currentPage - 1)}
+                      onClick={() => setCurrentPage(1)}
                     >
                       «
                     </button>
-                    {[...Array(Math.min(totalPages, 5))].map((_, i) => {
-                      const pageNum = Math.max(1, Math.min(currentPage - 2 + i, totalPages - 4 + i));
-                      return (
-                        <button
-                          key={pageNum}
-                          className={`btn btn-sm ${currentPage === pageNum ? 'btn-active' : ''}`}
-                          onClick={() => setCurrentPage(pageNum)}
-                        >
-                          {pageNum}
-                        </button>
-                      );
-                    })}
                     <button
-                      className="btn btn-sm"
+                      className="join-item btn btn-sm"
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage(currentPage - 1)}
+                    >
+                      ‹
+                    </button>
+                    
+                    {/* Page numbers */}
+                    {(() => {
+                      const pages = [];
+                      const showPages = 5;
+                      let startPage = Math.max(1, currentPage - Math.floor(showPages / 2));
+                      let endPage = Math.min(totalPages, startPage + showPages - 1);
+                      
+                      if (endPage - startPage + 1 < showPages) {
+                        startPage = Math.max(1, endPage - showPages + 1);
+                      }
+                      
+                      for (let i = startPage; i <= endPage; i++) {
+                        pages.push(
+                          <button
+                            key={i}
+                            className={`join-item btn btn-sm ${currentPage === i ? 'btn-active' : ''}`}
+                            onClick={() => setCurrentPage(i)}
+                          >
+                            {i}
+                          </button>
+                        );
+                      }
+                      return pages;
+                    })()}
+                    
+                    <button
+                      className="join-item btn btn-sm"
                       disabled={currentPage === totalPages}
                       onClick={() => setCurrentPage(currentPage + 1)}
+                    >
+                      ›
+                    </button>
+                    <button
+                      className="join-item btn btn-sm"
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage(totalPages)}
                     >
                       »
                     </button>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </>
           )}
         </div>

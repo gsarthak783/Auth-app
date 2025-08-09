@@ -11,6 +11,36 @@ const api = axios.create({
   },
 });
 
+// Simple rate limiter
+const rateLimiter = {
+  requests: new Map(),
+  minInterval: 1000, // Minimum 1 second between identical requests
+  
+  canMakeRequest(key) {
+    const now = Date.now();
+    const lastRequest = this.requests.get(key);
+    
+    if (!lastRequest || now - lastRequest >= this.minInterval) {
+      this.requests.set(key, now);
+      return true;
+    }
+    
+    return false;
+  },
+  
+  clearOldRequests() {
+    const now = Date.now();
+    for (const [key, time] of this.requests.entries()) {
+      if (now - time > 60000) { // Clear entries older than 1 minute
+        this.requests.delete(key);
+      }
+    }
+  }
+};
+
+// Clear old requests periodically
+setInterval(() => rateLimiter.clearOldRequests(), 30000);
+
 // Token management for platform users
 export const tokenManager = {
   getAccessToken: () => Cookies.get('accessToken'),
@@ -37,9 +67,33 @@ export const tokenManager = {
   }
 };
 
+// Flag to prevent concurrent refresh attempts
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  
+  failedQueue = [];
+};
+
 // Request interceptor to add auth header
 api.interceptors.request.use(
   (config) => {
+    // Rate limit check for sensitive endpoints
+    if (config.url?.includes('/auth/refresh')) {
+      const requestKey = `${config.method}:${config.url}`;
+      if (!rateLimiter.canMakeRequest(requestKey)) {
+        return Promise.reject(new Error('Too many requests. Please wait a moment.'));
+      }
+    }
+    
     const token = tokenManager.getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -57,35 +111,74 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // If the request targets project-users endpoints (x-api-key based),
-    // do not attempt platform token refresh or force logout.
-    const reqUrl = originalRequest?.url || '';
-    const isProjectUsersEndpoint = reqUrl.startsWith('/project-users');
-    if (isProjectUsersEndpoint) {
+    // Don't intercept if no config (network errors, etc)
+    if (!originalRequest) {
+      return Promise.reject(error);
+    }
+
+    // Skip refresh logic for these cases:
+    // 1. Project users endpoints (use API keys)
+    // 2. The refresh endpoint itself
+    // 3. Already retried requests
+    const reqUrl = originalRequest.url || '';
+    const isProjectUsersEndpoint = reqUrl.includes('/project-users');
+    const isRefreshEndpoint = reqUrl.includes('/auth/refresh');
+    const isLoginEndpoint = reqUrl.includes('/auth/login');
+    
+    if (isProjectUsersEndpoint || isRefreshEndpoint || isLoginEndpoint) {
       return Promise.reject(error);
     }
 
     if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        const refreshToken = tokenManager.getRefreshToken();
-        if (refreshToken) {
-          const response = await api.post('/auth/refresh', {
-            refreshToken
-          });
-
-          const { accessToken } = response.data.data;
-          tokenManager.setTokens(accessToken, refreshToken);
-
-          // Retry the original request
-          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+      if (isRefreshing) {
+        // If already refreshing, queue this request
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(token => {
+          originalRequest.headers.Authorization = `Bearer ${token}`;
           return api(originalRequest);
-        }
-      } catch (refreshError) {
-        // Refresh failed, redirect to login
+        }).catch(err => {
+          return Promise.reject(err);
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      const refreshToken = tokenManager.getRefreshToken();
+      
+      if (!refreshToken) {
+        isRefreshing = false;
         tokenManager.clearTokens();
         window.location.href = '/auth/login';
+        return Promise.reject(error);
+      }
+
+      try {
+        const response = await api.post('/auth/refresh', {
+          refreshToken
+        });
+
+        const { accessToken, refreshToken: newRefreshToken } = response.data.data;
+        tokenManager.setTokens(accessToken, newRefreshToken || refreshToken);
+        
+        isRefreshing = false;
+        processQueue(null, accessToken);
+
+        // Retry the original request
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        return api(originalRequest);
+      } catch (refreshError) {
+        // Refresh failed
+        isRefreshing = false;
+        processQueue(refreshError, null);
+        tokenManager.clearTokens();
+        
+        // Only redirect if not already on login page
+        if (!window.location.pathname.includes('/auth/login')) {
+          window.location.href = '/auth/login';
+        }
+        
         return Promise.reject(refreshError);
       }
     }

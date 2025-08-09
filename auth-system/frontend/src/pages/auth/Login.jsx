@@ -241,38 +241,6 @@ const Login = () => {
             Create account
           </Link>
         </div>
-
-        {/* Demo Credentials */}
-        <div className="mt-6 p-4 bg-base-200 rounded-lg">
-          <h3 className="font-semibold text-base-content mb-2">
-            Demo Account:
-          </h3>
-          <div className="text-sm text-base-content/80 space-y-1">
-            <div className="flex justify-between">
-              <span>Email:</span>
-              <code className="bg-base-300 px-2 py-1 rounded">admin@demo.com</code>
-            </div>
-            <div className="flex justify-between">
-              <span>Password:</span>
-              <code className="bg-base-300 px-2 py-1 rounded">admin123</code>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              setLoginType('email');
-              setFormData({
-                identifier: 'admin@demo.com',
-                password: 'admin123',
-                rememberMe: false,
-              });
-            }}
-            className="btn btn-sm btn-outline w-full mt-2"
-            disabled={isLoading}
-          >
-            Use Demo Account
-          </button>
-        </div>
       </div>
     </div>
   );

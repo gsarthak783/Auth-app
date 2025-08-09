@@ -244,27 +244,26 @@ function MyComponent() {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto overflow-x-hidden">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
         <button
           onClick={() => navigate('/projects')}
           className="btn btn-ghost btn-sm"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4 mr-1" />
+          Back
         </button>
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold text-base-content">{currentProject.name}</h1>
-            <div className={`badge ${currentProject.isActive ? 'badge-success' : 'badge-error'}`}>
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-bold truncate">{currentProject.name}</h1>
+            <span className={`badge ${currentProject.isActive ? 'badge-success' : 'badge-warning'}`}>
               {currentProject.isActive ? 'Active' : 'Inactive'}
-            </div>
+            </span>
           </div>
-          <p className="text-base-content/60 mt-1">
-            {currentProject.description || 'No description provided'}
-          </p>
+          <p className="text-base-content/60 mt-1 break-words">{currentProject.description}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Link
             to={`/project/${projectId}/guide`}
             className="btn btn-primary btn-sm"
@@ -659,9 +658,11 @@ function MyComponent() {
                     Copy
                   </button>
                 </div>
-                <pre className="bg-base-200 p-4 rounded-lg overflow-x-auto text-sm">
-                  <code>{codeExamples.javascript}</code>
-                </pre>
+                <div className="overflow-x-auto">
+                  <pre className="bg-base-200 p-4 rounded-lg text-xs sm:text-sm">
+                    <code>{codeExamples.javascript}</code>
+                  </pre>
+                </div>
               </div>
             </div>
 
@@ -678,9 +679,11 @@ function MyComponent() {
                     Copy
                   </button>
                 </div>
-                <pre className="bg-base-200 p-4 rounded-lg overflow-x-auto text-sm">
-                  <code>{codeExamples.react}</code>
-                </pre>
+                <div className="overflow-x-auto">
+                  <pre className="bg-base-200 p-4 rounded-lg text-xs sm:text-sm">
+                    <code>{codeExamples.react}</code>
+                  </pre>
+                </div>
               </div>
             </div>
 
@@ -697,9 +700,11 @@ function MyComponent() {
                     Copy
                   </button>
                 </div>
-                <pre className="bg-base-200 p-4 rounded-lg overflow-x-auto text-sm">
-                  <code>{codeExamples.curl}</code>
-                </pre>
+                <div className="overflow-x-auto">
+                  <pre className="bg-base-200 p-4 rounded-lg text-xs sm:text-sm">
+                    <code>{codeExamples.curl}</code>
+                  </pre>
+                </div>
               </div>
             </div>
           </div>
