@@ -14,7 +14,10 @@ import {
   PaginatedResponse,
   ExportOptions,
   ImportOptions,
-  ExportData
+  ExportData,
+  ChangePasswordData,
+  UpdateEmailData,
+  ReauthenticateData
 } from './types';
 import { LocalTokenStorage } from './storage';
 
@@ -26,19 +29,99 @@ export class AuthClient {
   private storage: TokenStorage;
   private eventListeners: Map<AuthEvent, EventListener[]> = new Map();
   private refreshPromise: Promise<string> | null = null;
+  private currentUser: User | null = null;
+  private initialized: boolean = false;
+  private initPromise: Promise<void> | null = null;
 
   constructor(config: AuthConfig, storage?: TokenStorage) {
     this.config = {
       baseUrl: 'https://access-kit-server.vercel.app/api/project-users',
       projectId: '',
       timeout: 10000,
-      retryAttempts: 3,
       ...config
     };
 
     this.storage = storage || new LocalTokenStorage();
     this.http = this.createHttpClient();
     this.setupInterceptors();
+    
+    // Auto-initialize to check existing auth state
+    this.initialize();
+  }
+
+  /**
+   * Initialize auth state by checking stored tokens
+   */
+  private async initialize(): Promise<void> {
+    if (this.initialized || this.initPromise) {
+      return this.initPromise || Promise.resolve();
+    }
+
+    this.initPromise = (async () => {
+      try {
+        const token = this.storage.getAccessToken();
+        if (token) {
+          // Try to get user profile if token exists
+          try {
+            const user = await this.getProfile();
+            this.currentUser = user;
+            this.emit('authStateChange', { user, isAuthenticated: true, timestamp: Date.now() });
+          } catch (error) {
+            // Token might be expired, clear it
+            this.storage.clearTokens();
+            this.currentUser = null;
+            this.emit('authStateChange', { user: undefined, isAuthenticated: false, timestamp: Date.now() });
+          }
+        } else {
+          this.currentUser = null;
+          this.emit('authStateChange', { user: undefined, isAuthenticated: false, timestamp: Date.now() });
+        }
+      } finally {
+        this.initialized = true;
+        this.initPromise = null;
+      }
+    })();
+
+    return this.initPromise;
+  }
+
+  /**
+   * Get the current authenticated user (from memory, no API call)
+   */
+  getCurrentUser(): User | null {
+    return this.currentUser;
+  }
+
+  /**
+   * Check if user is authenticated (has valid tokens)
+   */
+  isAuthenticated(): boolean {
+    return !!this.storage.getAccessToken() && !!this.currentUser;
+  }
+
+  /**
+   * Subscribe to auth state changes
+   * Returns an unsubscribe function
+   */
+  onAuthStateChange(callback: (user: User | null, isAuthenticated: boolean) => void): () => void {
+    // Ensure initialization has started
+    this.initialize();
+
+    const listener: EventListener = (data) => {
+      if ('user' in data && 'isAuthenticated' in data) {
+        callback(data.user as User | null, data.isAuthenticated as boolean);
+      }
+    };
+
+    this.on('authStateChange', listener);
+
+    // Immediately call with current state
+    callback(this.currentUser, this.isAuthenticated());
+
+    // Return unsubscribe function
+    return () => {
+      this.off('authStateChange', listener);
+    };
   }
 
   /**
@@ -73,8 +156,16 @@ export class AuthClient {
       (response) => response,
       async (error) => {
         const originalRequest = error.config;
-
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        
+        // Skip refresh for auth endpoints
+        const authEndpoints = ['/login', '/register', '/logout', '/refresh', '/request-password-reset', '/reset-password'];
+        const isAuthEndpoint = authEndpoints.some(endpoint => originalRequest?.url?.includes(endpoint));
+        
+        if (
+          error.response?.status === 401 && 
+          !originalRequest._retry && 
+          !isAuthEndpoint
+        ) {
           originalRequest._retry = true;
 
           try {
@@ -130,9 +221,16 @@ export class AuthClient {
       if (response.data.success && response.data.accessToken) {
         this.storage.setAccessToken(response.data.accessToken);
         this.storage.setRefreshToken(response.data.refreshToken);
+        this.currentUser = response.data.user;
         
         this.emit('register', {
           user: response.data.user,
+          timestamp: Date.now()
+        });
+        
+        this.emit('authStateChange', {
+          user: response.data.user,
+          isAuthenticated: true,
           timestamp: Date.now()
         });
       }
@@ -155,9 +253,16 @@ export class AuthClient {
       if (response.data.success && response.data.accessToken) {
         this.storage.setAccessToken(response.data.accessToken);
         this.storage.setRefreshToken(response.data.refreshToken);
+        this.currentUser = response.data.user;
         
         this.emit('login', {
           user: response.data.user,
+          timestamp: Date.now()
+        });
+        
+        this.emit('authStateChange', {
+          user: response.data.user,
+          isAuthenticated: true,
           timestamp: Date.now()
         });
       }
@@ -175,12 +280,21 @@ export class AuthClient {
    */
   async logout(): Promise<void> {
     try {
-      await this.http.post('/logout');
+      const refreshToken = this.storage.getRefreshToken();
+      if (refreshToken) {
+        await this.http.post('/logout', {}, {
+          headers: {
+            'X-Refresh-Token': refreshToken
+          }
+        });
+      }
     } catch (error) {
       // Ignore logout errors, clear tokens anyway
     } finally {
       this.storage.clearTokens();
+      this.currentUser = null;
       this.emit('logout', { timestamp: Date.now() });
+      this.emit('authStateChange', { user: undefined, isAuthenticated: false, timestamp: Date.now() });
     }
   }
 
@@ -190,27 +304,48 @@ export class AuthClient {
   async getProfile(): Promise<User> {
     try {
       const response: AxiosResponse<ApiResponse<User>> = await this.http.get('/profile');
-      return response.data.data!;
+      
+      if (response.data.success && response.data.data) {
+        this.currentUser = response.data.data;
+        return response.data.data;
+      }
+      
+      throw new Error('Failed to get user profile');
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Failed to get profile');
+      const authError = new Error(error.response?.data?.message || 'Failed to get profile');
+      this.emit('error', { error: authError, timestamp: Date.now() });
+      throw authError;
     }
   }
 
   /**
    * Update user profile
    */
-  async updateProfile(userData: UpdateUserData): Promise<User> {
+  async updateProfile(data: UpdateUserData): Promise<User> {
     try {
-      const response: AxiosResponse<ApiResponse<User>> = await this.http.put('/profile', userData);
+      const response: AxiosResponse<ApiResponse<User>> = await this.http.put('/profile', data);
       
-      this.emit('profile_update', {
-        user: response.data.data!,
-        timestamp: Date.now()
-      });
-
-      return response.data.data!;
+      if (response.data.success && response.data.data) {
+        this.currentUser = response.data.data;
+        this.emit('profile_update', {
+          user: response.data.data,
+          timestamp: Date.now()
+        });
+        
+        this.emit('authStateChange', {
+          user: response.data.data,
+          isAuthenticated: true,
+          timestamp: Date.now()
+        });
+        
+        return response.data.data;
+      }
+      
+      throw new Error('Failed to update profile');
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Failed to update profile');
+      const authError = new Error(error.response?.data?.message || 'Failed to update profile');
+      this.emit('error', { error: authError, timestamp: Date.now() });
+      throw authError;
     }
   }
 
@@ -291,10 +426,75 @@ export class AuthClient {
   }
 
   /**
-   * Check if user is authenticated
+   * Update user password
    */
-  isAuthenticated(): boolean {
-    return !!this.storage.getAccessToken();
+  async updatePassword(data: ChangePasswordData): Promise<void> {
+    try {
+      const response = await this.http.put('/change-password', data);
+      
+      // Password change invalidates all sessions, so clear tokens
+      this.storage.clearTokens();
+      this.currentUser = null;
+      this.emit('logout', { timestamp: Date.now() });
+      this.emit('authStateChange', { user: undefined, isAuthenticated: false, timestamp: Date.now() });
+      
+    } catch (error: any) {
+      const authError = new Error(error.response?.data?.message || 'Password update failed');
+      this.emit('error', { error: authError, timestamp: Date.now() });
+      throw authError;
+    }
+  }
+
+  /**
+   * Update user email
+   */
+  async updateEmail(data: UpdateEmailData): Promise<{ email: string; isVerified: boolean }> {
+    try {
+      const response: AxiosResponse<ApiResponse<{ email: string; isVerified: boolean }>> = await this.http.put('/update-email', data);
+      
+      if (response.data.success && response.data.data) {
+        // Update current user's email if we have the user object
+        if (this.currentUser) {
+          this.currentUser.email = response.data.data.email;
+          this.currentUser.isVerified = response.data.data.isVerified;
+          this.emit('profile_update', { user: this.currentUser, timestamp: Date.now() });
+          this.emit('authStateChange', { user: this.currentUser, isAuthenticated: true, timestamp: Date.now() });
+        }
+        
+        return response.data.data;
+      }
+      
+      throw new Error('Failed to update email');
+    } catch (error: any) {
+      const authError = new Error(error.response?.data?.message || 'Email update failed');
+      this.emit('error', { error: authError, timestamp: Date.now() });
+      throw authError;
+    }
+  }
+
+  /**
+   * Reauthenticate user with credentials
+   * This is useful for sensitive operations that require password confirmation
+   */
+  async reauthenticateWithCredential(data: ReauthenticateData): Promise<{ authenticated: boolean; authenticatedAt: string }> {
+    try {
+      const response: AxiosResponse<ApiResponse<{ authenticated: boolean; authenticatedAt: string }>> = await this.http.post('/reauthenticate', data);
+      
+      if (response.data.success && response.data.data) {
+        this.emit('reauthenticate', { 
+          user: this.currentUser || undefined, 
+          timestamp: Date.now() 
+        });
+        
+        return response.data.data;
+      }
+      
+      throw new Error('Reauthentication failed');
+    } catch (error: any) {
+      const authError = new Error(error.response?.data?.message || 'Reauthentication failed');
+      this.emit('error', { error: authError, timestamp: Date.now() });
+      throw authError;
+    }
   }
 
   /**

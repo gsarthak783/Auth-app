@@ -59,6 +59,8 @@ interface AuthConfig {
 }
 ```
 
+**Note:** The SDK does not automatically retry failed authentication requests (login, register, logout). Authentication errors will fail immediately to prevent rate limiting issues.
+
 ### Get Your API Keys
 
 1. Visit the [AccessKit Dashboard](https://access-kit.vercel.app/)
@@ -68,6 +70,38 @@ interface AuthConfig {
 
 ## 🔧 Core Methods
 
+### Authentication State Management
+
+```javascript
+// Listen to auth state changes (perfect for maintaining persistent login)
+const unsubscribe = auth.onAuthStateChange((user, isAuthenticated) => {
+  console.log('Auth state changed:', { user, isAuthenticated });
+  
+  if (isAuthenticated) {
+    // User is logged in
+    console.log('Welcome', user.firstName);
+  } else {
+    // User is logged out
+    console.log('User logged out');
+  }
+});
+
+// Clean up listener when done
+unsubscribe();
+
+// Get current user without API call
+const currentUser = auth.getCurrentUser();
+
+// Check if authenticated
+const isLoggedIn = auth.isAuthenticated();
+```
+
+The SDK automatically:
+- Checks for existing tokens on initialization
+- Maintains auth state across page refreshes
+- Clears invalid/expired tokens
+- Emits auth state changes on login/logout/profile updates
+
 ### Authentication
 
 ```javascript
@@ -76,22 +110,123 @@ const user = await auth.register({
   email: string,
   password: string,
   firstName: string,
-  lastName?: string,
+  lastName: string,
   username?: string,
   customFields?: object
 });
 
 // Login user
-const response = await auth.login({
+const { user, accessToken } = await auth.login({
   email: string,
   password: string
 });
 
-// Logout
+// Logout user
 await auth.logout();
 
-// Check authentication status
-const isLoggedIn = auth.isAuthenticated();
+// Request password reset
+await auth.requestPasswordReset('user@example.com');
+
+// Reset password with token
+await auth.resetPassword('reset-token', 'new-password');
+
+// Verify email
+await auth.verifyEmail('verification-token');
+```
+
+### Profile Management
+
+```javascript
+// Get current user profile
+const profile = await auth.getProfile();
+
+// Update user profile
+const updatedUser = await auth.updateProfile({
+  firstName: 'John',
+  lastName: 'Doe',
+  avatar: 'https://example.com/avatar.jpg',
+  customFields: { theme: 'dark' }
+});
+```
+
+### Account Security
+
+```javascript
+// Update password (requires current password)
+try {
+  await auth.updatePassword({
+    currentPassword: 'old-password',
+    newPassword: 'new-secure-password'
+  });
+  console.log('Password updated successfully');
+  // Note: This will log out the user from all sessions
+} catch (error) {
+  console.error('Password update failed:', error.message);
+}
+
+// Update email (requires password verification)
+try {
+  const result = await auth.updateEmail({
+    newEmail: 'newemail@example.com',
+    password: 'current-password'
+  });
+  console.log('Email updated:', result.email);
+  console.log('Verification required:', !result.isVerified);
+} catch (error) {
+  console.error('Email update failed:', error.message);
+}
+
+// Reauthenticate for sensitive operations
+try {
+  const result = await auth.reauthenticateWithCredential({
+    password: 'current-password'
+  });
+  console.log('Reauthenticated at:', result.authenticatedAt);
+  // Now you can perform sensitive operations
+} catch (error) {
+  console.error('Reauthentication failed:', error.message);
+}
+```
+
+### Practical Example: Secure Account Deletion
+
+```javascript
+// Example: Implementing secure account deletion with reauthentication
+async function deleteAccountSecurely(auth) {
+  try {
+    // Step 1: Reauthenticate the user
+    console.log('Please confirm your password to continue...');
+    
+    const reauthResult = await auth.reauthenticateWithCredential({
+      password: getUserPasswordInput() // Your UI function to get password
+    });
+    
+    console.log('Identity verified at:', reauthResult.authenticatedAt);
+    
+    // Step 2: Show final confirmation
+    const confirmed = await showConfirmationDialog(
+      'Are you sure you want to delete your account? This action cannot be undone.'
+    );
+    
+    if (!confirmed) {
+      console.log('Account deletion cancelled');
+      return;
+    }
+    
+    // Step 3: Proceed with account deletion
+    // Note: You would need to implement the deleteAccount method
+    // await auth.deleteAccount();
+    
+    console.log('Account deleted successfully');
+    
+  } catch (error) {
+    if (error.message.includes('Password is incorrect')) {
+      console.error('Authentication failed. Please check your password.');
+    } else {
+      console.error('Error:', error.message);
+    }
+  }
+}
 ```
 
 ### User Management
@@ -278,6 +413,11 @@ class AuthClient {
   resetPassword(token: string, password: string): Promise<void>
   verifyEmail(token: string): Promise<void>
   
+  // Account Security
+  updatePassword(data: ChangePasswordData): Promise<void>
+  updateEmail(data: UpdateEmailData): Promise<{ email: string; isVerified: boolean }>
+  reauthenticateWithCredential(data: ReauthenticateData): Promise<{ authenticated: boolean; authenticatedAt: string }>
+  
   // Token Management
   getAccessToken(): string | null
   refreshAccessToken(): Promise<string>
@@ -304,10 +444,10 @@ interface User {
   firstName: string;
   lastName?: string;
   isVerified: boolean;
-  status: 'active' | 'suspended' | 'pending';
-  customFields?: object;
+  isActive: boolean;
+  customFields?: Record<string, any>;
   createdAt: string;
-  updatedAt: string;
+  lastLogin?: string;
 }
 
 interface CreateUserData {
@@ -328,6 +468,20 @@ interface AuthResponse {
   user: User;
   accessToken: string;
   refreshToken: string;
+}
+
+interface ChangePasswordData {
+  currentPassword: string;
+  newPassword: string;
+}
+
+interface UpdateEmailData {
+  newEmail: string;
+  password: string;
+}
+
+interface ReauthenticateData {
+  password: string;
 }
 ```
 
@@ -370,6 +524,33 @@ const auth = new AuthClient({
 ## 📄 License
 
 MIT License - see [LICENSE](./LICENSE) file for details.
+
+## 📝 Changelog
+
+### Version 1.2.0
+- Added `updatePassword` method for secure password changes
+- Added `updateEmail` method for email updates with verification
+- Added `reauthenticateWithCredential` method for sensitive operations
+- Password changes now invalidate all sessions for security
+- Email updates trigger re-verification process
+- Added TypeScript interfaces for all new methods
+
+### Version 1.1.0
+- Added `onAuthStateChange` method for Firebase-like auth state management
+- Added `getCurrentUser` method to get user without API call
+- Automatic auth state persistence across page refreshes
+- Auto-initialization on SDK instantiation
+- Improved React SDK to use centralized auth state management
+- Added `authStateChange` event for custom event handling
+
+### Version 1.0.5
+- Fixed authentication retry loop issue that was causing excessive API calls
+- Updated logout method to properly send refresh token
+- Removed automatic retries for authentication endpoints (login, register, logout)
+- Authentication errors now fail immediately without retrying
+
+### Version 1.0.4
+- Initial stable release
 
 ---
 

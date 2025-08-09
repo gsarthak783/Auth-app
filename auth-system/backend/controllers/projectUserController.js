@@ -1101,6 +1101,242 @@ const refreshProjectUserToken = async (req, res) => {
   }
 };
 
+// Change password for project user
+const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const { userId, projectId } = req.projectUser;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Current password and new password are required'
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'New password must be at least 6 characters'
+      });
+    }
+
+    const projectUser = await ProjectUser.findOne({ 
+      _id: userId, 
+      projectId,
+      deletedAt: null 
+    });
+
+    if (!projectUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Verify current password
+    const passwordResult = await projectUser.comparePassword(currentPassword);
+    
+    if (passwordResult.needsPasswordReset) {
+      return res.status(400).json({
+        success: false,
+        message: 'Your account needs a password reset due to a security update. Please use the forgot password feature.',
+        needsPasswordReset: true
+      });
+    }
+    
+    if (!passwordResult.isValid) {
+      return res.status(401).json({
+        success: false,
+        message: 'Current password is incorrect'
+      });
+    }
+
+    // Update password
+    projectUser.password = newPassword; // pre-save hook will hash it
+    
+    // Invalidate all sessions for security
+    projectUser.sessions = [];
+    await projectUser.save();
+
+    res.json({
+      success: true,
+      message: 'Password changed successfully. Please login again with your new password.'
+    });
+
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
+
+// Update email for project user
+const updateEmail = async (req, res) => {
+  try {
+    const { newEmail, password } = req.body;
+    const { userId, projectId } = req.projectUser;
+
+    if (!newEmail || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'New email and password are required'
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid email format'
+      });
+    }
+
+    const projectUser = await ProjectUser.findOne({ 
+      _id: userId, 
+      projectId,
+      deletedAt: null 
+    });
+
+    if (!projectUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Verify password
+    const passwordResult = await projectUser.comparePassword(password);
+    
+    if (!passwordResult.isValid) {
+      return res.status(401).json({
+        success: false,
+        message: 'Password is incorrect'
+      });
+    }
+
+    // Check if email already exists for this project
+    const existingUser = await ProjectUser.findOne({
+      projectId,
+      email: newEmail.toLowerCase(),
+      _id: { $ne: userId },
+      deletedAt: null
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'This email is already registered for this project'
+      });
+    }
+
+    // Update email
+    projectUser.email = newEmail.toLowerCase();
+    projectUser.isVerified = false; // Reset verification status
+    
+    // Generate new verification token
+    projectUser.emailVerificationToken = crypto.randomBytes(32).toString('hex');
+    projectUser.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    
+    await projectUser.save();
+
+    // Send verification email to new address
+    try {
+      const project = await Project.findById(projectId);
+      if (process.env.SEND_PROJECT_USER_EMAILS !== 'false' && project) {
+        await sendVerificationEmail(projectUser, projectUser.emailVerificationToken, project.name, projectId);
+      }
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError);
+    }
+
+    res.json({
+      success: true,
+      message: 'Email updated successfully. Please verify your new email address.',
+      data: {
+        email: projectUser.email,
+        isVerified: projectUser.isVerified
+      }
+    });
+
+  } catch (error) {
+    console.error('Update email error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
+
+// Reauthenticate project user
+const reauthenticate = async (req, res) => {
+  try {
+    const { password } = req.body;
+    const { userId, projectId } = req.projectUser;
+
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password is required'
+      });
+    }
+
+    const projectUser = await ProjectUser.findOne({ 
+      _id: userId, 
+      projectId,
+      deletedAt: null 
+    });
+
+    if (!projectUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Verify password
+    const passwordResult = await projectUser.comparePassword(password);
+    
+    if (passwordResult.needsPasswordReset) {
+      return res.status(400).json({
+        success: false,
+        message: 'Your account needs a password reset due to a security update. Please use the forgot password feature.',
+        needsPasswordReset: true
+      });
+    }
+    
+    if (!passwordResult.isValid) {
+      return res.status(401).json({
+        success: false,
+        message: 'Password is incorrect'
+      });
+    }
+
+    // Update last authenticated timestamp
+    projectUser.lastAuthenticatedAt = new Date();
+    await projectUser.save();
+
+    res.json({
+      success: true,
+      message: 'Reauthentication successful',
+      data: {
+        authenticated: true,
+        authenticatedAt: projectUser.lastAuthenticatedAt
+      }
+    });
+
+  } catch (error) {
+    console.error('Reauthenticate error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
+
 module.exports = {
   registerProjectUser,
   loginProjectUser,
@@ -1118,5 +1354,8 @@ module.exports = {
   requestPasswordReset,
   resetPassword,
   logoutProjectUser,
-  refreshProjectUserToken
+  refreshProjectUserToken,
+  changePassword,
+  updateEmail,
+  reauthenticate
 };

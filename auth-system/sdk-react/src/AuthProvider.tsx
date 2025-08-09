@@ -16,6 +16,9 @@ interface AuthContextType {
   }) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (userData: Partial<User>) => Promise<void>;
+  updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  updateEmail: (newEmail: string, password: string) => Promise<{ email: string; isVerified: boolean }>;
+  reauthenticateWithCredential: (password: string) => Promise<{ authenticated: boolean; authenticatedAt: string }>;
   requestPasswordReset: (email: string) => Promise<void>;
   resetPassword: (token: string, password: string) => Promise<void>;
   verifyEmail: (token: string) => Promise<void>;
@@ -28,82 +31,36 @@ interface AuthProviderProps {
   children: ReactNode;
   config: AuthConfig;
   storage?: TokenStorage;
-  autoInitialize?: boolean;
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({
   children,
   config,
-  storage,
-  autoInitialize = true
+  storage
 }) => {
   const [client] = useState(() => new AuthClient(config, storage));
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(autoInitialize);
-
-  const initialize = async () => {
-    if (!client.isAuthenticated()) {
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      const userProfile = await client.getProfile();
-      setUser(userProfile);
-    } catch (error) {
-      // Token might be invalid, clear it
-      await client.logout();
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    if (autoInitialize) {
-      initialize();
-    }
+    // Subscribe to auth state changes
+    const unsubscribe = client.onAuthStateChange((user, isAuthenticated) => {
+      setUser(user);
+      setIsAuthenticated(isAuthenticated);
+      setIsLoading(false);
+    });
 
-    // Set up event listeners
-    const handleLogin = (data: any) => {
-      setUser(data.user);
-    };
-
-    const handleRegister = (data: any) => {
-      setUser(data.user);
-    };
-
-    const handleLogout = () => {
-      setUser(null);
-    };
-
-    const handleProfileUpdate = (data: any) => {
-      setUser(data.user);
-    };
-
-    const handleError = (data: any) => {
-      console.error('Auth error:', data.error);
-    };
-
-    client.on('login', handleLogin);
-    client.on('register', handleRegister);
-    client.on('logout', handleLogout);
-    client.on('profile_update', handleProfileUpdate);
-    client.on('error', handleError);
-
+    // Cleanup on unmount
     return () => {
-      client.off('login', handleLogin);
-      client.off('register', handleRegister);
-      client.off('logout', handleLogout);
-      client.off('profile_update', handleProfileUpdate);
-      client.off('error', handleError);
+      unsubscribe();
     };
-  }, [client, autoInitialize]);
+  }, [client]);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const response = await client.login({ email, password });
-      setUser(response.user);
+      await client.login({ email, password });
     } finally {
       setIsLoading(false);
     }
@@ -119,8 +76,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
   }) => {
     setIsLoading(true);
     try {
-      const response = await client.register(userData);
-      setUser(response.user);
+      await client.register(userData);
     } finally {
       setIsLoading(false);
     }
@@ -130,15 +86,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
     setIsLoading(true);
     try {
       await client.logout();
-      setUser(null);
     } finally {
       setIsLoading(false);
     }
   };
 
   const updateProfile = async (userData: Partial<User>) => {
-    const updatedUser = await client.updateProfile(userData);
-    setUser(updatedUser);
+    await client.updateProfile(userData);
+  };
+
+  const updatePassword = async (currentPassword: string, newPassword: string) => {
+    await client.updatePassword({ currentPassword, newPassword });
+  };
+
+  const updateEmail = async (newEmail: string, password: string) => {
+    return await client.updateEmail({ newEmail, password });
+  };
+
+  const reauthenticateWithCredential = async (password: string) => {
+    return await client.reauthenticateWithCredential({ password });
   };
 
   const requestPasswordReset = async (email: string) => {
@@ -156,11 +122,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
   const value: AuthContextType = {
     user,
     isLoading,
-    isAuthenticated: !!user,
+    isAuthenticated,
     login,
     register,
     logout,
     updateProfile,
+    updatePassword,
+    updateEmail,
+    reauthenticateWithCredential,
     requestPasswordReset,
     resetPassword,
     verifyEmail,

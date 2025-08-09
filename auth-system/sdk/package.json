@@ -1,6 +1,6 @@
 {
   "name": "@gsarthak783/accesskit-auth",
-  "version": "1.0.4",
+  "version": "1.2.0",
   "description": "JavaScript/TypeScript SDK for AccessKit Authentication System - Easy auth integration for any project",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",

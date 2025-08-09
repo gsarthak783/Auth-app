@@ -16,7 +16,10 @@ const {
   requestPasswordReset,
   resetPassword,
   logoutProjectUser,
-  refreshProjectUserToken
+  refreshProjectUserToken,
+  changePassword,
+  updateEmail,
+  reauthenticate
 } = require('../controllers/projectUserController.js');
 const { verifyProjectAccess, verifyProjectAccessStrict, authenticateProjectUser } = require('../middleware/auth.js');
 
@@ -51,16 +54,30 @@ const validateProjectUserLogin = [
 ];
 
 const validateProfileUpdate = [
-  body('firstName').optional().trim().notEmpty(),
+  body('firstName').optional().trim(),
   body('lastName').optional().trim(),
   body('displayName').optional().trim(),
   body('avatar').optional().isURL().withMessage('Avatar must be a valid URL'),
-  body('bio').optional().trim().isLength({ max: 500 }).withMessage('Bio cannot exceed 500 characters'),
+  body('bio').optional().trim().isLength({ max: 500 }).withMessage('Bio must be less than 500 characters'),
   body('phoneNumber').optional().trim(),
-  body('dateOfBirth').optional().isISO8601().withMessage('Invalid date format'),
-  body('gender').optional().isIn(['male', 'female', 'other', 'prefer-not-to-say']),
-  body('customFields').optional().isObject(),
-  body('preferences').optional().isObject()
+  body('dateOfBirth').optional().isISO8601().withMessage('Date of birth must be a valid date'),
+  body('gender').optional().isIn(['male', 'female', 'other', 'prefer_not_to_say']),
+  body('customFields').optional().isObject().withMessage('Custom fields must be an object'),
+  body('preferences').optional().isObject().withMessage('Preferences must be an object')
+];
+
+const validatePasswordChange = [
+  body('currentPassword').notEmpty().withMessage('Current password is required'),
+  body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters')
+];
+
+const validateEmailUpdate = [
+  body('newEmail').isEmail().normalizeEmail().withMessage('Valid email is required'),
+  body('password').notEmpty().withMessage('Password is required for verification')
+];
+
+const validateReauthentication = [
+  body('password').notEmpty().withMessage('Password is required')
 ];
 
 // Public routes (require project API key verification)
@@ -148,6 +165,39 @@ router.put('/profile',
   authenticateProjectUser,
   validateProfileUpdate,
   updateProjectUserProfile
+);
+
+/**
+ * @route   PUT /api/project-users/change-password
+ * @desc    Change project user password
+ * @access  Private (project user)
+ */
+router.put('/change-password',
+  authenticateProjectUser,
+  validatePasswordChange,
+  changePassword
+);
+
+/**
+ * @route   PUT /api/project-users/update-email
+ * @desc    Update project user email
+ * @access  Private (project user)
+ */
+router.put('/update-email',
+  authenticateProjectUser,
+  validateEmailUpdate,
+  updateEmail
+);
+
+/**
+ * @route   POST /api/project-users/reauthenticate
+ * @desc    Reauthenticate project user for sensitive operations
+ * @access  Private (project user)
+ */
+router.post('/reauthenticate',
+  authenticateProjectUser,
+  validateReauthentication,
+  reauthenticate
 );
 
 // Admin routes (require project access and admin permissions)

@@ -31,10 +31,24 @@ export interface LoginCredentials {
 export interface UpdateUserData {
   firstName?: string;
   lastName?: string;
-  username?: string;
   displayName?: string;
   avatar?: string;
+  username?: string;
   customFields?: Record<string, any>;
+}
+
+export interface ChangePasswordData {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface UpdateEmailData {
+  newEmail: string;
+  password: string;
+}
+
+export interface ReauthenticateData {
+  password: string;
 }
 
 // Authentication responses
@@ -62,7 +76,6 @@ export interface AuthConfig {
   baseUrl?: string;
   projectId?: string;
   timeout?: number;
-  retryAttempts?: number;
 }
 
 // Token storage interface
@@ -81,12 +94,15 @@ export type AuthEvent =
   | 'register'
   | 'token_refresh'
   | 'profile_update'
-  | 'error';
+  | 'error'
+  | 'authStateChange'
+  | 'reauthenticate';
 
 export interface AuthEventData {
   user?: User;
   error?: Error;
   timestamp: number;
+  isAuthenticated?: boolean;
 }
 
 // Pagination

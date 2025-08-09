@@ -10,50 +10,37 @@ React SDK for AccessKit Authentication System - Ready-to-use hooks and component
 ### Installation
 
 ```bash
-npm install @gsarthak783/accesskit-react
+npm install @gsarthak783/accesskit-react @gsarthak783/accesskit-auth
 ```
 
-> **Note**: This package automatically includes `@gsarthak783/accesskit-auth` as a dependency.
-
-### Basic Setup
+### Basic Usage
 
 Wrap your app with the `AuthProvider`:
 
 ```jsx
-import React from 'react';
 import { AuthProvider } from '@gsarthak783/accesskit-react';
 
 function App() {
+  const authConfig = {
+    projectId: 'your-project-id',
+    apiKey: 'your-api-key'
+  };
+
   return (
-    <AuthProvider 
-      config={{
-        projectId: 'your-project-id',
-        apiKey: 'your-api-key'
-        // baseUrl automatically points to https://access-kit-server.vercel.app/api/project-users
-      }}
-    >
-      <YourApp />
+    <AuthProvider config={authConfig}>
+      {/* Your app components */}
     </AuthProvider>
   );
 }
-
-export default App;
 ```
 
-### Using the useAuth Hook
+### Using Auth in Components
 
 ```jsx
 import { useAuth } from '@gsarthak783/accesskit-react';
 
 function MyComponent() {
-  const { 
-    user, 
-    isLoading, 
-    isAuthenticated, 
-    login, 
-    register, 
-    logout 
-  } = useAuth();
+  const { user, isAuthenticated, isLoading, login, logout } = useAuth();
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -61,11 +48,9 @@ function MyComponent() {
 
   if (!isAuthenticated) {
     return (
-      <div>
-        <button onClick={() => login('user@example.com', 'password')}>
-          Login
-        </button>
-      </div>
+      <button onClick={() => login('user@example.com', 'password')}>
+        Login
+      </button>
     );
   }
 
@@ -75,6 +60,28 @@ function MyComponent() {
       <button onClick={logout}>Logout</button>
     </div>
   );
+}
+```
+
+### Persistent Authentication
+
+The SDK automatically maintains authentication state across page refreshes:
+
+```jsx
+function App() {
+  const { user, isLoading } = useAuth();
+
+  // On page refresh/reload:
+  // 1. isLoading starts as true
+  // 2. SDK checks for stored tokens
+  // 3. If valid tokens exist, user is automatically fetched
+  // 4. isLoading becomes false with user data (or null if not authenticated)
+
+  if (isLoading) {
+    return <div>Checking authentication...</div>;
+  }
+
+  return user ? <Dashboard /> : <LoginPage />;
 }
 ```
 
@@ -243,6 +250,68 @@ const customStorage = {
 ```
 
 ## 🎨 Advanced Usage
+
+### Account Security
+
+```jsx
+import { useAuth } from '@gsarthak783/accesskit-react';
+
+function AccountSettings() {
+  const { user, updatePassword, updateEmail, reauthenticateWithCredential } = useAuth();
+  const [isReauthenticated, setIsReauthenticated] = useState(false);
+
+  // Change password
+  const handlePasswordChange = async (currentPassword, newPassword) => {
+    try {
+      await updatePassword(currentPassword, newPassword);
+      alert('Password updated successfully! Please login again.');
+      // User will be logged out automatically
+    } catch (error) {
+      alert(`Error: ${error.message}`);
+    }
+  };
+
+  // Update email
+  const handleEmailUpdate = async (newEmail, password) => {
+    try {
+      const result = await updateEmail(newEmail, password);
+      alert(`Email updated to ${result.email}. Please verify your new email.`);
+    } catch (error) {
+      alert(`Error: ${error.message}`);
+    }
+  };
+
+  // Reauthenticate before sensitive operations
+  const handleReauthentication = async (password) => {
+    try {
+      const result = await reauthenticateWithCredential(password);
+      setIsReauthenticated(true);
+      console.log('Reauthenticated at:', result.authenticatedAt);
+      // Now you can show sensitive settings
+    } catch (error) {
+      alert('Invalid password');
+    }
+  };
+
+  return (
+    <div>
+      {!isReauthenticated ? (
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          handleReauthentication(e.target.password.value);
+        }}>
+          <input type="password" name="password" placeholder="Enter password to continue" />
+          <button type="submit">Verify Identity</button>
+        </form>
+      ) : (
+        <div>
+          {/* Show sensitive account settings */}
+        </div>
+      )}
+    </div>
+  );
+}
+```
 
 ### Protected Routes
 
@@ -563,6 +632,22 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUpdate }) => {
 ## 📄 License
 
 MIT License - see [LICENSE](./LICENSE) file for details.
+
+## 📝 Changelog
+
+### Version 1.2.0
+- Added `updatePassword`, `updateEmail`, and `reauthenticateWithCredential` methods to useAuth hook
+- Enhanced account security features
+- Updated to use @gsarthak783/accesskit-auth v1.2.0
+
+### Version 1.1.0
+- Simplified AuthProvider using onAuthStateChange from core SDK
+- Removed autoInitialize prop (always auto-initializes now)
+- Automatic auth state persistence across page refreshes
+- Improved TypeScript types
+
+### Version 1.0.5
+- Updated to use @gsarthak783/accesskit-auth v1.0.5
 
 ---
 
