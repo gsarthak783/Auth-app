@@ -787,6 +787,103 @@ const getProjectStats = async (req, res) => {
   }
 };
 
+// Get email templates for a project
+const getEmailTemplates = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+
+    const project = await Project.findById(projectId);
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: 'Project not found'
+      });
+    }
+
+    // Check if user has access to this project
+    if (project.owner.toString() !== req.user.userId.toString() &&
+        !project.team.some(member => member.user.toString() === req.user.userId.toString())) {
+      return res.status(403).json({
+        success: false,
+        message: 'You do not have permission to view this project'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        emailTemplates: project.emailTemplates,
+        projectName: project.name,
+        projectWebsite: project.website
+      }
+    });
+
+  } catch (error) {
+    console.error('Get email templates error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
+
+// Update email templates for a project
+const updateEmailTemplates = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { templateType, templateData } = req.body;
+
+    const project = await Project.findById(projectId);
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: 'Project not found'
+      });
+    }
+
+    // Check if user has access to this project
+    if (project.owner.toString() !== req.user.userId.toString() &&
+        !project.team.some(member => member.user.toString() === req.user.userId.toString() && member.role === 'admin')) {
+      return res.status(403).json({
+        success: false,
+        message: 'You do not have permission to update this project'
+      });
+    }
+
+    // Validate template type
+    const allowedTemplates = ['welcome', 'emailVerification', 'passwordReset'];
+    if (!allowedTemplates.includes(templateType)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid template type'
+      });
+    }
+
+    // Update the specific template
+    project.emailTemplates[templateType] = {
+      ...project.emailTemplates[templateType],
+      ...templateData
+    };
+
+    await project.save();
+
+    res.json({
+      success: true,
+      message: 'Email template updated successfully',
+      data: {
+        emailTemplates: project.emailTemplates
+      }
+    });
+
+  } catch (error) {
+    console.error('Update email templates error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
+
 module.exports = {
   validateProject,
   createProject,
@@ -799,5 +896,7 @@ module.exports = {
   removeTeamMember,
   updateTeamMemberRole,
   regenerateApiKeys,
-  getProjectStats
+  getProjectStats,
+  getEmailTemplates,
+  updateEmailTemplates
 };

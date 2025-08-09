@@ -102,12 +102,12 @@ const registerProjectUser = async (req, res) => {
       if (process.env.SEND_PROJECT_USER_EMAILS !== 'false') {
         if (project.settings.requireEmailVerification) {
           await sendVerificationEmail(
-            projectUser.email,
+            projectUser,
             projectUser.emailVerificationToken,
-            project.name
+            project
           );
         } else {
-          await sendWelcomeEmail(projectUser, project.name);
+          await sendWelcomeEmail(projectUser, project);
         }
       }
     } catch (emailError) {
@@ -982,7 +982,7 @@ const requestPasswordReset = async (req, res) => {
 
     try {
       if (process.env.SEND_PROJECT_USER_EMAILS !== 'false') {
-        await sendPasswordResetEmail(user, user.passwordResetToken, project.name, project._id || project.id);
+        await sendPasswordResetEmail(user, user.passwordResetToken, project);
       }
     } catch (emailError) {
       // Log but do not fail the request
@@ -1253,7 +1253,7 @@ const updateEmail = async (req, res) => {
     try {
       const project = await Project.findById(projectId);
       if (process.env.SEND_PROJECT_USER_EMAILS !== 'false' && project) {
-        await sendVerificationEmail(projectUser, projectUser.emailVerificationToken, project.name, projectId);
+        await sendVerificationEmail(projectUser, projectUser.emailVerificationToken, project);
       }
     } catch (emailError) {
       console.error('Failed to send verification email:', emailError);

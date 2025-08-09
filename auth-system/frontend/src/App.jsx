@@ -31,6 +31,7 @@ import ProjectSettings from './pages/projects/ProjectSettings';
 import ProjectUsers from './pages/projects/ProjectUsers';
 import ProjectAnalytics from './pages/projects/ProjectAnalytics';
 import ProjectGuide from './pages/projects/ProjectGuide';
+import EmailTemplates from './pages/projects/EmailTemplates';
 
 // Documentation pages
 import QuickStart from './pages/docs/QuickStart';
@@ -155,6 +156,7 @@ function App() {
                       <Route path="analytics" element={<ProjectAnalytics />} />
                       <Route path="settings" element={<ProjectSettings />} />
                       <Route path="guide" element={<ProjectGuide />} />
+                      <Route path="email-templates" element={<EmailTemplates />} />
                       <Route path="*" element={<Navigate to="../" replace />} />
                     </Routes>
                   </Layout>

@@ -12,13 +12,16 @@ const {
   updateTeamMemberRole,
   regenerateApiKeys,
   getProjectStats,
-  validateProject
+  validateProject,
+  getEmailTemplates,
+  updateEmailTemplates
 } = require('../controllers/projectController.js');
 const {
   authenticate,
   authorize,
   verifyProjectMember,
-  verifyProjectAdmin
+  verifyProjectAdmin,
+  authenticatePlatformUser
 } = require('../middleware/auth.js');
 
 const router = express.Router();
@@ -63,5 +66,9 @@ router.put('/:projectId/users/:memberId/role', generalLimiter, updateTeamMemberR
 
 // API key management
 router.post('/:projectId/regenerate-keys', generalLimiter, regenerateApiKeys);
+
+// Email template routes
+router.get('/:projectId/email-templates', authenticatePlatformUser, getEmailTemplates);
+router.put('/:projectId/email-templates', authenticatePlatformUser, updateEmailTemplates);
 
 module.exports = router;

@@ -22,7 +22,8 @@ import {
   ExternalLink,
   Download,
   Book,
-  Zap
+  Zap,
+  Mail
 } from 'lucide-react';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import toast from 'react-hot-toast';
@@ -395,6 +396,13 @@ function MyComponent() {
                   >
                     <Settings className="w-4 h-4 mr-2" />
                     Project Settings
+                  </Link>
+                  <Link
+                    to={`/project/${projectId}/email-templates`}
+                    className="btn btn-ghost btn-sm justify-start w-full"
+                  >
+                    <Mail className="w-4 h-4 mr-2" />
+                    Email Templates
                   </Link>
                 </div>
               </div>

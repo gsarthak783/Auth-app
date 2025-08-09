@@ -142,31 +142,87 @@ const projectSchema = new mongoose.Schema({
     welcome: {
       subject: {
         type: String,
-        default: 'Welcome to {{projectName}}'
+        default: 'Welcome to {{projectName}}!'
       },
-      body: {
+      heading: {
         type: String,
-        default: 'Welcome to our platform! Please verify your email.'
+        default: 'Welcome aboard!'
+      },
+      message: {
+        type: String,
+        default: 'We\'re excited to have you join us. Get started by exploring all the features we have to offer.'
+      },
+      buttonText: {
+        type: String,
+        default: 'Get Started'
+      },
+      buttonUrl: {
+        type: String,
+        default: ''
+      },
+      footerText: {
+        type: String,
+        default: 'Best regards,<br>The {{projectName}} Team'
+      },
+      enabled: {
+        type: Boolean,
+        default: true
       }
     },
-    verification: {
+    emailVerification: {
       subject: {
         type: String,
-        default: 'Verify your email address'
+        default: 'Verify your email for {{projectName}}'
       },
-      body: {
+      heading: {
         type: String,
-        default: 'Click the link to verify your email: {{verificationLink}}'
+        default: 'Verify Your Email'
+      },
+      message: {
+        type: String,
+        default: 'Please click the button below to verify your email address and activate your account.'
+      },
+      buttonText: {
+        type: String,
+        default: 'Verify Email'
+      },
+      footerText: {
+        type: String,
+        default: 'If you didn\'t create an account, you can safely ignore this email.<br><br>Best regards,<br>The {{projectName}} Team'
+      },
+      enabled: {
+        type: Boolean,
+        default: true
       }
     },
     passwordReset: {
       subject: {
         type: String,
-        default: 'Reset your password'
+        default: 'Reset your password for {{projectName}}'
       },
-      body: {
+      heading: {
         type: String,
-        default: 'Click the link to reset your password: {{resetLink}}'
+        default: 'Reset Your Password'
+      },
+      message: {
+        type: String,
+        default: 'You requested to reset your password. Click the button below to create a new password.'
+      },
+      buttonText: {
+        type: String,
+        default: 'Reset Password'
+      },
+      footerText: {
+        type: String,
+        default: 'If you didn\'t request this, you can safely ignore this email.<br><br>Best regards,<br>The {{projectName}} Team'
+      },
+      expiryText: {
+        type: String,
+        default: 'This link will expire in 1 hour.'
+      },
+      enabled: {
+        type: Boolean,
+        default: true
       }
     }
   },
