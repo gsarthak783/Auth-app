@@ -89,26 +89,26 @@ const Landing = () => {
       <div className="navbar bg-base-100/80 backdrop-blur-md sticky top-0 z-50 border-b border-base-300/50">
         <div className="navbar-start">
           <div className="flex items-center">
-            <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-primary mr-2 sm:mr-3" />
-            <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            <Shield className="w-6 h-6 sm:w-7 sm:h-7 text-primary mr-2 sm:mr-3" />
+            <span className="text-lg sm:text-xl font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               AccessKit
             </span>
           </div>
         </div>
         <div className="navbar-center hidden lg:flex">
           <ul className="menu menu-horizontal px-1">
-            <li><a href="#features" className="font-medium">Features</a></li>
-            <li><a href="#pricing" className="font-medium">Pricing</a></li>
-            <li><Link to="/docs" className="font-medium">Documentation</Link></li>
-            <li><a href="#about" className="font-medium">About</a></li>
+            <li><a href="#features" className="text-sm font-medium">Features</a></li>
+            <li><a href="#pricing" className="text-sm font-medium">Pricing</a></li>
+            <li><Link to="/docs" className="text-sm font-medium">Documentation</Link></li>
+            <li><a href="#about" className="text-sm font-medium">About</a></li>
           </ul>
         </div>
         <div className="navbar-end">
-          <Link to="/auth/login" className="btn btn-ghost btn-sm mr-1 sm:mr-2">Sign In</Link>
-          <Link to="/auth/signup" className="btn btn-primary btn-sm">
+          <Link to="/auth/login" className="btn btn-ghost btn-sm text-sm mr-1 sm:mr-2">Sign In</Link>
+          <Link to="/auth/signup" className="btn btn-primary btn-sm text-sm">
             <span className="hidden sm:inline">Get Started</span>
             <span className="sm:hidden">Start</span>
-            <ArrowRight className="w-4 h-4 ml-1" />
+            <ArrowRight className="w-3.5 h-3.5 ml-1" />
           </Link>
         </div>
       </div>
@@ -119,26 +119,26 @@ const Landing = () => {
           <div>
             <div className="flex justify-center mb-6">
               <div className="p-4 bg-primary/10 rounded-full">
-                <Shield className="w-12 h-12 sm:w-16 sm:h-16 text-primary" />
+                <Shield className="w-10 h-10 sm:w-12 sm:h-12 text-primary" />
               </div>
             </div>
-            <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold mb-6">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold mb-6">
               Authentication{' '}
               <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 Made Simple
               </span>
             </h1>
-            <p className="text-lg sm:text-xl md:text-2xl text-base-content/70 mb-8 max-w-3xl mx-auto leading-relaxed px-4">
+            <p className="text-base sm:text-lg md:text-xl text-base-content/70 mb-8 max-w-3xl mx-auto leading-relaxed px-4 font-normal">
               Build secure, scalable applications with our powerful authentication platform. 
               Start protecting your users in minutes, not days.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-              <Link to="/auth/signup" className="btn btn-primary btn-lg">
+              <Link to="/auth/signup" className="btn btn-primary btn-md text-sm">
                 Start Building Free
-                <ArrowRight className="w-5 h-5 ml-2" />
+                <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
-              <Link to="/docs" className="btn btn-outline btn-lg">
-                <Code className="w-5 h-5 mr-2" />
+              <Link to="/docs" className="btn btn-outline btn-md text-sm">
+                <Code className="w-4 h-4 mr-2" />
                 View Documentation
               </Link>
             </div>
@@ -159,13 +159,13 @@ const Landing = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-20 bg-base-100">
-        <div className="container mx-auto px-6">
+      <section className="py-16 sm:py-20 px-4 bg-base-200">
+        <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
-                <div className="text-4xl font-bold text-primary mb-2">{stat.number}</div>
-                <div className="text-base-content/60">{stat.label}</div>
+                <div className="text-2xl sm:text-3xl font-semibold text-primary">{stat.number}</div>
+                <div className="text-xs sm:text-sm text-base-content/60 uppercase tracking-wider font-medium mt-1">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -173,31 +173,26 @@ const Landing = () => {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-16 md:py-20 px-4">
-        <div className="container mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6">
+      <section id="features" className="py-16 sm:py-24 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-2xl sm:text-4xl font-semibold mb-4">
               Everything You Need for{' '}
-              <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                Modern Authentication
-              </span>
+              <span className="text-primary">Modern Authentication</span>
             </h2>
-            <p className="text-lg sm:text-xl text-base-content/70 max-w-3xl mx-auto px-4">
-              Built by developers, for developers. Get enterprise-grade security without the complexity.
+            <p className="text-sm sm:text-base text-base-content/70 max-w-2xl mx-auto font-normal">
+              Comprehensive features designed to handle authentication at any scale, 
+              from startups to enterprise applications.
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {features.map((feature, index) => (
-              <div key={index} className="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
+              <div key={index} className="card bg-base-100 shadow-lg hover:shadow-2xl transition-all duration-300 border border-base-200">
                 <div className="card-body">
-                  <div className="flex items-center mb-4">
-                    <div className="p-3 bg-primary/10 rounded-lg mr-4">
-                      <feature.icon className="w-6 h-6 text-primary" />
-                    </div>
-                    <h3 className="card-title text-lg">{feature.title}</h3>
-                  </div>
-                  <p className="text-base-content/70">{feature.description}</p>
+                  <feature.icon className="w-10 h-10 sm:w-12 sm:h-12 text-primary mb-4" />
+                  <h3 className="card-title text-lg sm:text-xl font-semibold">{feature.title}</h3>
+                  <p className="text-xs sm:text-sm text-base-content/70 font-normal">{feature.description}</p>
                 </div>
               </div>
             ))}
@@ -235,31 +230,31 @@ const Landing = () => {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-16 md:py-20 bg-base-200 px-4">
-        <div className="container mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6">
-              Trusted by <span className="text-primary">Developers</span>
+      <section className="py-16 sm:py-24 px-4 bg-base-200">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-2xl sm:text-4xl font-semibold mb-4">
+              Trusted by <span className="text-primary">Developers</span> Worldwide
             </h2>
+            <p className="text-sm sm:text-base text-base-content/70 max-w-2xl mx-auto font-normal">
+              Join thousands of developers who've simplified their authentication with AccessKit.
+            </p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-6 sm:gap-8">
             {testimonials.map((testimonial, index) => (
-              <div key={index} className="card bg-base-100 shadow-xl">
+              <div key={index} className="card bg-base-100 shadow-lg">
                 <div className="card-body">
                   <div className="flex items-center mb-4">
-                    <div className="text-3xl mr-4">{testimonial.avatar}</div>
+                    <div className="text-3xl sm:text-4xl mr-3 sm:mr-4">{testimonial.avatar}</div>
                     <div>
-                      <h3 className="font-bold">{testimonial.name}</h3>
-                      <p className="text-sm text-base-content/60">{testimonial.role} at {testimonial.company}</p>
+                      <h4 className="font-semibold text-sm sm:text-base">{testimonial.name}</h4>
+                      <p className="text-xs text-base-content/60 font-normal">
+                        {testimonial.role} at {testimonial.company}
+                      </p>
                     </div>
                   </div>
-                  <p className="text-base-content/70 italic">"{testimonial.content}"</p>
-                  <div className="flex mt-4">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
-                    ))}
-                  </div>
+                  <p className="text-xs sm:text-sm text-base-content/80 italic font-normal">"{testimonial.content}"</p>
                 </div>
               </div>
             ))}

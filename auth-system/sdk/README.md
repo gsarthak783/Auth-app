@@ -72,35 +72,80 @@ interface AuthConfig {
 
 ### Authentication State Management
 
-```javascript
-// Listen to auth state changes (perfect for maintaining persistent login)
-const unsubscribe = auth.onAuthStateChange((user, isAuthenticated) => {
-  console.log('Auth state changed:', { user, isAuthenticated });
-  
-  if (isAuthenticated) {
-    // User is logged in
-    console.log('Welcome', user.firstName);
+The SDK provides Firebase-like authentication state management with automatic persistence across page refreshes.
+
+#### How It Works
+
+1. **Automatic Initialization**: When you create an `AuthClient` instance, it automatically checks for stored tokens
+2. **Token Validation**: If tokens exist, it validates them by fetching the user profile
+3. **State Updates**: The current authentication state is emitted via `onAuthStateChange`
+4. **Persistence**: Tokens are stored in localStorage (or your custom storage) and persist across page refreshes
+
+#### onAuthStateChange
+
+Subscribe to authentication state changes, including the initial state on page load:
+
+```typescript
+// This will be called immediately with the current state (from stored tokens if any)
+// and again whenever the auth state changes (login, logout, token refresh, etc.)
+const unsubscribe = client.onAuthStateChange((user, isAuthenticated) => {
+  if (isAuthenticated && user) {
+    console.log('User is logged in:', user.email);
+    // User remains logged in even after page refresh
   } else {
-    // User is logged out
-    console.log('User logged out');
+    console.log('User is not logged in');
   }
 });
 
-// Clean up listener when done
+// Clean up when done
 unsubscribe();
-
-// Get current user without API call
-const currentUser = auth.getCurrentUser();
-
-// Check if authenticated
-const isLoggedIn = auth.isAuthenticated();
 ```
 
-The SDK automatically:
-- Checks for existing tokens on initialization
-- Maintains auth state across page refreshes
-- Clears invalid/expired tokens
-- Emits auth state changes on login/logout/profile updates
+#### Authentication Flow on Page Refresh
+
+```typescript
+// 1. User logs in
+await client.login({ email: 'user@example.com', password: 'password' });
+// Tokens are stored in localStorage
+
+// 2. Page refreshes or user navigates away and comes back
+const newClient = new AuthClient(config);
+
+// 3. onAuthStateChange is called with the persisted user state
+newClient.onAuthStateChange((user, isAuthenticated) => {
+  // This is called immediately with the user data if tokens are valid
+  // No need to login again!
+  console.log('User still logged in:', user?.email);
+});
+```
+
+#### getCurrentUser
+
+Get the current user synchronously (useful after initialization):
+
+```typescript
+const user = client.getCurrentUser();
+if (user) {
+  console.log('Current user:', user.email);
+}
+```
+
+#### isAuthenticated
+
+Check authentication status synchronously:
+
+```typescript
+if (client.isAuthenticated()) {
+  // User is logged in with valid tokens
+}
+```
+
+#### Best Practices
+
+1. **Always use onAuthStateChange** for initial auth state detection
+2. **Don't assume immediate availability** - the initial auth check is asynchronous
+3. **Handle loading states** - show a loading indicator while checking auth state
+4. **Clean up subscriptions** - always call the unsubscribe function when done
 
 ### Authentication
 
@@ -526,6 +571,17 @@ const auth = new AuthClient({
 MIT License - see [LICENSE](./LICENSE) file for details.
 
 ## 📝 Changelog
+
+### Version 1.2.2 (Latest)
+- **CRITICAL FIX**: Fixed token storage during login/register - tokens are now correctly saved from the nested response structure
+- Fixed refresh token endpoint to handle the correct response format
+- Updated AuthResponse type to match actual API response structure
+
+### Version 1.2.1
+- Fixed authentication persistence across page refreshes
+- Improved token refresh handling during initialization  
+- Enhanced `onAuthStateChange` to properly wait for initialization
+- Better error handling for expired tokens on app startup
 
 ### Version 1.2.0
 - Added `updatePassword` method for secure password changes

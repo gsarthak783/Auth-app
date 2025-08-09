@@ -48,7 +48,7 @@ const RootRoute = () => {
       <div className="min-h-screen flex items-center justify-center bg-base-100">
         <div className="text-center">
           <LoadingSpinner size="xl" />
-          <p className="mt-4 text-base-content/60">Loading...</p>
+          <p className="mt-4 text-sm text-base-content/60">Loading...</p>
         </div>
       </div>
     );

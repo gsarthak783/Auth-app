@@ -57,88 +57,81 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto overflow-x-hidden">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-base-content">
-              Welcome back, {user?.firstName}! 👋
-            </h1>
-            <p className="text-base-content/60 mt-1">
-              Manage your authentication projects and monitor your users
-            </p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-semibold">
+            Welcome back, {user?.firstName || 'User'}!
+          </h1>
+          <p className="text-sm text-base-content/60 mt-1 font-normal">
+            Manage your authentication projects and monitor usage
+          </p>
+        </div>
+        <div>
+          <button
+            onClick={() => navigate('/project/create')}
+            className="btn btn-primary btn-sm text-sm"
+            disabled={user && getRemainingProjects() <= 0}
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">New Project</span>
+            <span className="sm:hidden">New</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Account Overview Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="stat bg-base-100 rounded-lg shadow">
+          <div className="stat-figure text-primary">
+            <Globe className="w-6 h-6 sm:w-7 sm:h-7" />
           </div>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-            <div className={`badge ${getSubscriptionBadge(user?.subscription?.plan)} badge-lg`}>
-              {user?.subscription?.plan?.toUpperCase() || 'FREE'}
-            </div>
-            <button
-              onClick={handleCreateProject}
-              disabled={!canCreateProject()}
-              className="btn btn-primary btn-sm sm:btn-md gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">New Project</span>
-              <span className="sm:hidden">New</span>
-            </button>
+          <div className="stat-title text-xs uppercase tracking-wider font-medium">Total Projects</div>
+          <div className="stat-value text-2xl font-semibold text-primary">{user?.stats?.totalProjects || 0}</div>
+          <div className="stat-desc text-xs font-normal">
+            {getRemainingProjects()} remaining
           </div>
         </div>
 
-        {/* Account Overview Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="stat bg-base-100 rounded-lg shadow">
-            <div className="stat-figure text-primary">
-              <Globe className="w-8 h-8" />
-            </div>
-            <div className="stat-title">Total Projects</div>
-            <div className="stat-value text-primary">{user?.stats?.totalProjects || 0}</div>
-            <div className="stat-desc">
-              {getRemainingProjects()} remaining
-            </div>
+        <div className="stat bg-base-100 rounded-lg shadow">
+          <div className="stat-figure text-secondary">
+            <Users className="w-6 h-6 sm:w-7 sm:h-7" />
           </div>
+          <div className="stat-title text-xs uppercase tracking-wider font-medium">Total Users</div>
+          <div className="stat-value text-2xl font-semibold text-secondary">
+            {userProjects?.reduce((total, project) => total + (project.statistics?.totalUsers || 0), 0) || 0}
+          </div>
+          <div className="stat-desc text-xs font-normal">Across all projects</div>
+        </div>
 
-          <div className="stat bg-base-100 rounded-lg shadow">
-            <div className="stat-figure text-secondary">
-              <Users className="w-8 h-8" />
-            </div>
-            <div className="stat-title">Total Users</div>
-            <div className="stat-value text-secondary">
-              {userProjects?.reduce((total, project) => total + (project.statistics?.totalUsers || 0), 0) || 0}
-            </div>
-            <div className="stat-desc">Across all projects</div>
+        <div className="stat bg-base-100 rounded-lg shadow">
+          <div className="stat-figure text-accent">
+            <Zap className="w-6 h-6 sm:w-7 sm:h-7" />
           </div>
+          <div className="stat-title text-xs uppercase tracking-wider font-medium">API Calls</div>
+          <div className="stat-value text-2xl font-semibold text-accent">
+            {user?.stats?.totalAPICallsThisMonth?.toLocaleString() || 0}
+          </div>
+          <div className="stat-desc text-xs font-normal">This month</div>
+        </div>
 
-          <div className="stat bg-base-100 rounded-lg shadow">
-            <div className="stat-figure text-accent">
-              <Zap className="w-8 h-8" />
-            </div>
-            <div className="stat-title">API Calls</div>
-            <div className="stat-value text-accent">
-              {user?.stats?.totalAPICallsThisMonth?.toLocaleString() || 0}
-            </div>
-            <div className="stat-desc">This month</div>
+        <div className="stat bg-base-100 rounded-lg shadow">
+          <div className="stat-figure text-info">
+            <Shield className="w-6 h-6 sm:w-7 sm:h-7" />
           </div>
-
-          <div className="stat bg-base-100 rounded-lg shadow">
-            <div className="stat-figure text-info">
-              <Shield className="w-8 h-8" />
-            </div>
-            <div className="stat-title">Security Score</div>
-            <div className="stat-value text-info">98%</div>
-            <div className="stat-desc">All systems secure</div>
-          </div>
+          <div className="stat-title text-xs uppercase tracking-wider font-medium">Security Score</div>
+          <div className="stat-value text-2xl font-semibold text-info">98%</div>
+          <div className="stat-desc text-xs font-normal">All systems secure</div>
         </div>
       </div>
 
       {/* Projects Section */}
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-semibold text-base-content">Your Projects</h2>
-          <Link to="/projects" className="link link-primary">
-            View all projects
-          </Link>
-        </div>
+        <h2 className="text-xl sm:text-2xl font-semibold mb-4">Your Projects</h2>
+        <Link to="/projects" className="link link-primary">
+          View all projects
+        </Link>
 
         {userProjects?.length === 0 ? (
           /* Empty State */

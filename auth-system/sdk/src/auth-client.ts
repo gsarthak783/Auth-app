@@ -59,23 +59,42 @@ export class AuthClient {
 
     this.initPromise = (async () => {
       try {
-        const token = this.storage.getAccessToken();
-        if (token) {
-          // Try to get user profile if token exists
-          try {
+        const accessToken = this.storage.getAccessToken();
+        const refreshToken = this.storage.getRefreshToken();
+        
+        if (!accessToken && !refreshToken) {
+          // No tokens, user is not authenticated
+          this.currentUser = null;
+          this.emit('authStateChange', { user: undefined, isAuthenticated: false, timestamp: Date.now() });
+          return;
+        }
+
+        // We have tokens, try to get user profile
+        try {
+          if (accessToken) {
+            // First try with access token
             const user = await this.getProfile();
             this.currentUser = user;
             this.emit('authStateChange', { user, isAuthenticated: true, timestamp: Date.now() });
-          } catch (error) {
-            // Token might be expired, clear it
-            this.storage.clearTokens();
-            this.currentUser = null;
-            this.emit('authStateChange', { user: undefined, isAuthenticated: false, timestamp: Date.now() });
+          } else if (refreshToken) {
+            // No access token but have refresh token, try to refresh
+            await this.refreshToken();
+            // After refresh, get user profile
+            const user = await this.getProfile();
+            this.currentUser = user;
+            this.emit('authStateChange', { user, isAuthenticated: true, timestamp: Date.now() });
           }
-        } else {
+        } catch (error) {
+          // Both access and refresh failed, user is logged out
+          this.storage.clearTokens();
           this.currentUser = null;
           this.emit('authStateChange', { user: undefined, isAuthenticated: false, timestamp: Date.now() });
         }
+      } catch (error) {
+        // Any other error, ensure clean state
+        this.storage.clearTokens();
+        this.currentUser = null;
+        this.emit('authStateChange', { user: undefined, isAuthenticated: false, timestamp: Date.now() });
       } finally {
         this.initialized = true;
         this.initPromise = null;
@@ -104,9 +123,6 @@ export class AuthClient {
    * Returns an unsubscribe function
    */
   onAuthStateChange(callback: (user: User | null, isAuthenticated: boolean) => void): () => void {
-    // Ensure initialization has started
-    this.initialize();
-
     const listener: EventListener = (data) => {
       if ('user' in data && 'isAuthenticated' in data) {
         callback(data.user as User | null, data.isAuthenticated as boolean);
@@ -115,8 +131,19 @@ export class AuthClient {
 
     this.on('authStateChange', listener);
 
-    // Immediately call with current state
-    callback(this.currentUser, this.isAuthenticated());
+    // Wait for initialization then call with current state
+    if (this.initialized) {
+      // Already initialized, call immediately
+      callback(this.currentUser, this.isAuthenticated());
+    } else {
+      // Wait for initialization to complete
+      this.initialize().then(() => {
+        callback(this.currentUser, this.isAuthenticated());
+      }).catch(() => {
+        // Even if initialization fails, still call the callback
+        callback(null, false);
+      });
+    }
 
     // Return unsubscribe function
     return () => {
@@ -218,18 +245,18 @@ export class AuthClient {
     try {
       const response: AxiosResponse<AuthResponse> = await this.http.post('/register', userData);
       
-      if (response.data.success && response.data.accessToken) {
-        this.storage.setAccessToken(response.data.accessToken);
-        this.storage.setRefreshToken(response.data.refreshToken);
-        this.currentUser = response.data.user;
+      if (response.data.success && response.data.data) {
+        this.storage.setAccessToken(response.data.data.tokens.accessToken);
+        this.storage.setRefreshToken(response.data.data.tokens.refreshToken);
+        this.currentUser = response.data.data.user;
         
         this.emit('register', {
-          user: response.data.user,
+          user: response.data.data.user,
           timestamp: Date.now()
         });
         
         this.emit('authStateChange', {
-          user: response.data.user,
+          user: response.data.data.user,
           isAuthenticated: true,
           timestamp: Date.now()
         });
@@ -250,18 +277,18 @@ export class AuthClient {
     try {
       const response: AxiosResponse<AuthResponse> = await this.http.post('/login', credentials);
       
-      if (response.data.success && response.data.accessToken) {
-        this.storage.setAccessToken(response.data.accessToken);
-        this.storage.setRefreshToken(response.data.refreshToken);
-        this.currentUser = response.data.user;
+      if (response.data.success && response.data.data) {
+        this.storage.setAccessToken(response.data.data.tokens.accessToken);
+        this.storage.setRefreshToken(response.data.data.tokens.refreshToken);
+        this.currentUser = response.data.data.user;
         
         this.emit('login', {
-          user: response.data.user,
+          user: response.data.data.user,
           timestamp: Date.now()
         });
         
         this.emit('authStateChange', {
-          user: response.data.user,
+          user: response.data.data.user,
           isAuthenticated: true,
           timestamp: Date.now()
         });
@@ -376,16 +403,21 @@ export class AuthClient {
     }
 
     try {
-      const response: AxiosResponse<{ accessToken: string }> = await this.http.post('/refresh', {
+      // The refresh endpoint returns data.accessToken and data.refreshToken
+      const response: AxiosResponse<{ success: boolean; data: { accessToken: string; refreshToken: string } }> = await this.http.post('/refresh', {
         refreshToken
       });
 
-      const newToken = response.data.accessToken;
-      this.storage.setAccessToken(newToken);
+      const newAccessToken = response.data.data.accessToken;
+      const newRefreshToken = response.data.data.refreshToken;
+      
+      // Update both tokens
+      this.storage.setAccessToken(newAccessToken);
+      this.storage.setRefreshToken(newRefreshToken);
 
       this.emit('token_refresh', { timestamp: Date.now() });
 
-      return newToken;
+      return newAccessToken;
     } catch (error: any) {
       this.storage.clearTokens();
       throw new Error('Token refresh failed');

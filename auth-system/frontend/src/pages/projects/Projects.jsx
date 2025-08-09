@@ -150,13 +150,13 @@ const Projects = () => {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <Link to={`/project/${project.id}`} className="hover:text-primary transition-colors">
-                      <h3 className="card-title text-lg">{project.name}</h3>
+                      <h3 className="card-title text-base sm:text-lg font-semibold">{project.name}</h3>
                     </Link>
-                    <p className="text-base-content/60 text-sm mt-1 line-clamp-2">
+                    <p className="text-base-content/60 text-xs sm:text-sm mt-1 line-clamp-2 font-normal">
                       {project.description || 'No description provided'}
                     </p>
                   </div>
-                  <div className={`badge ${project.isActive ? 'badge-success' : 'badge-error'}`}>
+                  <div className={`badge badge-sm ${project.isActive ? 'badge-success' : 'badge-error'}`}>
                     {project.isActive ? 'Active' : 'Inactive'}
                   </div>
                 </div>
@@ -164,7 +164,7 @@ const Projects = () => {
                 {/* API Key */}
                 <div className="mt-4 p-3 bg-base-200 rounded-lg">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">API Key</span>
+                    <span className="text-xs font-medium uppercase tracking-wider">API Key</span>
                     <button
                       onClick={() => toggleApiKeyVisibility(project.id)}
                       className="btn btn-ghost btn-xs"
@@ -177,23 +177,23 @@ const Projects = () => {
                     </button>
                   </div>
                   <code className="text-xs font-mono break-all">
-                                          {showApiKeys[project.id] ? project.apiKey : maskApiKey(project.apiKey)}
+                    {showApiKeys[project.id] ? project.apiKey : maskApiKey(project.apiKey)}
                   </code>
                 </div>
 
                 {/* Stats */}
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   <div className="text-center">
-                    <div className="text-lg font-bold text-primary">
+                    <div className="text-base sm:text-lg font-semibold text-primary">
                       {project.statistics?.totalUsers || 0}
                     </div>
-                    <div className="text-xs text-base-content/60">Users</div>
+                    <div className="text-xs text-base-content/60 uppercase tracking-wider font-medium">Users</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-lg font-bold text-secondary">
+                    <div className="text-base sm:text-lg font-semibold text-secondary">
                       {project.statistics?.totalLogins || 0}
                     </div>
-                    <div className="text-xs text-base-content/60">Logins</div>
+                    <div className="text-xs text-base-content/60 uppercase tracking-wider font-medium">Logins</div>
                   </div>
                 </div>
 

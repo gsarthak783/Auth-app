@@ -65,23 +65,108 @@ function MyComponent() {
 
 ### Persistent Authentication
 
-The SDK automatically maintains authentication state across page refreshes:
+The SDK automatically maintains authentication state across page refreshes, similar to Firebase Auth.
 
 ```jsx
 function App() {
-  const { user, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
 
-  // On page refresh/reload:
-  // 1. isLoading starts as true
-  // 2. SDK checks for stored tokens
-  // 3. If valid tokens exist, user is automatically fetched
-  // 4. isLoading becomes false with user data (or null if not authenticated)
+  // On initial load and page refresh:
+  // 1. isLoading is true while checking stored tokens
+  // 2. If valid tokens exist, user is automatically logged in
+  // 3. isLoading becomes false once check is complete
 
   if (isLoading) {
     return <div>Checking authentication...</div>;
   }
 
-  return user ? <Dashboard /> : <LoginPage />;
+  return (
+    <div>
+      {isAuthenticated ? (
+        <div>
+          Welcome back, {user.firstName}!
+          {/* User stays logged in even after page refresh */}
+        </div>
+      ) : (
+        <div>Please log in</div>
+      )}
+    </div>
+  );
+}
+```
+
+#### How Persistence Works
+
+1. **Token Storage**: Access and refresh tokens are stored in localStorage by default
+2. **Automatic Verification**: On app initialization, stored tokens are verified
+3. **Seamless Experience**: Valid tokens = user stays logged in across sessions
+4. **Token Refresh**: Expired access tokens are automatically refreshed using the refresh token
+
+#### Example: Protected Routes with Persistence
+
+```jsx
+function ProtectedRoute({ children }) {
+  const { isAuthenticated, isLoading } = useAuth();
+  
+  if (isLoading) {
+    // Important: Show loading while checking auth state
+    return <LoadingSpinner />;
+  }
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+  
+  return children;
+}
+
+// Usage
+function App() {
+  return (
+    <AuthProvider config={config}>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </AuthProvider>
+  );
+}
+```
+
+#### Handling Different Scenarios
+
+```jsx
+function AuthStatus() {
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      console.log('User restored from previous session:', user.email);
+    }
+  }, [isAuthenticated, user]);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <div>Not logged in</div>;
+  }
+
+  return (
+    <div>
+      <p>Logged in as: {user.email}</p>
+      <p>Session persists across refreshes</p>
+      <button onClick={logout}>Logout</button>
+    </div>
+  );
 }
 ```
 
@@ -635,10 +720,18 @@ MIT License - see [LICENSE](./LICENSE) file for details.
 
 ## 📝 Changelog
 
-### Version 1.2.0
-- Added `updatePassword`, `updateEmail`, and `reauthenticateWithCredential` methods to useAuth hook
-- Enhanced account security features
-- Updated to use @gsarthak783/accesskit-auth v1.2.0
+### 1.2.2 (Latest)
+- Updated to use @gsarthak783/accesskit-auth v1.2.2 with critical token storage fix
+- Tokens are now properly saved during login/register
+
+### 1.2.1
+- Fixed authentication persistence across page refreshes
+- Improved integration with core SDK's initialization flow
+- Better handling of loading states during auth checks
+
+### 1.2.0
+- Added support for account security methods
+- Exposed `updatePassword`, `updateEmail`, and `reauthenticateWithCredential` via useAuth hook
 
 ### Version 1.1.0
 - Simplified AuthProvider using onAuthStateChange from core SDK

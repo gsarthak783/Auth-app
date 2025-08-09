@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,11 +6,84 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    font-size: 15px; /* Base font size slightly smaller */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   
   body {
-    font-feature-settings: 'rlig' 1, 'calt' 1;
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-weight: 400;
+    letter-spacing: -0.011em;
+    line-height: 1.5;
+    color: theme('colors.base-content');
   }
+  
+  /* Professional Typography Scale */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+  
+  h1 { @apply text-3xl sm:text-4xl; }
+  h2 { @apply text-2xl sm:text-3xl; }
+  h3 { @apply text-xl sm:text-2xl; }
+  h4 { @apply text-lg sm:text-xl; }
+  h5 { @apply text-base sm:text-lg; }
+  h6 { @apply text-sm sm:text-base; }
+  
+  p {
+    @apply text-sm sm:text-base;
+    font-weight: 400;
+  }
+  
+  /* Small text for labels, captions, etc */
+  .text-xs { font-size: 0.75rem; line-height: 1.5; }
+  .text-sm { font-size: 0.875rem; line-height: 1.5; }
+  .text-base { font-size: 1rem; line-height: 1.6; }
+  .text-lg { font-size: 1.125rem; line-height: 1.5; }
+  .text-xl { font-size: 1.25rem; line-height: 1.4; }
+  .text-2xl { font-size: 1.5rem; line-height: 1.3; }
+  .text-3xl { font-size: 1.875rem; line-height: 1.3; }
+  .text-4xl { font-size: 2.25rem; line-height: 1.2; }
+  
+  /* Button text should be slightly smaller */
+  .btn {
+    @apply text-sm;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  
+  .btn-sm {
+    @apply text-xs;
+  }
+  
+  /* Input fields with refined sizing */
+  .input, .textarea, .select {
+    @apply text-sm;
+    font-weight: 400;
+  }
+  
+  /* Menu items */
+  .menu {
+    @apply text-sm;
+    font-weight: 400;
+  }
+  
+  /* Card titles */
+  .card-title {
+    @apply text-lg;
+    font-weight: 600;
+  }
+  
+  /* Make text lighter overall */
+  .font-light { font-weight: 300; }
+  .font-normal { font-weight: 400; }
+  .font-medium { font-weight: 500; }
+  .font-semibold { font-weight: 600; }
+  .font-bold { font-weight: 700; }
 }
 
 @layer components {
@@ -22,12 +94,12 @@
   
   /* Enhanced button hover effects (non-shifting) */
   .btn:hover {
-    box-shadow: 0 6px 16px -6px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 4px 12px -4px rgba(0, 0, 0, 0.1);
   }
   
   /* Card hover effects */
   .card:hover {
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15);
   }
   
   /* Glassmorphism effect */
@@ -47,7 +119,7 @@
   
   /* Modern input focus states (non-shifting) */
   .input:focus, .textarea:focus, .select:focus {
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 0 0 2px hsl(var(--p) / 0.2);
+    box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.08), 0 0 0 2px hsl(var(--p) / 0.2);
   }
   
   /* Sidebar navigation enhancements (non-shifting) */
@@ -81,7 +153,7 @@
   .dropdown-content {
     backdrop-filter: blur(20px);
     border: 1px solid hsl(var(--bc) / 0.1);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2);
   }
   
   /* Hero section enhancements */
@@ -93,7 +165,7 @@
   
   /* Modern scrollbar */
   ::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
   }
   
   ::-webkit-scrollbar-track {
@@ -102,11 +174,64 @@
   
   ::-webkit-scrollbar-thumb {
     background: hsl(var(--bc) / 0.3);
-    border-radius: 4px;
+    border-radius: 3px;
   }
   
   ::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--bc) / 0.5);
+  }
+  
+  /* Professional spacing adjustments */
+  .prose {
+    @apply text-sm;
+  }
+  
+  .prose h1, .prose h2, .prose h3 {
+    @apply font-semibold;
+  }
+  
+  /* Stats and metrics */
+  .stat-value {
+    @apply text-2xl font-semibold;
+  }
+  
+  .stat-title {
+    @apply text-xs uppercase tracking-wider;
+    font-weight: 500;
+    opacity: 0.7;
+  }
+  
+  .stat-desc {
+    @apply text-xs;
+    font-weight: 400;
+    opacity: 0.6;
+  }
+  
+  /* Badge refinements */
+  .badge {
+    @apply text-xs;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+  
+  /* Table text sizing */
+  .table {
+    @apply text-sm;
+    font-weight: 400;
+  }
+  
+  .table th {
+    @apply text-xs uppercase tracking-wider;
+    font-weight: 600;
+  }
+  
+  /* Label text */
+  .label-text {
+    font-weight: 500;
+  }
+  
+  .label-text-alt {
+    font-weight: 400;
   }
 }
 
@@ -149,6 +274,12 @@
       opacity: 1; 
       transform: scale(1); 
     }
+  }
+  
+  /* Typography utilities */
+  .font-display {
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    font-weight: 600;
   }
 }
 

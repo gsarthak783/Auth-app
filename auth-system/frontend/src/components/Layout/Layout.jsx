@@ -56,10 +56,10 @@ const Layout = ({ children }) => {
         {/* Sidebar Header */}
         <div className="flex items-center justify-between h-16 px-4 lg:px-6 border-b border-base-300 flex-shrink-0">
           <div className="flex items-center">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <Shield className="w-5 h-5 text-primary-content" />
+            <div className="w-7 h-7 lg:w-8 lg:h-8 bg-primary rounded-lg flex items-center justify-center">
+              <Shield className="w-4 h-4 lg:w-5 lg:h-5 text-primary-content" />
             </div>
-            <span className="ml-2 text-lg lg:text-xl font-bold text-base-content">AccessKit</span>
+            <span className="ml-2 text-base lg:text-lg font-semibold text-base-content">AccessKit</span>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
@@ -79,13 +79,13 @@ const Layout = ({ children }) => {
                   <Link
                     to={item.href}
                     onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    className={`flex items-center px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
                       isActive(item.href)
                         ? 'bg-primary text-primary-content'
                         : 'text-base-content hover:bg-base-300'
                     }`}
                   >
-                    <Icon className="w-5 h-5 mr-3" />
+                    <Icon className="w-4 h-4 mr-3" />
                     {item.name}
                   </Link>
                 </li>
@@ -98,14 +98,14 @@ const Layout = ({ children }) => {
         <div className="p-4 border-t border-base-300 flex-shrink-0">
           <div className="flex items-center mb-4">
             <div className="avatar placeholder">
-              <div className="bg-neutral-focus text-neutral-content rounded-full w-10">
-                <span className="text-sm">
+              <div className="bg-neutral-focus text-neutral-content rounded-full w-8 lg:w-10">
+                <span className="text-xs lg:text-sm font-medium">
                   {user?.firstName?.[0] || user?.username?.[0] || 'U'}
                 </span>
               </div>
             </div>
             <div className="ml-3 flex-1 min-w-0">
-              <p className="text-sm font-medium text-base-content truncate">
+              <p className="text-xs lg:text-sm font-medium text-base-content truncate">
                 {user?.firstName} {user?.lastName}
               </p>
               <p className="text-xs text-base-content/60 truncate">
@@ -118,16 +118,16 @@ const Layout = ({ children }) => {
             <Link
               to="/profile"
               onClick={() => setSidebarOpen(false)}
-              className="flex items-center px-3 py-2 rounded-lg text-sm text-base-content hover:bg-base-300 transition-colors"
+              className="flex items-center px-3 py-2 rounded-lg text-xs font-medium text-base-content hover:bg-base-300 transition-colors"
             >
-              <Settings className="w-4 h-4 mr-3" />
+              <Settings className="w-3.5 h-3.5 mr-3" />
               Settings
             </Link>
             <button
               onClick={handleLogout}
-              className="flex items-center w-full px-3 py-2 rounded-lg text-sm text-base-content hover:bg-base-300 transition-colors"
+              className="flex items-center w-full px-3 py-2 rounded-lg text-xs font-medium text-base-content hover:bg-base-300 transition-colors"
             >
-              <LogOut className="w-4 h-4 mr-3" />
+              <LogOut className="w-3.5 h-3.5 mr-3" />
               Logout
             </button>
           </div>
@@ -144,19 +144,17 @@ const Layout = ({ children }) => {
               className="btn btn-square btn-ghost lg:hidden"
               aria-label="Open menu"
             >
-              <Menu className="w-6 h-6" />
+              <Menu className="w-5 h-5" />
             </button>
-            <Link to="/dashboard" className="btn btn-ghost text-xl font-bold hidden lg:flex">
-              <Shield className="w-7 h-7 text-primary mr-2" />
-              <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                AccessKit
-              </span>
+            <Link to="/dashboard" className="btn btn-ghost text-lg font-semibold hidden lg:flex">
+              <Shield className="w-6 h-6 text-primary mr-2" />
+              AccessKit
             </Link>
           </div>
 
           <div className="navbar-center lg:hidden">
-            <Link to="/dashboard" className="text-xl font-bold flex items-center">
-              <Shield className="w-6 h-6 text-primary mr-2" />
+            <Link to="/dashboard" className="text-lg font-semibold flex items-center">
+              <Shield className="w-5 h-5 text-primary mr-2" />
               <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 AccessKit
               </span>
@@ -168,13 +166,13 @@ const Layout = ({ children }) => {
             <div className="hidden md:flex items-center space-x-2 mr-4">
               <Link 
                 to="/projects/create" 
-                className="btn btn-sm btn-primary btn-outline"
+                className="btn btn-sm btn-primary btn-outline text-xs"
               >
-                <Plus className="w-4 h-4 mr-1" />
+                <Plus className="w-3.5 h-3.5 mr-1" />
                 New Project
               </Link>
-              <Link to="/docs" className="btn btn-sm btn-ghost">
-                <Book className="w-4 h-4 mr-1" />
+              <Link to="/docs" className="btn btn-sm btn-ghost text-xs">
+                <Book className="w-3.5 h-3.5 mr-1" />
                 Docs
               </Link>
             </div>
@@ -182,8 +180,8 @@ const Layout = ({ children }) => {
             {/* User Menu */}
             <div className="dropdown dropdown-end">
               <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar hover:bg-primary/10">
-                <div className="w-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                  <span className="text-primary-content font-bold text-lg">
+                <div className="w-8 lg:w-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                  <span className="text-primary-content font-bold text-sm lg:text-base">
                     {user?.firstName?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || 'U'}
                   </span>
                 </div>
@@ -193,7 +191,7 @@ const Layout = ({ children }) => {
                 className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow-xl bg-base-100 rounded-box w-52 border border-base-300"
               >
                 <li className="menu-title">
-                  <span className="text-base-content font-semibold">
+                  <span className="text-base-content font-semibold text-sm">
                     {user?.firstName || 'User'}
                   </span>
                   <span className="text-xs text-base-content/60 truncate">

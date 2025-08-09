@@ -54,10 +54,15 @@ export interface ReauthenticateData {
 // Authentication responses
 export interface AuthResponse {
   success: boolean;
-  user: User;
-  accessToken: string;
-  refreshToken: string;
   message?: string;
+  data: {
+    user: User;
+    tokens: {
+      accessToken: string;
+      refreshToken: string;
+    };
+    needsVerification?: boolean;
+  };
 }
 
 export interface ApiResponse<T = any> {

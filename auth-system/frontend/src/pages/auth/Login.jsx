@@ -89,8 +89,8 @@ const Login = () => {
     <div className="card bg-base-100 shadow-xl">
       <div className="card-body">
         <div className="text-center mb-6">
-          <h2 className="text-3xl font-bold text-base-content">Welcome Back</h2>
-          <p className="text-base-content/60 mt-2">
+          <h2 className="text-2xl sm:text-3xl font-semibold text-base-content">Welcome Back</h2>
+          <p className="text-sm text-base-content/60 mt-2 font-normal">
             Sign in to your AuthSystem account
           </p>
         </div>
@@ -101,18 +101,18 @@ const Login = () => {
             <div className="btn-group">
               <button
                 type="button"
-                className={`btn btn-sm ${loginType === 'email' ? 'btn-primary' : 'btn-ghost'}`}
+                className={`btn btn-sm text-xs ${loginType === 'email' ? 'btn-primary' : 'btn-ghost'}`}
                 onClick={() => setLoginType('email')}
               >
-                <Mail className="w-4 h-4 mr-1" />
+                <Mail className="w-3.5 h-3.5 mr-1" />
                 Email
               </button>
               <button
                 type="button"
-                className={`btn btn-sm ${loginType === 'username' ? 'btn-primary' : 'btn-ghost'}`}
+                className={`btn btn-sm text-xs ${loginType === 'username' ? 'btn-primary' : 'btn-ghost'}`}
                 onClick={() => setLoginType('username')}
               >
-                <User className="w-4 h-4 mr-1" />
+                <User className="w-3.5 h-3.5 mr-1" />
                 Username
               </button>
             </div>
@@ -121,7 +121,7 @@ const Login = () => {
           {/* Email/Username Input */}
           <div className="form-control">
             <label className="label">
-              <span className="label-text">
+              <span className="label-text text-sm font-medium">
                 {loginType === 'email' ? 'Email Address' : 'Username'}
               </span>
             </label>
@@ -136,21 +136,21 @@ const Login = () => {
                     ? 'Enter your email address' 
                     : 'Enter your username'
                 }
-                className={`input input-bordered w-full ${errors.identifier ? 'input-error' : ''}`}
+                className={`input input-bordered w-full text-sm ${errors.identifier ? 'input-error' : ''}`}
                 disabled={isLoading}
               />
               <div className="absolute inset-y-0 right-0 flex items-center pr-3">
                 {loginType === 'email' ? (
-                  <Mail className="w-5 h-5 text-base-content/40" />
+                  <Mail className="w-4 h-4 text-base-content/40" />
                 ) : (
-                  <User className="w-5 h-5 text-base-content/40" />
+                  <User className="w-4 h-4 text-base-content/40" />
                 )}
               </div>
             </div>
             {errors.identifier && (
               <label className="label">
-                <span className="label-text-alt text-error flex items-center">
-                  <AlertCircle className="w-4 h-4 mr-1" />
+                <span className="label-text-alt text-error text-xs flex items-center">
+                  <AlertCircle className="w-3 h-3 mr-1" />
                   {errors.identifier}
                 </span>
               </label>
